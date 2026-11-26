@@ -135,6 +135,33 @@ async function runTests() {
     const lockedOverview = await fetch(`${admUrl}/api/ops/overview`);
     assert.equal(lockedOverview.status, 401, "Unauthenticated /api/ops/overview MUST return 401");
 
+    // Verify dedicated /admin/login & edge auth redirect on all 7 /admin/* routes
+    const adminRoutes = [
+      "/admin/dashboard",
+      "/admin/live-map",
+      "/admin/operators",
+      "/admin/trips",
+      "/admin/zones",
+      "/admin/finance",
+      "/admin/sos",
+    ];
+    const rootRedir = await fetch(`${admUrl}/`, { redirect: "manual" });
+    assert.equal(rootRedir.status, 307);
+    assert.ok((rootRedir.headers.get("location") || "").endsWith("/admin/login"));
+
+    const enRedir = await fetch(`${admUrl}/en`, { redirect: "manual" });
+    assert.equal(enRedir.status, 307);
+    assert.ok((enRedir.headers.get("location") || "").endsWith("/admin/login"));
+
+    const loginPage = await fetch(`${admUrl}/admin/login`, { redirect: "manual" });
+    assert.equal(loginPage.status, 200, "/admin/login must render 200 OK");
+
+    for (const r of adminRoutes) {
+      const unauthPage = await fetch(`${admUrl}${r}`, { redirect: "manual" });
+      assert.equal(unauthPage.status, 307, `Unauthenticated ${r} must redirect to /admin/login`);
+      assert.ok((unauthPage.headers.get("location") || "").endsWith("/admin/login"));
+    }
+
     // Mint a CUSTOMER JWT and prove /api/ops/overview rejects it 403
     const custJwt = await signAccessToken({
       sub: "11111111-1111-4111-8111-111111111111",
@@ -180,7 +207,23 @@ async function runTests() {
     assert.equal(unlockedOverview.status, 200);
     const ovJson = await unlockedOverview.json();
     assert.equal(ovJson.dbHealth.connected, true);
-    console.log("   [PASS] Admin Auth Gate enforces 401/403 and unlocks via signed HttpOnly OTP cookie");
+
+    // Authenticated Admin accessing /admin/login redirects to /admin/dashboard, and all 7 pages return 200 OK
+    const authedLoginRedir = await fetch(`${admUrl}/admin/login`, {
+      headers: { cookie: adminCookie },
+      redirect: "manual",
+    });
+    assert.equal(authedLoginRedir.status, 307);
+    assert.ok((authedLoginRedir.headers.get("location") || "").endsWith("/admin/dashboard"));
+
+    for (const r of adminRoutes) {
+      const authedPage = await fetch(`${admUrl}${r}`, {
+        headers: { cookie: adminCookie },
+        redirect: "manual",
+      });
+      assert.equal(authedPage.status, 200, `Authenticated ${r} must return 200 OK`);
+    }
+    console.log("   [PASS] Admin Auth Gate enforces /admin/login -> /admin/dashboard and all 7 dedicated /admin/* pages");
 
     // -----------------------------------------------------------------------
     // 2. LIVE CROSS-APP FLOW: PARTNER PWA <-> ADMIN WEB <-> CUSTOMER WEB

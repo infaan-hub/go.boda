@@ -2,7 +2,7 @@
   "name": "Go.boda Operations Command Center",
   "short_name": "Go.boda Ops",
   "description": "Manage Unguja Bodaboda Riders, Bajaji Drivers, Zones, Tariffs, Finance & SOS Incidents.",
-  "start_url": "/en",
+  "start_url": "/admin/dashboard",
   "scope": "/",
   "display": "standalone",
   "background_color": "#020617",

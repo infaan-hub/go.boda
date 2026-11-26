@@ -1,17 +1,16 @@
+import { cookies } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
 import {
   getMessages,
   isSupportedLocale,
   type SupportedLocale,
 } from "@goboda/i18n";
-import { routing } from "./routing";
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  const requested = await requestLocale;
+export default getRequestConfig(async () => {
+  const cookieStore = await cookies();
+  const raw = cookieStore.get("NEXT_LOCALE")?.value;
   const locale: SupportedLocale =
-    requested && isSupportedLocale(requested)
-      ? requested
-      : routing.defaultLocale;
+    raw && isSupportedLocale(raw) ? raw : "en";
 
   return {
     locale,

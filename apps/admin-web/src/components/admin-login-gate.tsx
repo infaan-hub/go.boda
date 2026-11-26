@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { KeyRound, Lock, Phone, ShieldCheck } from "lucide-react";
 import { Badge, BrandLogo, Button, Card, LanguageSwitchLink } from "@goboda/ui";
 
@@ -11,14 +13,11 @@ export interface AuthenticatedAdmin {
   role: "ADMIN";
 }
 
-export function AdminLoginGate({
-  locale,
-  onAuthenticated,
-}: {
-  locale: "sw" | "en";
-  onAuthenticated: (admin: AuthenticatedAdmin) => void;
-}) {
+export function AdminLoginGate() {
+  const router = useRouter();
+  const locale = useLocale() === "sw" ? "sw" : "en";
   const isSw = locale === "sw";
+
   const [step, setStep] = React.useState<"phone" | "otp">("phone");
   const [phone, setPhone] = React.useState("+255770000112");
   const [code, setCode] = React.useState("");
@@ -80,7 +79,8 @@ export function AdminLoginGate({
         setError(json.message || json.error || "Invalid OTP code");
         return;
       }
-      onAuthenticated(json.admin);
+      router.replace("/admin/dashboard");
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Network error");
     } finally {
@@ -97,8 +97,8 @@ export function AdminLoginGate({
         />
         <LanguageSwitchLink
           currentLocale={locale}
-          hrefSw="/sw"
-          hrefEn="/en"
+          hrefSw="/admin/login?lang=sw"
+          hrefEn="/admin/login?lang=en"
         />
       </div>
 
@@ -121,7 +121,7 @@ export function AdminLoginGate({
               </p>
             </div>
           </div>
-          <Badge tone="amber">RBAC</Badge>
+          <Badge tone="amber">ADMIN</Badge>
         </div>
 
         {error ? (
@@ -134,7 +134,9 @@ export function AdminLoginGate({
           <form onSubmit={requestOtp} className="mt-5 space-y-4">
             <label className="block">
               <span className="text-xs font-semibold text-slate-300">
-                {isSw ? "Namba ya Simu ya Msimamizi (+255...)" : "Admin Phone Number (+255...)"}
+                {isSw
+                  ? "Namba ya Simu ya Msimamizi (+255...)"
+                  : "Admin Phone Number (+255...)"}
               </span>
               <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 focus-within:border-teal-500">
                 <Phone className="h-4 w-4 text-teal-400" />
@@ -149,7 +151,13 @@ export function AdminLoginGate({
               </div>
             </label>
 
-            <Button type="submit" variant="primary" size="lg" className="w-full" disabled={busy}>
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              className="w-full"
+              disabled={busy}
+            >
               <ShieldCheck className="h-4 w-4" />
               {busy
                 ? isSw
@@ -162,8 +170,8 @@ export function AdminLoginGate({
 
             <p className="text-center text-[11px] text-slate-500">
               {isSw
-                ? "Kikao kinalindwa na kuki ya JWT HttpOnly + RBAC ya ADMIN."
-                : "Protected by signed HttpOnly JWT session cookie & strict ADMIN RBAC."}
+                ? "Baada ya uthibitisho utaelekezwa moja kwa moja /admin/dashboard."
+                : "Redirects to /admin/dashboard with a signed HttpOnly JWT session."}
             </p>
           </form>
         ) : (
@@ -224,8 +232,8 @@ export function AdminLoginGate({
                     ? "Inathibitisha..."
                     : "Verifying..."
                   : isSw
-                    ? "Thibitisha na Fungua Kituo"
-                    : "Verify & Open Command Center"}
+                    ? "Thibitisha na Fungua Dashboard"
+                    : "Verify & Go to Dashboard"}
               </Button>
             </div>
           </form>
