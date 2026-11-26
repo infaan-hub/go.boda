@@ -14,20 +14,34 @@ if (existsSync(envPath)) {
   }
 }
 
-const { getSql } = await import("../packages/db/dist/index.js");
+const { getSql, hashPassword } = await import("../packages/db/dist/index.js");
 
 const PILOT_ADMIN_PHONE = process.env.ADMIN_BOOTSTRAP_PHONE || "+255770000112";
 const PILOT_ADMIN_NAME = process.env.ADMIN_BOOTSTRAP_NAME || "Go.boda Unguja Ops Desk";
+const PILOT_ADMIN_USERNAME = process.env.ADMIN_BOOTSTRAP_USERNAME || "admin504";
+const PILOT_ADMIN_PASSWORD =
+  process.env.ADMIN_BOOTSTRAP_PASSWORD || "Admin009@504";
 
 const sql = getSql();
+const passwordHash = hashPassword(PILOT_ADMIN_PASSWORD);
 const rows = await sql`
-  INSERT INTO auth.users (phone, role, name, language)
-  VALUES (${PILOT_ADMIN_PHONE}, 'ADMIN', ${PILOT_ADMIN_NAME}, 'en')
+  INSERT INTO auth.users (phone, username, password_hash, role, name, language)
+  VALUES (
+    ${PILOT_ADMIN_PHONE},
+    ${PILOT_ADMIN_USERNAME},
+    ${passwordHash},
+    'ADMIN',
+    ${PILOT_ADMIN_NAME},
+    'en'
+  )
   ON CONFLICT (phone) DO UPDATE SET
+    username = EXCLUDED.username,
+    password_hash = EXCLUDED.password_hash,
     role = 'ADMIN',
     name = EXCLUDED.name,
+    status = 'ACTIVE',
     updated_at = NOW()
-  RETURNING id, phone, role, name
+  RETURNING id, phone, username, role, name
 `;
 
 console.log("[Seed Admin] Pilot Operations Admin ready:", rows[0]);

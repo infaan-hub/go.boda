@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
@@ -18,6 +19,7 @@ import {
   KeyRound,
   Loader2,
   LocateFixed,
+  LogOut,
   MapPin,
   MessageSquare,
   Navigation,
@@ -253,8 +255,15 @@ const CUSTOMER_CHAT_PRESETS = [
   },
 ] as const;
 
-export function CustomerHomeView({ locale }: { locale: "sw" | "en" }) {
+export function CustomerHomeView({
+  locale,
+  customerName,
+}: {
+  locale: "sw" | "en";
+  customerName?: string;
+}) {
   const t = useTranslations();
+  const router = useRouter();
 
   const [activeTab, setActiveTab] = React.useState<"book" | "history">("book");
   const [selectedType, setSelectedType] = React.useState<TransportType>(
@@ -637,6 +646,14 @@ export function CustomerHomeView({ locale }: { locale: "sw" | "en" }) {
     setActiveTab("history");
   };
 
+  const handleSignOut = async () => {
+    await fetch("/api/customer/auth/logout", { method: "POST" }).catch(
+      () => null
+    );
+    router.replace("/login");
+    router.refresh();
+  };
+
   const shareOrigin =
     typeof window !== "undefined"
       ? window.location.origin
@@ -656,15 +673,29 @@ export function CustomerHomeView({ locale }: { locale: "sw" | "en" }) {
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <BrandLogo subtitle={t("common.ungujaOnly")} />
           <div className="flex items-center gap-2">
-            <Badge tone="teal" className="hidden sm:inline-flex">
+            {customerName ? (
+              <span className="hidden text-xs font-semibold text-slate-600 sm:inline">
+                {locale === "sw" ? "Habari" : "Hi"}, {customerName}
+              </span>
+            ) : null}
+            <Badge tone="teal" className="hidden md:inline-flex">
               <Compass className="h-3.5 w-3.5" />
               {t("common.phaseBadge")}
             </Badge>
             <LanguageSwitchLink
               currentLocale={locale}
-              hrefSw="/sw"
-              hrefEn="/en"
+              hrefSw="/dashboard?lang=sw"
+              hrefEn="/dashboard?lang=en"
             />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              {locale === "sw" ? "Toka" : "Sign out"}
+            </Button>
           </div>
         </div>
       </header>

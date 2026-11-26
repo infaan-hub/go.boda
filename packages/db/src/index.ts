@@ -1,5 +1,7 @@
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 
+export { hashPassword, normalizeUsername, verifyPassword } from "./password.js";
+
 export const MICROSERVICE_SCHEMAS = [
   "auth",
   "operator",

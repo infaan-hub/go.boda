@@ -64,6 +64,33 @@ function parseCookieHeader(cookieHeader: string | null, name: string): string | 
   return null;
 }
 
+export async function readPartnerSessionToken(
+  token: string
+): Promise<PartnerSessionUser | null> {
+  try {
+    const { payload } = await jwtVerify(token, getJwtSecretBytes(), {
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
+    });
+    if (
+      !payload.sub ||
+      (payload.role !== "BODABODA_RIDER" && payload.role !== "BAJAJI_DRIVER")
+    ) {
+      return null;
+    }
+    const role = payload.role as "BODABODA_RIDER" | "BAJAJI_DRIVER";
+    return {
+      id: payload.sub,
+      phone: typeof payload.phone === "string" ? payload.phone : "",
+      name: typeof payload.name === "string" ? payload.name : "Go.boda Operator",
+      role,
+      transportType: role === "BAJAJI_DRIVER" ? "BAJAJI" : "BODABODA",
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function verifyPartnerRequest(
   request: Request
 ): Promise<
@@ -88,35 +115,8 @@ export async function verifyPartnerRequest(
     };
   }
 
-  try {
-    const { payload } = await jwtVerify(token, getJwtSecretBytes(), {
-      issuer: JWT_ISSUER,
-      audience: JWT_AUDIENCE,
-    });
-    if (
-      !payload.sub ||
-      (payload.role !== "BODABODA_RIDER" && payload.role !== "BAJAJI_DRIVER")
-    ) {
-      return {
-        ok: false,
-        response: NextResponse.json(
-          { error: "OPERATOR_ROLE_REQUIRED" },
-          { status: 403 }
-        ),
-      };
-    }
-    const role = payload.role as "BODABODA_RIDER" | "BAJAJI_DRIVER";
-    return {
-      ok: true,
-      partner: {
-        id: payload.sub,
-        phone: typeof payload.phone === "string" ? payload.phone : "",
-        name: typeof payload.name === "string" ? payload.name : "Go.boda Operator",
-        role,
-        transportType: role === "BAJAJI_DRIVER" ? "BAJAJI" : "BODABODA",
-      },
-    };
-  } catch {
+  const partner = await readPartnerSessionToken(token);
+  if (!partner) {
     return {
       ok: false,
       response: NextResponse.json(
@@ -125,6 +125,8 @@ export async function verifyPartnerRequest(
       ),
     };
   }
+
+  return { ok: true, partner };
 }
 
 export function attachPartnerCookie(response: NextResponse, token: string): void {

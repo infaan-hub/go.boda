@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
@@ -13,6 +14,7 @@ import {
   ExternalLink,
   FileCheck2,
   KeyRound,
+  LogOut,
   MapPin,
   MessageSquare,
   PhoneCall,
@@ -119,13 +121,26 @@ function playOfferChime() {
   }
 }
 
-export function PartnerHomeView({ locale }: { locale: "sw" | "en" }) {
+export function PartnerHomeView({
+  locale,
+  partnerName,
+  partnerTransportType,
+  partnerPlateNumber,
+  partnerKituo,
+}: {
+  locale: "sw" | "en";
+  partnerName?: string;
+  partnerTransportType?: TransportType;
+  partnerPlateNumber?: string;
+  partnerKituo?: string;
+}) {
   const t = useTranslations();
+  const router = useRouter();
   const [activeTab, setActiveTab] = React.useState<
     "shift" | "earnings" | "wallet" | "kyc"
   >("shift");
   const [operatorType, setOperatorType] = React.useState<TransportType>(
-    TransportType.BODABODA
+    partnerTransportType ?? TransportType.BODABODA
   );
   const [isOnline, setIsOnline] = React.useState(false);
   const [sunlightMode, setSunlightMode] = React.useState(false);
@@ -179,9 +194,13 @@ export function PartnerHomeView({ locale }: { locale: "sw" | "en" }) {
   const [customerRating, setCustomerRating] = React.useState(5);
 
   // Multi-step Mobile Camera KYC Onboarding state
-  const [kycName, setKycName] = React.useState("Hassan Ali");
-  const [kycPlate, setKycPlate] = React.useState("Z 104 AAB");
-  const [kycKituo, setKycKituo] = React.useState("Darajani / Creek Road Stage");
+  const [kycName, setKycName] = React.useState(partnerName ?? "Hassan Ali");
+  const [kycPlate, setKycPlate] = React.useState(
+    partnerPlateNumber ?? "Z 104 AAB"
+  );
+  const [kycKituo, setKycKituo] = React.useState(
+    partnerKituo ?? "Darajani / Creek Road Stage"
+  );
   const [kycLicense, setKycLicense] = React.useState("ZN-A-48219");
   const [kycPayoutPhone, setKycPayoutPhone] = React.useState("+255770123456");
   const [kycDocs, setKycDocs] = React.useState<Record<string, string>>({});
@@ -433,6 +452,12 @@ export function PartnerHomeView({ locale }: { locale: "sw" | "en" }) {
     setKycSubmitted(true);
   };
 
+  const handleSignOut = async () => {
+    await fetch("/api/partner/auth", { method: "DELETE" }).catch(() => null);
+    router.replace("/partner/login");
+    router.refresh();
+  };
+
   const formatTimer = (sec: number) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
@@ -486,9 +511,22 @@ export function PartnerHomeView({ locale }: { locale: "sw" | "en" }) {
             </button>
             <LanguageSwitchLink
               currentLocale={locale}
-              hrefSw="/sw"
-              hrefEn="/en"
+              hrefSw="/partner/dashboard?lang=sw"
+              hrefEn="/partner/dashboard?lang=en"
             />
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold",
+                sunlightMode
+                  ? "border-slate-300 bg-white text-slate-700"
+                  : "border-slate-700 bg-slate-900 text-slate-300"
+              )}
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              {locale === "sw" ? "Toka" : "Sign out"}
+            </button>
           </div>
         </div>
       </header>
