@@ -34,6 +34,7 @@
     "test:phase7": "node scripts/test-phase7-e2e.mjs",
     "test:phase8": "node scripts/test-phase8.mjs",
     "test:phase9": "node scripts/test-phase9.mjs",
+    "test:routes": "node scripts/test-routes-no-404.mjs",
     "test:auth": "node scripts/test-auth-flows.mjs",
     "test:e2e": "node scripts/test-phase7-e2e.mjs",
     "infra:up": "docker compose -f infra/docker-compose.yml up -d",

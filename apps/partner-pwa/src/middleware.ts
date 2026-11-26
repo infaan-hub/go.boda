@@ -1,12 +1,8 @@
-import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
-import { routing } from "./i18n/routing";
 import {
   PARTNER_COOKIE_NAME,
   readPartnerSessionToken,
 } from "./lib/partner-auth";
-
-const intlMiddleware = createMiddleware(routing);
 
 function applyLocale(response: NextResponse, lang: string | null): NextResponse {
   if (lang === "sw" || lang === "en") {
@@ -27,13 +23,50 @@ async function hasPartnerSession(request: NextRequest): Promise<boolean> {
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+  const trimmedPath = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   const lang = searchParams.get("lang");
 
-  if (pathname === "/safety" || pathname === "/safety/") {
+  // Legacy /en or /sw root -> set cookie and redirect to /partner/dashboard or /partner/login
+  if (trimmedPath === "/en" || trimmedPath === "/sw") {
+    const loc = trimmedPath === "/sw" ? "sw" : "en";
+    const authed = await hasPartnerSession(request);
+    const target = request.nextUrl.clone();
+    target.pathname = authed ? "/partner/dashboard" : "/partner/login";
+    return applyLocale(NextResponse.redirect(target), loc);
+  }
+
+  // Strip /en/* or /sw/* from any path -> set cookie and redirect cleanly
+  if (trimmedPath.startsWith("/en/") || trimmedPath.startsWith("/sw/")) {
+    const loc = trimmedPath.startsWith("/sw/") ? "sw" : "en";
+    const stripped = trimmedPath.slice(3) || "/";
+    const target = request.nextUrl.clone();
+    if (
+      stripped === "/login" ||
+      stripped === "/register" ||
+      stripped === "/partner/register"
+    ) {
+      target.pathname = "/partner/login";
+    } else if (stripped === "/dashboard") {
+      target.pathname = "/partner/dashboard";
+    } else {
+      target.pathname = stripped;
+    }
+    return applyLocale(NextResponse.redirect(target), loc);
+  }
+
+  if (trimmedPath === "/safety") {
     return applyLocale(NextResponse.next(), lang);
   }
 
-  if (pathname === "/partner" || pathname === "/partner/") {
+  // Root and shortcut aliases -> canonical /partner/* routes
+  if (
+    trimmedPath === "/" ||
+    trimmedPath === "/partner" ||
+    trimmedPath === "/login" ||
+    trimmedPath === "/register" ||
+    trimmedPath === "/partner/register" ||
+    trimmedPath === "/dashboard"
+  ) {
     const authed = await hasPartnerSession(request);
     return applyLocale(
       NextResponse.redirect(
@@ -43,7 +76,7 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  if (pathname === "/partner/login" || pathname === "/partner/login/") {
+  if (trimmedPath === "/partner/login") {
     const authed = await hasPartnerSession(request);
     if (authed) {
       return applyLocale(
@@ -54,14 +87,7 @@ export async function middleware(request: NextRequest) {
     return applyLocale(NextResponse.next(), lang);
   }
 
-  if (pathname === "/partner/register" || pathname === "/partner/register/") {
-    return applyLocale(NextResponse.next(), lang);
-  }
-
-  if (
-    pathname === "/partner/dashboard" ||
-    pathname === "/partner/dashboard/"
-  ) {
+  if (trimmedPath === "/partner/dashboard") {
     const authed = await hasPartnerSession(request);
     if (!authed) {
       return applyLocale(
@@ -72,9 +98,9 @@ export async function middleware(request: NextRequest) {
     return applyLocale(NextResponse.next(), lang);
   }
 
-  return intlMiddleware(request);
+  return applyLocale(NextResponse.next(), lang);
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|_vercel|offline|.*\\..*).*)"],
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
 };
