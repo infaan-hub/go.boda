@@ -43,7 +43,11 @@ export async function POST(request: Request) {
       SELECT id, phone, name, role, status, password_hash AS "passwordHash"
       FROM auth.users
       WHERE role = 'CUSTOMER'
-        AND (LOWER(username) = LOWER(${identifier}) OR phone = ${phone})
+        AND (
+          LOWER(username) = LOWER(${identifier})
+          OR LOWER(email) = LOWER(${identifier})
+          OR phone = ${phone}
+        )
       LIMIT 1
     `) as CustomerCredentialRow[];
 

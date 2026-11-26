@@ -12,6 +12,8 @@ export function CustomerRegisterForm() {
   const isSw = useLocale() === "sw";
 
   const [name, setName] = React.useState("");
+  const [username, setUsername] = React.useState("");
+  const [email, setEmail] = React.useState("");
   const [phone, setPhone] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
@@ -42,6 +44,8 @@ export function CustomerRegisterForm() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           name,
+          username,
+          email,
           phone,
           password,
           language: isSw ? "sw" : "en",
@@ -123,6 +127,44 @@ export function CustomerRegisterForm() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={isSw ? "Amina Juma" : "Amina Juma"}
+                className="w-full bg-transparent text-sm text-[#122927] placeholder:text-[#17645F]/40 focus:outline-none"
+              />
+            </div>
+          </label>
+
+          <label className="block">
+            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#17645F]/80">
+              {isSw ? "Jina la Mtumiaji" : "Username"}
+            </span>
+            <div className="mt-1.5 flex items-center gap-2 rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3.5 py-2.5 focus-within:border-[#17645F] focus-within:bg-[#FAF7F2]">
+              <UserRound className="h-4 w-4 text-[#17645F]" />
+              <input
+                type="text"
+                autoComplete="username"
+                required
+                minLength={3}
+                maxLength={40}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder={isSw ? "amina_juma" : "amina_juma"}
+                className="w-full bg-transparent text-sm text-[#122927] placeholder:text-[#17645F]/40 focus:outline-none"
+              />
+            </div>
+          </label>
+
+          <label className="block">
+            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#17645F]/80">
+              {isSw ? "Barua Pepe" : "Email"}
+            </span>
+            <div className="mt-1.5 flex items-center gap-2 rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3.5 py-2.5 focus-within:border-[#17645F] focus-within:bg-[#FAF7F2]">
+              <UserRound className="h-4 w-4 text-[#17645F]" />
+              <input
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="amina@example.com"
                 className="w-full bg-transparent text-sm text-[#122927] placeholder:text-[#17645F]/40 focus:outline-none"
               />
             </div>

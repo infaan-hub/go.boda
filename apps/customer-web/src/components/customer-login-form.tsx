@@ -92,7 +92,7 @@ export function CustomerLoginForm() {
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <label className="block">
             <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#17645F]/80">
-              {isSw ? "Namba ya Simu au Username" : "Phone Number or Username"}
+              {isSw ? "Jina la Mtumiaji / Barua Pepe / Simu" : "Username / Email / Phone"}
             </span>
             <div className="mt-1.5 flex items-center gap-2 rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3.5 py-2.5 focus-within:border-[#17645F] focus-within:bg-[#FAF7F2]">
               <UserRound className="h-4 w-4 text-[#17645F]" />

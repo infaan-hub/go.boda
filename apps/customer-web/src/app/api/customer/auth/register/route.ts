@@ -11,6 +11,16 @@ export const dynamic = "force-dynamic";
 
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(120),
+  username: z
+    .string()
+    .trim()
+    .min(3)
+    .max(40)
+    .regex(
+      /^[a-zA-Z0-9._-]+$/,
+      "Username may only contain letters, numbers, dots, dashes and underscores"
+    ),
+  email: z.string().trim().email().max(254),
   phone: z.string().trim().min(9).max(20),
   password: z.string().min(8).max(128),
   language: z.enum(["sw", "en"]).default("sw"),
@@ -35,6 +45,8 @@ export async function POST(request: Request) {
 
   const d = parsed.data;
   const phone = normalizeTzPhone(d.phone);
+  const username = d.username.trim().toLowerCase();
+  const email = d.email.trim().toLowerCase();
   const passwordHash = hashPassword(d.password);
 
   try {
@@ -42,7 +54,9 @@ export async function POST(request: Request) {
     const existing = (await sql`
       SELECT id
       FROM auth.users
-      WHERE phone = ${phone} OR LOWER(username) = LOWER(${phone})
+      WHERE phone = ${phone}
+         OR LOWER(username) = LOWER(${username})
+         OR LOWER(email) = LOWER(${email})
       LIMIT 1
     `) as Array<{ id: string }>;
 
@@ -51,15 +65,15 @@ export async function POST(request: Request) {
         {
           error: "ACCOUNT_ALREADY_EXISTS",
           message:
-            "An account with this phone number already exists. Please sign in instead.",
+            "An account with this username, email, or phone already exists. Please sign in instead.",
         },
         { status: 409 }
       );
     }
 
     const rows = (await sql`
-      INSERT INTO auth.users (phone, username, password_hash, name, role, language)
-      VALUES (${phone}, ${phone}, ${passwordHash}, ${d.name}, 'CUSTOMER', ${d.language})
+      INSERT INTO auth.users (phone, email, username, password_hash, name, role, language)
+      VALUES (${phone}, ${email}, ${username}, ${passwordHash}, ${d.name}, 'CUSTOMER', ${d.language})
       RETURNING id, phone, name, role
     `) as UserRow[];
 
