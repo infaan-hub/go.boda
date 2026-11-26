@@ -65,13 +65,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (trimmedPath === "/") {
-    const authed = await hasCustomerSession(request);
-    return applyLocale(
-      NextResponse.redirect(
-        new URL(authed ? "/dashboard" : "/login", request.url)
-      ),
-      lang
-    );
+    return applyLocale(NextResponse.next(), lang);
   }
 
   return applyLocale(NextResponse.next(), lang);
