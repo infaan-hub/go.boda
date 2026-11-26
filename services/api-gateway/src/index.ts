@@ -44,7 +44,7 @@ export async function buildGateway() {
   });
 
   await app.register(cors, {
-    origin: config.corsOrigins,
+    origin: config.corsOrigins.includes("*") ? true : config.corsOrigins,
     credentials: true,
   });
 
@@ -77,6 +77,20 @@ export async function buildGateway() {
       "gateway request completed"
     );
   });
+
+  app.get("/", async () => ({
+    name: "Go.boda API Gateway",
+    service: SERVICE_NAME,
+    version: SERVICE_VERSION,
+    serviceArea: "Unguja Island, Zanzibar",
+    endpoints: {
+      health: "/healthz",
+      ready: "/readyz",
+      services: "/api/v1/services",
+    },
+    registeredServices: MICROSERVICES_REGISTRY.length,
+    timestamp: new Date().toISOString(),
+  }));
 
   app.get("/healthz", async () => ({
     service: SERVICE_NAME,
@@ -162,18 +176,17 @@ export async function buildGateway() {
   return { app, config, logger };
 }
 
-async function start() {
-  const { app, config, logger } = await buildGateway();
-  try {
-    await app.listen({ port: config.port, host: config.host });
-    logger.info(
-      { port: config.port, host: config.host },
-      "Go.boda API Gateway listening"
-    );
-  } catch (err) {
-    logger.error({ err }, "Failed to start Go.boda API Gateway");
-    process.exit(1);
-  }
+const { app, config, logger } = await buildGateway();
+
+try {
+  await app.listen({ port: config.port, host: config.host });
+  logger.info(
+    { port: config.port, host: config.host },
+    "Go.boda API Gateway listening"
+  );
+} catch (err) {
+  logger.error({ err }, "Failed to start Go.boda API Gateway");
+  process.exit(1);
 }
 
-start();
+export default app;
