@@ -181,7 +181,7 @@ try {
   assert.equal(partLoginPage.status, 200, "/partner/login renders 200");
 
   const partRegisterPage = await fetch(`${partUrl}/partner/register`, { redirect: "manual" });
-  assert.equal(partRegisterPage.status, 200, "/partner/register renders 200");
+  assert.equal(partRegisterPage.status, 404, "/partner/register removed (admin registers via API)");
 
   console.log("6. Partner: registration requires valid admin credentials");
   const regNoAdmin = await fetch(`${partUrl}/api/partner/register`, {

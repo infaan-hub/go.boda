@@ -10,7 +10,7 @@ import { PwaInstallBanner, PwaRegistrar } from "@goboda/ui";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Go.boda Partner — Bodaboda Riders & Bajaji Drivers",
+  title: "Go.boda Rider-Driver — Bodaboda Riders & Bajaji Drivers",
   description:
     "Accept nearby Unguja transport requests, complete trips, and receive fast per-trip payouts.",
   manifest: "/manifest.webmanifest",

@@ -63,7 +63,7 @@ export const enMessages = {
     navProfile: "Profile",
   },
   partner: {
-    appTitle: "Go.boda Partner",
+    appTitle: "Go.boda Rider-Driver",
     subtitle: "For Unguja Bodaboda Riders & Bajaji Drivers",
     sunlightMode: "Sunlight Mode",
     rolePreview: "Operator Mode",

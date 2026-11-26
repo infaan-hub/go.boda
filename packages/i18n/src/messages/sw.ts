@@ -64,7 +64,7 @@ export const swMessages = {
     navProfile: "Wasifu",
   },
   partner: {
-    appTitle: "Go.boda Partner",
+    appTitle: "Go.boda Rider-Driver",
     subtitle: "Kwa Riders wa Bodaboda na Madereva wa Bajaji Unguja",
     sunlightMode: "Mwanga wa Jua",
     rolePreview: "Aina ya Chombo",

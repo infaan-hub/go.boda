@@ -127,17 +127,7 @@ export function OperatorsKycPanel({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
-          <a
-            href={`${
-              process.env.NEXT_PUBLIC_PARTNER_APP_URL ?? "http://localhost:3001"
-            }/partner/register`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900 transition hover:bg-amber-100"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Register Partner
-          </a>
+
           {(
             [
               ["ALL", "All"],
@@ -169,7 +159,7 @@ export function OperatorsKycPanel({
             No operators in this filter
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            New Bodaboda Riders and Bajaji Drivers onboarding from the Partner
+            New Bodaboda Riders and Bajaji Drivers onboarding from the Rider-Driver
             PWA appear here automatically.
           </p>
         </Card>

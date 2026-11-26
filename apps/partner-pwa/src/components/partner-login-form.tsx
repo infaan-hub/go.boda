@@ -57,8 +57,8 @@ export function PartnerLoginForm() {
           dark
           subtitle={
             isSw
-              ? "Rider & Driver — Go.boda Partner"
-              : "Rider & Driver — Go.boda Partner"
+              ? "Rider & Driver — Go.boda Rider-Driver"
+              : "Rider & Driver — Go.boda Rider-Driver"
           }
         />
       </div>
@@ -71,7 +71,7 @@ export function PartnerLoginForm() {
             </div>
             <div>
               <h1 className="text-base font-extrabold text-white">
-                {isSw ? "Ingia — Partner" : "Partner Sign-In"}
+                {isSw ? "Ingia — Rider-Driver" : "Rider-Driver Sign-In"}
               </h1>
               <p className="text-xs text-slate-400">
                 {isSw
@@ -92,7 +92,7 @@ export function PartnerLoginForm() {
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <label className="block">
             <span className="text-xs font-semibold text-slate-300">
-              {isSw ? "Jina la Mtumiaji" : "Partner Username"}
+              {isSw ? "Jina la Mtumiaji" : "Rider-Driver Username"}
             </span>
             <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 focus-within:border-amber-400">
               <UserRound className="h-4 w-4 text-amber-400" />
@@ -147,17 +147,10 @@ export function PartnerLoginForm() {
         <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950/70 px-3.5 py-2.5 text-[11px] text-slate-400">
           <p>
             {isSw
-              ? "Akaunti za Partner husajiliwa na Go.boda Admin pekee."
-              : "Partner accounts are registered by Go.boda Admin only."}
+              ? "Akaunti za Rider-Driver husajiliwa na Go.boda Admin pekee."
+              : "Rider-Driver accounts are registered by Go.boda Admin only."}
           </p>
-          <Link
-            href="/partner/register"
-            className="mt-1 inline-flex font-semibold text-amber-300 hover:underline"
-          >
-            {isSw
-              ? "Admin: Sajili Partner Mpya →"
-              : "Admin: Register a new Partner →"}
-          </Link>
+
         </div>
       </Card>
     </div>
