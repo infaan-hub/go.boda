@@ -12,7 +12,7 @@ export const enMessages = {
       "Check your network connection. Active trip details remain cached locally.",
     retry: "Try Again",
     languageLabel: "Language",
-    phaseBadge: "Phase 6 Admin Command Center",
+    phaseBadge: "Unguja Pilot Ready • v1.0",
   },
   roles: {
     customer: "Customer",
@@ -56,7 +56,7 @@ export const enMessages = {
     requestCta: "Request Nearby Transport",
     quoteLockedTitle: "Upfront Fare Ready for Dispatch",
     quoteLockedDesc:
-      "Live Rider/Driver matching, 20s offer timers & 4-digit Start PIN activate in Phase 3.",
+      "Live Rider/Driver matching, 20s offer countdown & 4-digit Start PIN are active across Unguja.",
     navHome: "Map",
     navBook: "Book",
     navHistory: "Trips",

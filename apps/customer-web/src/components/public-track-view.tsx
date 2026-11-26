@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import {
   AlertTriangle,
   Bike,
@@ -13,7 +14,19 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Badge, BrandLogo, Card } from "@goboda/ui";
-import { UngujaMap, type MapVehicle } from "./unguja-map";
+import type { MapVehicle } from "./unguja-map";
+
+const UngujaMap = dynamic(
+  () => import("./unguja-map").then((m) => m.UngujaMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[320px] w-full items-center justify-center rounded-2xl bg-slate-900 text-xs font-semibold text-teal-200">
+        Loading Live Unguja Tracker Map...
+      </div>
+    ),
+  }
+);
 
 interface TrackPayload {
   shareToken: string;

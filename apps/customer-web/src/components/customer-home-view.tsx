@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
@@ -46,12 +47,19 @@ import {
   TripStatus,
   formatTzs,
 } from "@goboda/shared-types";
-import {
-  UngujaMap,
-  type MapPoint,
-  type MapVehicle,
-  type RouteGeoJson,
-} from "./unguja-map";
+import type { MapPoint, MapVehicle, RouteGeoJson } from "./unguja-map";
+
+const UngujaMap = dynamic(
+  () => import("./unguja-map").then((m) => m.UngujaMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full min-h-[260px] w-full items-center justify-center rounded-2xl bg-slate-900/90 text-xs font-semibold text-teal-200">
+        Loading Unguja Map...
+      </div>
+    ),
+  }
+);
 
 interface NearbySummary {
   totalNearby: number;

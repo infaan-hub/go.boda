@@ -1,4 +1,4 @@
-const CACHE_NAME = "goboda-partner-v1";
+const CACHE_NAME = "goboda-partner-v2";
 const OFFLINE_URL = "/offline";
 const PRECACHE_URLS = [OFFLINE_URL, "/manifest.webmanifest", "/icons/icon.svg"];
 
@@ -26,6 +26,26 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+
+  // Cache-First for immutable Next.js static chunks & icons (fast 3G resume)
+  if (
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/icons/")
+  ) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(event.request);
+        if (cached) return cached;
+        const response = await fetch(event.request);
+        if (response.ok) cache.put(event.request, response.clone());
+        return response;
+      })
+    );
+    return;
+  }
+
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request).catch(async () => {

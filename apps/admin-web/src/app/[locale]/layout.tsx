@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, isSupportedLocale, type SupportedLocale } from "@goboda/i18n";
 import { notFound } from "next/navigation";
@@ -8,6 +8,13 @@ export const metadata: Metadata = {
   title: "Go.boda Admin — Unguja Operations Command Center",
   description:
     "Manage Bodaboda Riders, Bajaji Drivers, Unguja zones, tariffs, live trips, SOS alerts, and payouts.",
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0f766e",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default async function AdminLocaleLayout({

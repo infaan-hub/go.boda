@@ -28,6 +28,8 @@
     "test:phase4": "node scripts/test-phase4.mjs",
     "test:phase5": "node scripts/test-phase5.mjs",
     "test:phase6": "node scripts/test-phase6.mjs",
+    "test:phase7": "node scripts/test-phase7-e2e.mjs",
+    "test:e2e": "node scripts/test-phase7-e2e.mjs",
     "infra:up": "docker compose -f infra/docker-compose.yml up -d",
     "infra:down": "docker compose -f infra/docker-compose.yml down",
     "infra:logs": "docker compose -f infra/docker-compose.yml logs -f"

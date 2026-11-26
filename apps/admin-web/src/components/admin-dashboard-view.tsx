@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import {
   Activity,
@@ -28,7 +29,17 @@ import {
   Card,
   LanguageSwitchLink,
 } from "@goboda/ui";
-import { AdminUngujaMap } from "./admin-unguja-map";
+const AdminUngujaMap = dynamic(
+  () => import("./admin-unguja-map").then((m) => m.AdminUngujaMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[420px] items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-500">
+        Loading Unguja Live Operations Map...
+      </div>
+    ),
+  }
+);
 import {
   OperatorsKycPanel,
   TripsMonitorPanel,

@@ -13,7 +13,7 @@ export const swMessages = {
       "Kagua muunganisho wako wa intaneti. Taarifa za safari yako zimehifadhiwa kwenye simu.",
     retry: "Jaribu Tena",
     languageLabel: "Lugha",
-    phaseBadge: "Awamu ya 6 Kituo cha Operesheni",
+    phaseBadge: "Tayari kwa Unguja • v1.0",
   },
   roles: {
     customer: "Mteja",
@@ -57,7 +57,7 @@ export const swMessages = {
     requestCta: "Agiza Usafiri wa Karibu",
     quoteLockedTitle: "Nauli ya Awali Iko Tayari",
     quoteLockedDesc:
-      "Kuunganisha Rider/Dereva moja kwa moja, kipima muda cha sekunde 20 na PIN ya safari vinawashwa Awamu ya 3.",
+      "Kuunganisha Rider/Dereva aliyethibitishwa, kipima muda cha sekunde 20 na PIN ya tarakimu 4 vimewashwa Unguja nzima.",
     navHome: "Ramani",
     navBook: "Agiza",
     navHistory: "Safari",
