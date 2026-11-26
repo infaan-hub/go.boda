@@ -345,6 +345,8 @@ try {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       name: TEST_CUSTOMER.name,
+      username: `cust_${stamp}`,
+      email: `cust_${stamp}@example.com`,
       phone: TEST_CUSTOMER.phone,
       password: TEST_CUSTOMER.password,
       language: "en",
@@ -384,6 +386,8 @@ try {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       name: "Dup Customer",
+      username: `cust_${stamp}`,
+      email: `cust_${stamp}@example.com`,
       phone: TEST_CUSTOMER.phone,
       password: TEST_CUSTOMER.password,
     }),
