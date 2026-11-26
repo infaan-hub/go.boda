@@ -34,7 +34,12 @@ const securityHeaders = [
 const nextConfig = {
   poweredByHeader: false,
   compress: true,
-  transpilePackages: ["@goboda/ui", "@goboda/i18n", "@goboda/shared-types"],
+  transpilePackages: [
+    "@goboda/ui",
+    "@goboda/i18n",
+    "@goboda/shared-types",
+    "@goboda/db",
+  ],
   async headers() {
     return [
       {

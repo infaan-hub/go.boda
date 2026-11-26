@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ExternalLink,
   LayoutDashboard,
+  LogOut,
   Map,
   RefreshCw,
   Route,
@@ -49,6 +50,10 @@ import {
   FinanceCompliancePanel,
   SosIncidentRoomPanel,
 } from "./admin-panels-safety-finance";
+import {
+  AdminLoginGate,
+  type AuthenticatedAdmin,
+} from "./admin-login-gate";
 import type { AdminOverviewPayload } from "./admin-types";
 
 type AdminTab =
@@ -66,9 +71,13 @@ function formatTzs(amount: number | null | undefined): string {
 
 export function AdminDashboardView({ locale }: { locale: "sw" | "en" }) {
   const t = useTranslations();
+  const [authChecked, setAuthChecked] = React.useState(false);
+  const [adminUser, setAdminUser] = React.useState<AuthenticatedAdmin | null>(
+    null
+  );
   const [activeTab, setActiveTab] = React.useState<AdminTab>("overview");
   const [data, setData] = React.useState<AdminOverviewPayload | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [toast, setToast] = React.useState<{
     tone: "emerald" | "rose";
@@ -116,6 +125,11 @@ export function AdminDashboardView({ locale }: { locale: "sw" | "en" }) {
     setLoadError(null);
     try {
       const res = await fetch("/api/ops/overview", { cache: "no-store" });
+      if (res.status === 401 || res.status === 403) {
+        setAdminUser(null);
+        setData(null);
+        return;
+      }
       const json = (await res.json()) as AdminOverviewPayload & {
         error?: string;
         message?: string;
@@ -134,8 +148,56 @@ export function AdminDashboardView({ locale }: { locale: "sw" | "en" }) {
   }, []);
 
   React.useEffect(() => {
-    refreshOverview();
-  }, [refreshOverview]);
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/ops/auth/me", { cache: "no-store" });
+        if (res.ok) {
+          const json = (await res.json()) as {
+            authenticated: boolean;
+            admin?: AuthenticatedAdmin;
+          };
+          if (active && json.authenticated && json.admin) {
+            setAdminUser(json.admin);
+          }
+        }
+      } finally {
+        if (active) setAuthChecked(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (adminUser) {
+      refreshOverview();
+    }
+  }, [adminUser, refreshOverview]);
+
+  async function handleSignOut() {
+    await fetch("/api/ops/auth/logout", { method: "POST" }).catch(() => null);
+    setAdminUser(null);
+    setData(null);
+  }
+
+  if (!authChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-xs font-semibold text-slate-300">
+        Verifying Go.boda Operations Admin session...
+      </div>
+    );
+  }
+
+  if (!adminUser) {
+    return (
+      <AdminLoginGate
+        locale={locale}
+        onAuthenticated={(admin) => setAdminUser(admin)}
+      />
+    );
+  }
 
   const kpis = data?.kpis;
   const openSosCount = kpis?.openSosCount ?? 0;
@@ -312,6 +374,15 @@ export function AdminDashboardView({ locale }: { locale: "sw" | "en" }) {
                 hrefSw="/sw"
                 hrefEn="/en"
               />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleSignOut}
+                title={`Signed in as ${adminUser.name} (${adminUser.phone})`}
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Sign Out
+              </Button>
             </div>
           </div>
 

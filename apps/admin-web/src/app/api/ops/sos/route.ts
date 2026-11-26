@@ -1,11 +1,15 @@
 import { randomInt, randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getSql } from "@goboda/db";
+import { verifyAdminRequest } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
 // Trigger a controlled Unguja Test SOS Drill for Ops Incident Room verification
 export async function POST(request: Request) {
+  const auth = await verifyAdminRequest(request);
+  if (!auth.ok) return auth.response;
+
   const body = (await request.json().catch(() => ({}))) as {
     reason?: string;
     transportType?: "BODABODA" | "BAJAJI";

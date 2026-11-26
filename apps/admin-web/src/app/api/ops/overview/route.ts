@@ -5,10 +5,14 @@ import {
   getUngujaBootstrapSummary,
 } from "@goboda/db";
 import { MICROSERVICES_REGISTRY } from "@goboda/shared-types";
+import { verifyAdminRequest } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const auth = await verifyAdminRequest(request);
+  if (!auth.ok) return auth.response;
+
   try {
     const sql = getSql();
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSql } from "@goboda/db";
+import { verifyAdminRequest } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,9 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ transportType: string }> }
 ) {
+  const auth = await verifyAdminRequest(request);
+  if (!auth.ok) return auth.response;
+
   const { transportType } = await context.params;
   const normalized = transportType.toUpperCase();
   if (normalized !== "BODABODA" && normalized !== "BAJAJI") {

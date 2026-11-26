@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSql } from "@goboda/db";
+import { verifyAdminRequest } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,9 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ alertId: string }> }
 ) {
+  const auth = await verifyAdminRequest(request);
+  if (!auth.ok) return auth.response;
+
   const { alertId } = await context.params;
   const body = await request.json().catch(() => null);
   const parsed = resolveSchema.safeParse(body);
