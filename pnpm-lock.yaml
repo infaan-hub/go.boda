@@ -546,6 +546,49 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
+  services/payment-wallet-service:
+    dependencies:
+      '@fastify/cors':
+        specifier: ^11.0.1
+        version: 11.4.3
+      '@fastify/helmet':
+        specifier: ^13.0.1
+        version: 13.2.0
+      '@fastify/rate-limit':
+        specifier: ^10.2.2
+        version: 10.3.0
+      '@goboda/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@goboda/events':
+        specifier: workspace:*
+        version: link:../../packages/events
+      '@goboda/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@goboda/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+      fastify:
+        specifier: ^5.2.2
+        version: 5.12.8
+      jose:
+        specifier: ^6.0.10
+        version: 6.2.18
+      zod:
+        specifier: ^3.24.4
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.4
+        version: 22.20.7
+      tsx:
+        specifier: ^4.19.3
+        version: 4.23.15
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+
   services/pricing-service:
     dependencies:
       '@fastify/cors':

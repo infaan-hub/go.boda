@@ -156,7 +156,8 @@ app.addHook("onRequest", async (request, reply) => {
     }
   } else if (
     path === "/api/v1/location/ping" ||
-    path.startsWith("/api/v1/dispatch/offers")
+    path.startsWith("/api/v1/dispatch/offers") ||
+    path.startsWith("/api/v1/wallets/")
   ) {
     if (!verifiedRole) {
       return reply.code(401).send({ error: "UNAUTHORIZED" });
@@ -169,13 +170,15 @@ app.addHook("onRequest", async (request, reply) => {
       return reply.code(403).send({
         error: "OPERATOR_ROLE_REQUIRED",
         message:
-          "Only Bodaboda Riders and Bajaji Drivers can access operator telemetry and dispatch offers.",
+          "Only Bodaboda Riders and Bajaji Drivers can access operator telemetry, dispatch offers, and wallets.",
       });
     }
   } else if (
     path.startsWith("/api/v1/trips") ||
     path.startsWith("/api/v1/dispatch/") ||
     path.startsWith("/api/v1/safety/") ||
+    (path.startsWith("/api/v1/payments/") &&
+      !path.startsWith("/api/v1/payments/webhooks/")) ||
     path === "/api/v1/auth/me" ||
     path === "/api/v1/notifications/me" ||
     path === "/api/v1/notifications/subscriptions" ||

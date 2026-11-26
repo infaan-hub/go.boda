@@ -11,5 +11,5 @@
 | `dispatch-service` | `4006` | Phase 3 | Implemented & Deployed |
 | `trip-service` | `4007` | Phase 3 | Implemented & Deployed |
 | `notification-service` | `4009` | Phase 3 | Implemented & Deployed |
-| `safety-service` | `4010` | Phase 4 | Implemented |
-| `payment-wallet-service` | `4008` | Phase 5 | Planned |
+| `safety-service` | `4010` | Phase 4 | Implemented & Deployed |
+| `payment-wallet-service` | `4008` | Phase 5 | Implemented |

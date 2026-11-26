@@ -38,6 +38,10 @@ import {
   TripStatus,
   formatTzs,
 } from "@goboda/shared-types";
+import {
+  PartnerWalletPanel,
+  type WalletLedgerRow,
+} from "./partner-wallet-panel";
 
 interface DemoOffer {
   tripCode: string;
@@ -117,7 +121,9 @@ function playOfferChime() {
 
 export function PartnerHomeView({ locale }: { locale: "sw" | "en" }) {
   const t = useTranslations();
-  const [activeTab, setActiveTab] = React.useState<"shift" | "kyc">("shift");
+  const [activeTab, setActiveTab] = React.useState<
+    "shift" | "earnings" | "wallet" | "kyc"
+  >("shift");
   const [operatorType, setOperatorType] = React.useState<TransportType>(
     TransportType.BODABODA
   );
@@ -125,10 +131,35 @@ export function PartnerHomeView({ locale }: { locale: "sw" | "en" }) {
   const [sunlightMode, setSunlightMode] = React.useState(false);
   const [wakeLockActive, setWakeLockActive] = React.useState(false);
 
-  // Shift counters
+  // Shift & Wallet ACID Preview Counters
   const [todayNetTzs, setTodayNetTzs] = React.useState(24500);
+  const [withdrawableEarningsTzs, setWithdrawableEarningsTzs] =
+    React.useState(18400);
   const [tripsToday, setTripsToday] = React.useState(7);
   const [floatBalanceTzs, setFloatBalanceTzs] = React.useState(6200);
+  const [walletLedger, setWalletLedger] = React.useState<WalletLedgerRow[]>([
+    {
+      id: "l-1",
+      label: "Trip GB-76640 • Darajani → ZNZ Airport (Net 88%)",
+      channel: "MOBILE_MONEY",
+      deltaTzs: 9240,
+      time: "14:22",
+    },
+    {
+      id: "l-2",
+      label: "Trip GB-76511 • Cash 12% Commission Debit",
+      channel: "CASH",
+      deltaTzs: -540,
+      time: "13:05",
+    },
+    {
+      id: "l-3",
+      label: "Commission Float Top-Up (M-Pesa)",
+      channel: "TOPUP",
+      deltaTzs: 5000,
+      time: "09:15",
+    },
+  ]);
 
   // Phase 3 & 4 Dispatch, Trip Lifecycle, SOS & Customer Rating state
   const [incomingOffer, setIncomingOffer] = React.useState<DemoOffer | null>(
@@ -332,8 +363,39 @@ export function PartnerHomeView({ locale }: { locale: "sw" | "en" }) {
     const net = activeTrip.fareTzs - commission;
     setTodayNetTzs((v) => v + net);
     setTripsToday((v) => v + 1);
+    const nowTime = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
     if (activeTrip.paymentMethod === "CASH") {
       setFloatBalanceTzs((v) => v - commission);
+      setWalletLedger((prev) => [
+        {
+          id: `cash-${Date.now()}`,
+          label: `Trip ${activeTrip.tripCode} • Cash 12% Commission`,
+          channel: "CASH",
+          deltaTzs: -commission,
+          time: nowTime,
+        },
+        ...prev,
+      ]);
+    } else {
+      // Digital payment auto-offsets negative float before crediting withdrawable earnings
+      const offset =
+        floatBalanceTzs < 0 ? Math.min(Math.abs(floatBalanceTzs), net) : 0;
+      const credit = net - offset;
+      if (offset > 0) setFloatBalanceTzs((v) => v + offset);
+      if (credit > 0) setWithdrawableEarningsTzs((v) => v + credit);
+      setWalletLedger((prev) => [
+        {
+          id: `dig-${Date.now()}`,
+          label: `Trip ${activeTrip.tripCode} • ${activeTrip.paymentMethod} Net (88%)`,
+          channel: activeTrip.paymentMethod,
+          deltaTzs: credit,
+          time: nowTime,
+        },
+        ...prev,
+      ]);
     }
     setActiveTrip(null);
     setTripStatus(null);
@@ -481,8 +543,53 @@ export function PartnerHomeView({ locale }: { locale: "sw" | "en" }) {
           </button>
         </div>
 
-        {/* KYC ONBOARDING TAB */}
-        {activeTab === "kyc" ? (
+        {/* EARNINGS OR WALLET TAB */}
+        {activeTab === "earnings" || activeTab === "wallet" ? (
+          <PartnerWalletPanel
+            mode={activeTab}
+            locale={locale}
+            sunlightMode={sunlightMode}
+            isBodabodaRider={isBodabodaRider}
+            withdrawableEarningsTzs={withdrawableEarningsTzs}
+            todayNetTzs={todayNetTzs}
+            tripsToday={tripsToday}
+            floatBalanceTzs={floatBalanceTzs}
+            payoutPhone={kycPayoutPhone}
+            ledger={walletLedger}
+            onFloatTopup={(amt, ch) => {
+              setFloatBalanceTzs((v) => v + amt);
+              setWalletLedger((prev) => [
+                {
+                  id: `topup-${Date.now()}`,
+                  label: `Float Top-Up (${ch})`,
+                  channel: "TOPUP",
+                  deltaTzs: amt,
+                  time: new Date().toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }),
+                },
+                ...prev,
+              ]);
+            }}
+            onWithdrawEarnings={(amt, ch) => {
+              setWithdrawableEarningsTzs((v) => Math.max(0, v - amt));
+              setWalletLedger((prev) => [
+                {
+                  id: `payout-${Date.now()}`,
+                  label: `Instant Payout (${ch} → ${kycPayoutPhone})`,
+                  channel: "PAYOUT",
+                  deltaTzs: -amt,
+                  time: new Date().toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }),
+                },
+                ...prev,
+              ]);
+            }}
+          />
+        ) : activeTab === "kyc" ? (
           <form
             onSubmit={handleSubmitKyc}
             className={cn(
@@ -1246,16 +1353,22 @@ export function PartnerHomeView({ locale }: { locale: "sw" | "en" }) {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("shift")}
-            className="flex flex-col items-center gap-1 text-slate-400"
+            onClick={() => setActiveTab("earnings")}
+            className={cn(
+              "flex flex-col items-center gap-1",
+              activeTab === "earnings" ? "text-amber-500" : "text-slate-400"
+            )}
           >
             <TrendingUp className="h-5 w-5" />
             {t("partner.navEarnings")}
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("shift")}
-            className="flex flex-col items-center gap-1 text-slate-400"
+            onClick={() => setActiveTab("wallet")}
+            className={cn(
+              "flex flex-col items-center gap-1",
+              activeTab === "wallet" ? "text-amber-500" : "text-slate-400"
+            )}
           >
             <Wallet className="h-5 w-5" />
             {t("partner.navWallet")}

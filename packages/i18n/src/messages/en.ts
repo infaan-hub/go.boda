@@ -12,7 +12,7 @@ export const enMessages = {
       "Check your network connection. Active trip details remain cached locally.",
     retry: "Try Again",
     languageLabel: "Language",
-    phaseBadge: "Phase 4 Safety, Live Share & Full Flows",
+    phaseBadge: "Phase 5 Payments & ACID Wallets",
   },
   roles: {
     customer: "Customer",
