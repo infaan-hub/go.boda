@@ -120,6 +120,14 @@ app.addHook("onRequest", async (request, reply) => {
 
   const path = request.url.split("?")[0] ?? "/";
 
+  // Block public external calls to internal service-to-service routes
+  if (/^\/api\/v1\/[^/]+\/internal(\/|$)/.test(path)) {
+    return reply.code(403).send({
+      error: "INTERNAL_ROUTE_FORBIDDEN",
+      message: "Internal service endpoints are not accessible via public gateway.",
+    });
+  }
+
   // Edge RBAC enforcement
   if (/^\/api\/v1\/[^/]+\/admin(\/|$)/.test(path)) {
     if (!verifiedRole) {
@@ -146,7 +154,10 @@ app.addHook("onRequest", async (request, reply) => {
           "Only Bodaboda Riders, Bajaji Drivers, or Admins can access operator routes.",
       });
     }
-  } else if (path === "/api/v1/location/ping") {
+  } else if (
+    path === "/api/v1/location/ping" ||
+    path.startsWith("/api/v1/dispatch/offers")
+  ) {
     if (!verifiedRole) {
       return reply.code(401).send({ error: "UNAUTHORIZED" });
     }
@@ -157,10 +168,19 @@ app.addHook("onRequest", async (request, reply) => {
     ) {
       return reply.code(403).send({
         error: "OPERATOR_ROLE_REQUIRED",
-        message: "Only Bodaboda Riders and Bajaji Drivers can stream GPS pings.",
+        message:
+          "Only Bodaboda Riders and Bajaji Drivers can access operator telemetry and dispatch offers.",
       });
     }
-  } else if (path === "/api/v1/auth/me") {
+  } else if (
+    path.startsWith("/api/v1/trips") ||
+    path.startsWith("/api/v1/dispatch/") ||
+    path === "/api/v1/auth/me" ||
+    path === "/api/v1/notifications/me" ||
+    path === "/api/v1/notifications/subscriptions" ||
+    (path.startsWith("/api/v1/notifications/chat/") &&
+      path !== "/api/v1/notifications/chat/presets")
+  ) {
     if (!verifiedRole) {
       return reply.code(401).send({ error: "UNAUTHORIZED" });
     }

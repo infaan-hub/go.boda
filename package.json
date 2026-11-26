@@ -19,8 +19,10 @@
     "db:bootstrap": "pnpm --filter @goboda/db db:bootstrap",
     "db:migrate:phase1": "pnpm --filter @goboda/db db:migrate:phase1",
     "db:migrate:phase2": "pnpm --filter @goboda/db db:migrate:phase2",
+    "db:migrate:phase3": "pnpm --filter @goboda/db db:migrate:phase3",
     "test:phase1": "node scripts/test-phase1.mjs",
     "test:phase2": "node scripts/test-phase2.mjs",
+    "test:phase3": "node scripts/test-phase3.mjs",
     "infra:up": "docker compose -f infra/docker-compose.yml up -d",
     "infra:down": "docker compose -f infra/docker-compose.yml down",
     "infra:logs": "docker compose -f infra/docker-compose.yml logs -f"
