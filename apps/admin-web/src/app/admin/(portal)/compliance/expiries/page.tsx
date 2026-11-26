@@ -95,8 +95,8 @@ export default function AdminComplianceExpiriesPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-            <CalendarClock className="h-5 w-5 text-amber-600" />
+          <h2 className="flex items-center gap-2 font-display text-2xl uppercase tracking-wide text-[#17645F]">
+            <CalendarClock className="h-5 w-5 text-[#B86B2B]" />
             License &amp; Insurance Expiries
           </h2>
         </div>
@@ -116,11 +116,11 @@ export default function AdminComplianceExpiriesPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {(
           [
-            ["EXPIRED", "Expired", data?.summary.expired ?? 0, "text-rose-700"],
-            ["7D", "Expiring ≤ 7d", data?.summary.within7d ?? 0, "text-rose-600"],
-            ["14D", "Expiring ≤ 14d", data?.summary.within14d ?? 0, "text-amber-700"],
-            ["30D", "Expiring ≤ 30d", data?.summary.within30d ?? 0, "text-amber-600"],
-            ["ALL", "All Operators", data?.items.length ?? 0, "text-teal-800"],
+            ["EXPIRED", "Expired", data?.summary.expired ?? 0, "text-[#A93232]"],
+            ["7D", "Expiring ≤ 7d", data?.summary.within7d ?? 0, "text-[#A93232]"],
+            ["14D", "Expiring ≤ 14d", data?.summary.within14d ?? 0, "text-[#B86B2B]"],
+            ["30D", "Expiring ≤ 30d", data?.summary.within30d ?? 0, "text-[#B86B2B]"],
+            ["ALL", "All Operators", data?.items.length ?? 0, "text-[#17645F]"],
           ] as const
         ).map(([key, label, count, color]) => (
           <button
@@ -128,10 +128,10 @@ export default function AdminComplianceExpiriesPage() {
             type="button"
             onClick={() => setBucket(key)}
             className={`rounded-2xl border p-4 text-left transition ${
-              bucket === key ? "border-teal-700 bg-teal-50/70 shadow-sm" : "border-slate-200 bg-white hover:bg-slate-50"
+              bucket === key ? "border-[#17645F] bg-[#17645F]/10 shadow-sm" : "border-[#17645F]/15 bg-[#FAF7F2] hover:bg-[#F3EEE8]"
             }`}
           >
-            <p className="text-xs font-semibold text-slate-500">{label}</p>
+            <p className="text-xs font-semibold text-[#17645F]/70">{label}</p>
             <p className={`mt-1 text-2xl font-extrabold ${color}`}>{count}</p>
           </button>
         ))}
@@ -139,13 +139,13 @@ export default function AdminComplianceExpiriesPage() {
 
       <Card className="overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="p-8 text-center text-xs text-slate-500">
+          <div className="p-8 text-center text-xs text-[#17645F]/70">
             No operators in this expiry bucket.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 uppercase text-slate-500">
+              <thead className="bg-[#EDE7DF] uppercase text-[#17645F]/70">
                 <tr>
                   <th className="px-4 py-3">Operator &amp; Plate</th>
                   <th className="px-4 py-3">Driving License Expiry</th>
@@ -154,17 +154,17 @@ export default function AdminComplianceExpiriesPage() {
                   <th className="px-4 py-3">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[#17645F]/10">
                 {filtered.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/70">
+                  <tr key={item.id} className="hover:bg-[#F3EEE8]/70">
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/operators/${item.id}`}
-                        className="font-bold text-teal-800 hover:underline"
+                        className="font-bold text-[#17645F] hover:underline"
                       >
                         {item.fullName}
                       </Link>
-                      <div className="text-[11px] text-slate-500">
+                      <div className="text-[11px] text-[#17645F]/70">
                         {item.transportType === "BODABODA" ? "Bodaboda Rider" : "Bajaji Driver"} •{" "}
                         <span className="font-mono">{item.plateNumber}</span> • {item.homeKituo}
                       </div>
@@ -172,7 +172,7 @@ export default function AdminComplianceExpiriesPage() {
                     <td className="px-4 py-3 font-mono">
                       {item.licenseExpiry?.slice(0, 10) ?? "Missing"}
                       {item.licenseDaysLeft !== null ? (
-                        <span className="ml-1.5 text-[11px] text-slate-500">
+                        <span className="ml-1.5 text-[11px] text-[#17645F]/70">
                           ({item.licenseDaysLeft}d)
                         </span>
                       ) : null}
@@ -180,7 +180,7 @@ export default function AdminComplianceExpiriesPage() {
                     <td className="px-4 py-3 font-mono">
                       {item.insuranceExpiry?.slice(0, 10) ?? "Missing"}
                       {item.insuranceDaysLeft !== null ? (
-                        <span className="ml-1.5 text-[11px] text-slate-500">
+                        <span className="ml-1.5 text-[11px] text-[#17645F]/70">
                           ({item.insuranceDaysLeft}d)
                         </span>
                       ) : null}
@@ -200,7 +200,7 @@ export default function AdminComplianceExpiriesPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Button size="sm" variant="outline" onClick={() => sendReminder(item)}>
-                        <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
+                        <MessageCircle className="h-3.5 w-3.5 text-[#17645F]" />
                         WhatsApp Remind
                       </Button>
                     </td>

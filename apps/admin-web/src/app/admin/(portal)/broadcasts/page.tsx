@@ -96,18 +96,18 @@ export default function AdminBroadcastsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-          <Megaphone className="h-5 w-5 text-teal-700" />
+        <h2 className="flex items-center gap-2 font-display text-2xl uppercase tracking-wide text-[#17645F]">
+          <Megaphone className="h-5 w-5 text-[#17645F]" />
           Broadcasts
         </h2>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[#17645F]/70">
           Send Kiswahili and English updates to Riders, Drivers, or Customers.
         </p>
       </div>
 
       <Card className="p-5">
         <div className="flex flex-wrap items-center gap-2 pb-3">
-          <span className="text-[11px] font-bold uppercase text-slate-500">Quick Templates:</span>
+          <span className="text-[11px] font-bold uppercase text-[#17645F]/70">Quick Templates:</span>
           {TEMPLATES.map((tpl) => (
             <button
               key={tpl.label}
@@ -122,7 +122,7 @@ export default function AdminBroadcastsPage() {
                   bodyEn: tpl.bodyEn,
                 }))
               }
-              className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-900 hover:bg-teal-100"
+              className="rounded-full border border-[#17645F]/25 bg-[#17645F]/10 px-3 py-1 text-xs font-semibold text-[#17645F] hover:bg-[#17645F]/15"
             >
               {tpl.label}
             </button>
@@ -132,11 +132,11 @@ export default function AdminBroadcastsPage() {
         <form onSubmit={sendBroadcast} className="space-y-4 text-xs">
           <div className="grid gap-3 sm:grid-cols-2">
             <label>
-              <span className="font-semibold text-slate-600">Target Unguja Segment</span>
+              <span className="font-semibold text-[#17645F]/80">Target Unguja Segment</span>
               <select
                 value={form.segment}
                 onChange={(e) => setForm((f) => ({ ...f, segment: e.target.value }))}
-                className="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-2.5 font-semibold"
+                className="mt-1 h-10 w-full rounded-lg border border-[#17645F]/15 bg-[#FAF7F2] px-2.5 font-semibold"
               >
                 <option value="ALL_OPERATORS">All Riders &amp; Drivers</option>
                 <option value="BODABODA_RIDERS">Bodaboda Riders Only</option>
@@ -147,11 +147,11 @@ export default function AdminBroadcastsPage() {
               </select>
             </label>
             <label>
-              <span className="font-semibold text-slate-600">Delivery Channel</span>
+              <span className="font-semibold text-[#17645F]/80">Delivery Channel</span>
               <select
                 value={form.channel}
                 onChange={(e) => setForm((f) => ({ ...f, channel: e.target.value }))}
-                className="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-2.5 font-semibold"
+                className="mt-1 h-10 w-full rounded-lg border border-[#17645F]/15 bg-[#FAF7F2] px-2.5 font-semibold"
               >
                 <option value="WHATSAPP">WhatsApp Business (Primary)</option>
                 <option value="WEB_PUSH">PWA Web Push</option>
@@ -161,15 +161,15 @@ export default function AdminBroadcastsPage() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-              <p className="font-bold text-teal-800">Kiswahili (SW)</p>
+            <div className="space-y-2 rounded-xl border border-[#17645F]/15 bg-[#F3EEE8] p-3.5">
+              <p className="font-bold text-[#17645F]">Kiswahili (SW)</p>
               <input
                 type="text"
                 required
                 placeholder="Kichwa cha ujumbe (SW)..."
                 value={form.titleSw}
                 onChange={(e) => setForm((f) => ({ ...f, titleSw: e.target.value }))}
-                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3"
+                className="h-9 w-full rounded-lg border border-[#17645F]/15 bg-[#FAF7F2] px-3"
               />
               <textarea
                 required
@@ -177,18 +177,18 @@ export default function AdminBroadcastsPage() {
                 placeholder="Ujumbe kamili kwa Kiswahili..."
                 value={form.bodySw}
                 onChange={(e) => setForm((f) => ({ ...f, bodySw: e.target.value }))}
-                className="w-full rounded-lg border border-slate-200 bg-white p-3"
+                className="w-full rounded-lg border border-[#17645F]/15 bg-[#FAF7F2] p-3"
               />
             </div>
-            <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-              <p className="font-bold text-slate-800">English (EN)</p>
+            <div className="space-y-2 rounded-xl border border-[#17645F]/15 bg-[#F3EEE8] p-3.5">
+              <p className="font-bold text-[#122927]">English (EN)</p>
               <input
                 type="text"
                 required
                 placeholder="Broadcast title (EN)..."
                 value={form.titleEn}
                 onChange={(e) => setForm((f) => ({ ...f, titleEn: e.target.value }))}
-                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3"
+                className="h-9 w-full rounded-lg border border-[#17645F]/15 bg-[#FAF7F2] px-3"
               />
               <textarea
                 required
@@ -196,7 +196,7 @@ export default function AdminBroadcastsPage() {
                 placeholder="Full broadcast message in English..."
                 value={form.bodyEn}
                 onChange={(e) => setForm((f) => ({ ...f, bodyEn: e.target.value }))}
-                className="w-full rounded-lg border border-slate-200 bg-white p-3"
+                className="w-full rounded-lg border border-[#17645F]/15 bg-[#FAF7F2] p-3"
               />
             </div>
           </div>
@@ -211,27 +211,27 @@ export default function AdminBroadcastsPage() {
       </Card>
 
       <Card className="p-5">
-        <h3 className="text-sm font-extrabold text-slate-900">
+        <h3 className="text-sm font-extrabold text-[#122927]">
           Sent Unguja Ops Broadcast Log ({broadcasts.length})
         </h3>
         {broadcasts.length === 0 ? (
-          <p className="mt-3 text-xs text-slate-500">No broadcasts sent yet.</p>
+          <p className="mt-3 text-xs text-[#17645F]/70">No broadcasts sent yet.</p>
         ) : (
-          <div className="mt-3 divide-y divide-slate-100">
+          <div className="mt-3 divide-y divide-[#17645F]/10">
             {broadcasts.map((b) => (
               <div key={b.id} className="py-3 text-xs">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900">{b.title}</span>
+                    <span className="font-bold text-[#122927]">{b.title}</span>
                     <Badge tone="teal">{b.payload?.segment ?? b.eventSubject}</Badge>
                     <Badge tone="slate">{b.channel}</Badge>
                   </div>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-[#17645F]/55">
                     {b.payload?.recipientCount ?? 0} targets •{" "}
                     {new Date(b.createdAt).toLocaleString("en-GB")}
                   </span>
                 </div>
-                <p className="mt-1 whitespace-pre-line text-slate-600">{b.body}</p>
+                <p className="mt-1 whitespace-pre-line text-[#17645F]/80">{b.body}</p>
               </div>
             ))}
           </div>

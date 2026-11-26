@@ -11,7 +11,7 @@ const AdminUngujaMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[420px] items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-500">
+      <div className="flex h-[420px] items-center justify-center rounded-2xl border border-[#17645F]/15 bg-[#EDE7DF] text-xs font-semibold text-[#17645F]/70">
         Loading Unguja Supply vs. Demand Heatmap...
       </div>
     ),
@@ -72,11 +72,11 @@ export default function AdminHeatmapPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-            <Flame className="h-5 w-5 text-amber-600" />
+          <h2 className="flex items-center gap-2 font-display text-2xl uppercase tracking-wide text-[#17645F]">
+            <Flame className="h-5 w-5 text-[#B86B2B]" />
             Supply &amp; Demand Heatmap
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[#17645F]/70">
             Idle vehicles compared with recent requests across Unguja.
           </p>
         </div>
@@ -93,10 +93,10 @@ export default function AdminHeatmapPage() {
           <Card key={z.id} className="p-4">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h3 className="text-sm font-extrabold text-slate-900">{z.name}</h3>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  Idle: <strong className="text-teal-800">{z.idleRiders} Riders</strong> •{" "}
-                  <strong className="text-amber-700">{z.idleDrivers} Drivers</strong> •{" "}
+                <h3 className="text-sm font-extrabold text-[#122927]">{z.name}</h3>
+                <p className="mt-0.5 text-xs text-[#17645F]/70">
+                  Idle: <strong className="text-[#17645F]">{z.idleRiders} Riders</strong> •{" "}
+                  <strong className="text-[#B86B2B]">{z.idleDrivers} Drivers</strong> •{" "}
                   24h Requests: <strong>{z.recentRequests24h}</strong> ({z.unmetRequests} unmet)
                 </p>
               </div>
@@ -112,7 +112,7 @@ export default function AdminHeatmapPage() {
                 {z.pressure.replace("_", " ")}
               </Badge>
             </div>
-            <p className="mt-2.5 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-700">
+            <p className="mt-2.5 rounded-lg bg-[#F3EEE8] px-3 py-2 text-xs text-[#122927]/85">
               {z.recommendation}
             </p>
           </Card>

@@ -33,7 +33,9 @@ import {
   Badge,
   BrandLogo,
   Button,
+  EditorialScrollHero,
   LanguageSwitchLink,
+  ScrollReveal,
   cn,
 } from "@goboda/ui";
 import {
@@ -468,43 +470,90 @@ export function PartnerHomeView({
     : 0;
   const operatorNetTzs = activeTrip ? activeTrip.fareTzs - commissionTzs : 0;
 
+  const nightMode = sunlightMode;
+
   return (
     <div
       className={cn(
         "min-h-screen pb-24 transition-colors",
-        sunlightMode ? "bg-white text-slate-950" : "bg-slate-950 text-white"
+        nightMode ? "bg-[#0F3F3C] text-[#F3EEE8]" : "bg-[#F3EEE8] text-[#122927]"
       )}
     >
+      {/* Editorial Minimal Top Navbar */}
       <header
         className={cn(
-          "sticky top-0 z-30 border-b backdrop-blur",
-          sunlightMode
-            ? "border-slate-300 bg-white"
-            : "border-slate-800 bg-slate-950/95"
+          "sticky top-0 z-40 border-b backdrop-blur",
+          nightMode
+            ? "border-[#F3EEE8]/15 bg-[#0F3F3C]/95"
+            : "border-[#17645F]/15 bg-[#F3EEE8]/95"
         )}
       >
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-8">
           <BrandLogo
-            dark={!sunlightMode}
+            dark={nightMode}
             subtitle={
               isBodabodaRider
                 ? t("roles.bodabodaRider")
                 : t("roles.bajajiDriver")
             }
           />
+
+          <nav
+            className={cn(
+              "hidden items-center gap-6 text-[11px] font-bold uppercase tracking-[0.2em] md:flex",
+              nightMode ? "text-[#F3EEE8]/75" : "text-[#17645F]/75"
+            )}
+          >
+            {(
+              [
+                { id: "shift", label: t("partner.navHome") },
+                { id: "earnings", label: t("partner.navEarnings") },
+                { id: "wallet", label: t("partner.navWallet") },
+                { id: "kyc", label: t("partner.navOnboarding") },
+              ] as const
+            ).map((nav) => (
+              <button
+                key={nav.id}
+                type="button"
+                onClick={() => setActiveTab(nav.id)}
+                className={cn(
+                  "uppercase transition hover:opacity-100",
+                  activeTab === nav.id
+                    ? nightMode
+                      ? "text-[#F3EEE8] underline underline-offset-4"
+                      : "text-[#17645F] underline underline-offset-4"
+                    : "opacity-75"
+                )}
+              >
+                {nav.label}
+              </button>
+            ))}
+            <Link href="/safety" className="opacity-75 transition hover:opacity-100">
+              {locale === "sw" ? "Usalama" : "Safety"}
+            </Link>
+          </nav>
+
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setSunlightMode((v) => !v)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold",
-                sunlightMode
-                  ? "border-slate-900 bg-amber-400 text-slate-950"
-                  : "border-slate-700 bg-slate-900 text-amber-400"
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] transition",
+                nightMode
+                  ? "border-[#F3EEE8]/30 bg-[#17645F] text-[#F3EEE8]"
+                  : "border-[#17645F]/30 bg-[#FAF7F2] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
               )}
             >
               <Sun className="h-3.5 w-3.5" />
-              {t("partner.sunlightMode")}
+              <span className="hidden sm:inline">
+                {nightMode
+                  ? locale === "sw"
+                    ? "Mchana"
+                    : "Day"
+                  : locale === "sw"
+                    ? "Usiku"
+                    : "Night"}
+              </span>
             </button>
             <LanguageSwitchLink
               currentLocale={locale}
@@ -515,75 +564,133 @@ export function PartnerHomeView({
               type="button"
               onClick={handleSignOut}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold",
-                sunlightMode
-                  ? "border-slate-300 bg-white text-slate-700"
-                  : "border-slate-700 bg-slate-900 text-slate-300"
+                "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] transition",
+                nightMode
+                  ? "border-[#F3EEE8]/35 text-[#F3EEE8] hover:bg-[#F3EEE8] hover:text-[#17645F]"
+                  : "border-[#17645F] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
               )}
             >
               <LogOut className="h-3.5 w-3.5" />
-              {locale === "sw" ? "Toka" : "Sign out"}
+              <span className="hidden sm:inline">
+                {locale === "sw" ? "Toka" : "Sign Out"}
+              </span>
             </button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl space-y-4 px-4 pt-4">
-        {/* Adaptive Role Switcher Preview (Bodaboda Rider vs Bajaji Driver) */}
-        <div
-          className={cn(
-            "grid grid-cols-2 gap-2 rounded-2xl border p-1.5",
-            sunlightMode
-              ? "border-slate-300 bg-slate-100"
-              : "border-slate-800 bg-slate-900"
-          )}
-        >
-          <button
-            type="button"
-            disabled={Boolean(activeTrip)}
-            onClick={() => {
-              setOperatorType(TransportType.BODABODA);
-              setKycSubmitted(false);
-            }}
+      {/* Editorial Bodaboda Scroll-Transition Hero on Rider-Driver Home */}
+      {activeTab === "shift" ? (
+        <EditorialScrollHero
+          eyebrowItems={[
+            "BODABODA RIDER",
+            "BAJAJI DRIVER",
+            "88% NET PAYOUT",
+            "UNGUJA",
+          ]}
+          displayWordLeft={locale === "sw" ? "ENDESHA" : "DRIVE"}
+          displayWordRight="UNGUJA"
+          taglineLines={
+            locale === "sw"
+              ? ["POKEA SAFARI KARIBU", "NA MALIPO YA PAPO", "HAPO KWA SIMU."]
+              : ["ACCEPT NEARBY TRIPS", "AND KEEP 88% NET", "ON EVERY UNGUJA RIDE."]
+          }
+          ctaLabel={
+            isOnline
+              ? locale === "sw"
+                ? "ZAMU IKO HEWANI"
+                : "VIEW LIVE SHIFT"
+              : locale === "sw"
+                ? "ANZA ZAMU"
+                : "START SHIFT"
+          }
+          ctaHref="#workspace"
+          imageSrc="/images/bodaboda-hero.webp"
+          imageAlt="Go.boda Zanzibar Bodaboda Rider"
+          scrollHint={
+            locale === "sw" ? "Shuka chini kuanza zamu" : "Scroll to shift console"
+          }
+          features={[
+            {
+              icon: <TrendingUp className="h-4 w-4" />,
+              title: "88% NET FARE",
+              subtitle: locale === "sw" ? "MALIPO YA HARAKA" : "INSTANT PAYOUT",
+            },
+            {
+              icon: <Wallet className="h-4 w-4" />,
+              title: "M-PESA & TIGO",
+              subtitle: locale === "sw" ? "FLOAT SALAMA" : "AUTO FLOAT",
+            },
+            {
+              icon: <ShieldCheck className="h-4 w-4" />,
+              title: "24/7 OPS DESK",
+              subtitle: locale === "sw" ? "USALAMA WA ZAMU" : "SHIFT SOS",
+            },
+          ]}
+        />
+      ) : null}
+
+      <main
+        id="workspace"
+        className="mx-auto max-w-3xl scroll-mt-20 space-y-5 px-4 pt-8 sm:px-6"
+      >
+        {/* Role Switcher (Bodaboda Rider vs Bajaji Driver) */}
+        <ScrollReveal>
+          <div
             className={cn(
-              "flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition disabled:opacity-50",
-              isBodabodaRider
-                ? "bg-teal-600 text-white shadow"
-                : sunlightMode
-                  ? "text-slate-700"
-                  : "text-slate-400"
+              "grid grid-cols-2 gap-2 rounded-full border p-1.5",
+              nightMode
+                ? "border-[#F3EEE8]/15 bg-[#123D3A]"
+                : "border-[#17645F]/15 bg-[#FAF7F2]"
             )}
           >
-            <Bike className="h-4 w-4" />
-            {t("roles.bodabodaRider")}
-          </button>
-          <button
-            type="button"
-            disabled={Boolean(activeTrip)}
-            onClick={() => {
-              setOperatorType(TransportType.BAJAJI);
-              setKycSubmitted(false);
-            }}
-            className={cn(
-              "flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition disabled:opacity-50",
-              !isBodabodaRider
-                ? "bg-amber-500 text-slate-950 shadow"
-                : sunlightMode
-                  ? "text-slate-700"
-                  : "text-slate-400"
-            )}
-          >
-            <CarFront className="h-4 w-4" />
-            {t("roles.bajajiDriver")}
-          </button>
-        </div>
+            <button
+              type="button"
+              disabled={Boolean(activeTrip)}
+              onClick={() => {
+                setOperatorType(TransportType.BODABODA);
+                setKycSubmitted(false);
+              }}
+              className={cn(
+                "flex items-center justify-center gap-2 rounded-full py-2.5 text-xs font-bold uppercase tracking-[0.12em] transition disabled:opacity-50",
+                isBodabodaRider
+                  ? "bg-[#17645F] text-[#F3EEE8] shadow-sm"
+                  : nightMode
+                    ? "text-[#F3EEE8]/70"
+                    : "text-[#17645F]/70 hover:text-[#17645F]"
+              )}
+            >
+              <Bike className="h-4 w-4" />
+              {t("roles.bodabodaRider")}
+            </button>
+            <button
+              type="button"
+              disabled={Boolean(activeTrip)}
+              onClick={() => {
+                setOperatorType(TransportType.BAJAJI);
+                setKycSubmitted(false);
+              }}
+              className={cn(
+                "flex items-center justify-center gap-2 rounded-full py-2.5 text-xs font-bold uppercase tracking-[0.12em] transition disabled:opacity-50",
+                !isBodabodaRider
+                  ? "bg-[#B86B2B] text-[#FAF7F2] shadow-sm"
+                  : nightMode
+                    ? "text-[#F3EEE8]/70"
+                    : "text-[#17645F]/70 hover:text-[#17645F]"
+              )}
+            >
+              <CarFront className="h-4 w-4" />
+              {t("roles.bajajiDriver")}
+            </button>
+          </div>
+        </ScrollReveal>
 
         {/* EARNINGS OR WALLET TAB */}
         {activeTab === "earnings" || activeTab === "wallet" ? (
           <PartnerWalletPanel
             mode={activeTab}
             locale={locale}
-            sunlightMode={sunlightMode}
+            nightMode={nightMode}
             isBodabodaRider={isBodabodaRider}
             withdrawableEarningsTzs={withdrawableEarningsTzs}
             todayNetTzs={todayNetTzs}
@@ -628,15 +735,15 @@ export function PartnerHomeView({
           <form
             onSubmit={handleSubmitKyc}
             className={cn(
-              "space-y-4 rounded-3xl border p-5",
-              sunlightMode
-                ? "border-slate-300 bg-white text-slate-950"
-                : "border-slate-800 bg-slate-900 text-white"
+              "space-y-4 rounded-3xl border p-6 shadow-sm",
+              nightMode
+                ? "border-[#F3EEE8]/15 bg-[#123D3A] text-[#F3EEE8]"
+                : "border-[#17645F]/15 bg-[#FAF7F2] text-[#122927]"
             )}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-amber-500">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#B86B2B]">
                   {isBodabodaRider
                     ? locale === "sw"
                       ? "Usajili wa Rider wa Bodaboda"
@@ -645,10 +752,15 @@ export function PartnerHomeView({
                       ? "Usajili wa Dereva wa Bajaji"
                       : "Bajaji Driver KYC Onboarding"}
                 </p>
-                <h1 className="text-lg font-extrabold">
+                <h1
+                  className={cn(
+                    "mt-1 font-display text-3xl uppercase leading-none",
+                    nightMode ? "text-[#F3EEE8]" : "text-[#17645F]"
+                  )}
+                >
                   {locale === "sw"
-                    ? "Thibitisha Chombo na Nyaraka (Unguja)"
-                    : "Verify Vehicle & Documents (Unguja)"}
+                    ? "Thibitisha Chombo na Nyaraka"
+                    : "Verify Vehicle & Documents"}
                 </h1>
               </div>
               <Badge tone={kycSubmitted ? "amber" : "teal"}>
@@ -657,13 +769,13 @@ export function PartnerHomeView({
             </div>
 
             {kycSubmitted ? (
-              <div className="space-y-3 rounded-2xl border border-emerald-500/40 bg-emerald-950/40 p-4 text-sm">
-                <p className="font-extrabold text-emerald-400">
+              <div className="space-y-3 rounded-2xl border border-[#17645F]/30 bg-[#17645F]/10 p-4 text-sm">
+                <p className="font-extrabold text-[#17645F]">
                   {locale === "sw"
                     ? "Maombi ya KYC Yametumwa kwa Uhakiki!"
                     : "KYC Package Submitted for Operations Review!"}
                 </p>
-                <p className="text-xs opacity-90">
+                <p className="text-xs opacity-85">
                   {kycName} • {kycPlate} • {kycKituo} •{" "}
                   {Object.keys(kycDocs).length}/{requiredKycDocs.length} photos
                   attached.
@@ -714,7 +826,7 @@ export function PartnerHomeView({
                     },
                   ].map((field) => (
                     <div key={field.label} className="space-y-1">
-                      <label className="text-[11px] font-bold opacity-75">
+                      <label className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-75">
                         {field.label}
                       </label>
                       <input
@@ -723,10 +835,10 @@ export function PartnerHomeView({
                         value={field.value}
                         onChange={(e) => field.set(e.target.value)}
                         className={cn(
-                          "w-full rounded-xl border px-3 py-2 text-sm font-medium focus:outline-none",
-                          sunlightMode
-                            ? "border-slate-300 bg-slate-50 text-slate-950"
-                            : "border-slate-700 bg-slate-950 text-white focus:border-amber-400"
+                          "w-full rounded-2xl border px-3.5 py-2.5 text-sm font-medium focus:outline-none",
+                          nightMode
+                            ? "border-[#F3EEE8]/20 bg-[#0D302E] text-[#F3EEE8] focus:border-[#E6C99E]"
+                            : "border-[#17645F]/20 bg-[#F3EEE8]/70 text-[#122927] focus:border-[#17645F] focus:bg-[#FAF7F2]"
                         )}
                       />
                     </div>
@@ -735,7 +847,7 @@ export function PartnerHomeView({
 
                 {/* Document Photos */}
                 <div className="space-y-2">
-                  <p className="text-xs font-bold uppercase tracking-wide opacity-80">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] opacity-80">
                     {locale === "sw"
                       ? "Picha za Nyaraka"
                       : "Required Document Photos"}
@@ -747,22 +859,22 @@ export function PartnerHomeView({
                         <label
                           key={doc.key}
                           className={cn(
-                            "flex cursor-pointer items-center justify-between rounded-2xl border px-3.5 py-3 text-xs font-semibold transition",
+                            "flex cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 text-xs font-semibold transition",
                             uploaded
-                              ? "border-emerald-500 bg-emerald-500/10"
-                              : sunlightMode
-                                ? "border-slate-300 bg-slate-50 hover:bg-slate-100"
-                                : "border-slate-700 bg-slate-950 hover:border-amber-400"
+                              ? "border-[#17645F] bg-[#17645F]/15"
+                              : nightMode
+                                ? "border-[#F3EEE8]/20 bg-[#0D302E] hover:border-[#E6C99E]"
+                                : "border-[#17645F]/20 bg-[#F3EEE8]/70 hover:border-[#17645F]"
                           )}
                         >
                           <span className="flex items-center gap-2">
-                            <Camera className="h-4 w-4 text-amber-500" />
+                            <Camera className="h-4 w-4 text-[#B86B2B]" />
                             <span>
                               {locale === "sw" ? doc.labelSw : doc.labelEn}
                               {uploaded ? ` (${uploaded})` : ""}
                             </span>
                           </span>
-                          <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-500">
+                          <span className="rounded-full bg-[#17645F]/15 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#17645F]">
                             {uploaded ? "✓" : locale === "sw" ? "Piga Picha" : "Capture"}
                           </span>
                           <input
@@ -783,8 +895,8 @@ export function PartnerHomeView({
                 <Button
                   type="submit"
                   size="lg"
-                  variant="amber"
-                  className="w-full font-extrabold"
+                  variant="primary"
+                  className="w-full font-extrabold uppercase tracking-[0.14em]"
                 >
                   <FileCheck2 className="h-5 w-5" />
                   {locale === "sw"
@@ -801,9 +913,9 @@ export function PartnerHomeView({
               <div
                 className={cn(
                   "flex items-center justify-between rounded-2xl border px-4 py-3 text-xs font-bold",
-                  sunlightMode
-                    ? "border-teal-600 bg-teal-50 text-teal-950"
-                    : "border-teal-500/40 bg-teal-950/60 text-teal-200"
+                  nightMode
+                    ? "border-[#E6C99E]/40 bg-[#123D3A] text-[#F3EEE8]"
+                    : "border-[#17645F]/30 bg-[#17645F]/10 text-[#17645F]"
                 )}
               >
                 <span>{statusNotice}</span>
@@ -819,23 +931,23 @@ export function PartnerHomeView({
 
             {/* Incoming Dispatch Offer */}
             {incomingOffer && (
-              <div className="rounded-2xl border-2 border-amber-400 bg-slate-900 p-5 text-white shadow-xl">
+              <div className="rounded-3xl border-2 border-[#17645F] bg-[#17645F] p-5 text-[#F3EEE8] shadow-xl">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-amber-400">
+                  <div className="flex items-center gap-2 text-[#E6C99E]">
                     <BellRing className="h-5 w-5 animate-bounce" />
-                    <span className="text-sm font-extrabold uppercase tracking-wide">
+                    <span className="text-xs font-extrabold uppercase tracking-[0.16em]">
                       {t("partner.incomingOfferTitle")}
                     </span>
                   </div>
-                  <span className="rounded-full bg-amber-400 px-3 py-1 text-sm font-black text-slate-950">
+                  <span className="rounded-full bg-[#F3EEE8] px-3.5 py-1 text-sm font-black text-[#17645F]">
                     {offerSecondsLeft}s
                   </span>
                 </div>
 
                 {/* Countdown progress bar */}
-                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#F3EEE8]/20">
                   <div
-                    className="h-full bg-amber-400 transition-all duration-1000"
+                    className="h-full bg-[#E6C99E] transition-all duration-1000"
                     style={{
                       width: `${
                         (offerSecondsLeft /
@@ -848,26 +960,26 @@ export function PartnerHomeView({
 
                 <div className="mt-4 flex items-end justify-between">
                   <div>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-[#F3EEE8]/75">
                       {incomingOffer.tripCode} • {incomingOffer.distanceKm} km •
                       ~{incomingOffer.etaMinutes} min pickup
                     </p>
-                    <p className="mt-1 text-3xl font-black text-emerald-400">
+                    <p className="mt-1 font-display text-4xl leading-none text-[#F3EEE8]">
                       {formatTzs(incomingOffer.fareTzs)}
                     </p>
                   </div>
                   <Badge tone="amber">{incomingOffer.paymentMethod}</Badge>
                 </div>
 
-                <div className="mt-4 space-y-2 rounded-2xl bg-white/5 p-3.5 text-sm">
+                <div className="mt-4 space-y-2 rounded-2xl bg-[#0F3F3C]/70 p-3.5 text-sm">
                   <div className="flex items-start gap-2">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-600 text-[10px] font-black">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F3EEE8] text-[10px] font-black text-[#17645F]">
                       A
                     </span>
                     <p className="font-semibold">{incomingOffer.pickupLabel}</p>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-slate-950">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#B86B2B] text-[10px] font-black text-white">
                       B
                     </span>
                     <p className="font-semibold">
@@ -892,7 +1004,7 @@ export function PartnerHomeView({
                     variant="amber"
                     size="lg"
                     onClick={handleAcceptOffer}
-                    className="col-span-2 text-lg font-black"
+                    className="col-span-2 text-base font-black uppercase tracking-[0.1em]"
                   >
                     <CheckCircle2 className="h-5 w-5" />
                     {t("partner.acceptOffer")}
@@ -905,15 +1017,15 @@ export function PartnerHomeView({
             {activeTrip && tripStatus && (
               <div
                 className={cn(
-                  "space-y-4 rounded-3xl border-2 p-5",
-                  sunlightMode
-                    ? "border-teal-700 bg-teal-50 text-slate-950"
-                    : "border-teal-500 bg-slate-900 text-white"
+                  "space-y-4 rounded-3xl border-2 p-5 shadow-md",
+                  nightMode
+                    ? "border-[#E6C99E]/50 bg-[#123D3A] text-[#F3EEE8]"
+                    : "border-[#17645F] bg-[#FAF7F2] text-[#122927]"
                 )}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-wide text-teal-500">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#17645F]">
                       {activeTrip.tripCode} • {activeTrip.customerName}
                     </p>
                     <p className="text-lg font-extrabold">
@@ -924,8 +1036,8 @@ export function PartnerHomeView({
                 </div>
 
                 {sosCode && (
-                  <div className="rounded-2xl border-2 border-rose-500 bg-rose-950/70 p-3 text-xs text-rose-100">
-                    <p className="font-black uppercase text-rose-300">
+                  <div className="rounded-2xl border-2 border-[#A93232] bg-[#A93232]/15 p-3.5 text-xs">
+                    <p className="font-black uppercase text-[#A93232]">
                       SOS ACTIVE — {sosCode}
                     </p>
                     <p className="mt-0.5">
@@ -933,7 +1045,7 @@ export function PartnerHomeView({
                     </p>
                     <a
                       href="tel:112"
-                      className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1 font-bold text-white"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#A93232] px-3.5 py-1 font-bold text-white"
                     >
                       <PhoneCall className="h-3.5 w-3.5" />
                       Call 112 Emergency
@@ -944,15 +1056,15 @@ export function PartnerHomeView({
                 <div
                   className={cn(
                     "space-y-2 rounded-2xl p-3.5 text-sm",
-                    sunlightMode ? "bg-white" : "bg-slate-950/70"
+                    nightMode ? "bg-[#0D302E]" : "bg-[#F3EEE8]"
                   )}
                 >
                   <p className="font-semibold">
-                    <span className="mr-2 font-black text-teal-600">A</span>
+                    <span className="mr-2 font-black text-[#17645F]">A</span>
                     {activeTrip.pickupLabel}
                   </p>
                   <p className="font-semibold">
-                    <span className="mr-2 font-black text-amber-500">B</span>
+                    <span className="mr-2 font-black text-[#B86B2B]">B</span>
                     {activeTrip.dropoffLabel}
                   </p>
                   <a
@@ -964,7 +1076,7 @@ export function PartnerHomeView({
                     }`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 pt-1 text-xs font-bold text-teal-500 underline"
+                    className="inline-flex items-center gap-1.5 pt-1 text-xs font-bold text-[#17645F] underline"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                     {locale === "sw"
@@ -978,7 +1090,7 @@ export function PartnerHomeView({
                   <Button
                     type="button"
                     size="lg"
-                    variant="amber"
+                    variant="primary"
                     onClick={handleMarkArrived}
                     className="w-full text-base font-extrabold"
                   >
@@ -990,19 +1102,12 @@ export function PartnerHomeView({
                 {/* Step 2: ARRIVED_AT_PICKUP -> 5-Minute Wait Timer + 4-Digit Start PIN */}
                 {tripStatus === TripStatus.ARRIVED_AT_PICKUP && (
                   <div className="space-y-3">
-                    <div
-                      className={cn(
-                        "flex items-center justify-between rounded-2xl border px-4 py-3",
-                        sunlightMode
-                          ? "border-amber-500 bg-amber-50"
-                          : "border-amber-500/40 bg-amber-500/10"
-                      )}
-                    >
+                    <div className="flex items-center justify-between rounded-2xl border border-[#B86B2B]/35 bg-[#B86B2B]/10 px-4 py-3">
                       <span className="inline-flex items-center gap-2 text-xs font-bold">
-                        <Clock className="h-4 w-4 text-amber-500" />
+                        <Clock className="h-4 w-4 text-[#B86B2B]" />
                         {t("partner.waitTimerLabel")}
                       </span>
-                      <span className="font-mono text-base font-black text-amber-500">
+                      <span className="font-mono text-base font-black text-[#B86B2B]">
                         {formatTimer(waitSeconds)}
                       </span>
                     </div>
@@ -1015,7 +1120,7 @@ export function PartnerHomeView({
                         <label className="font-bold">
                           {t("partner.pinPrompt")}
                         </label>
-                        <span className="rounded bg-teal-600/20 px-2 py-0.5 font-mono font-bold text-teal-400">
+                        <span className="rounded-full bg-[#17645F]/15 px-2.5 py-0.5 font-mono font-bold text-[#17645F]">
                           {t("partner.pinDemoHint")}: {activeTrip.startPin}
                         </span>
                       </div>
@@ -1032,13 +1137,13 @@ export function PartnerHomeView({
                         placeholder="• • • •"
                         className={cn(
                           "w-full rounded-2xl border-2 px-4 py-3 text-center font-mono text-2xl font-black tracking-[0.6em] focus:outline-none",
-                          sunlightMode
-                            ? "border-slate-900 bg-white text-slate-950"
-                            : "border-slate-700 bg-slate-950 text-white focus:border-teal-500"
+                          nightMode
+                            ? "border-[#F3EEE8]/30 bg-[#0D302E] text-[#F3EEE8]"
+                            : "border-[#17645F]/35 bg-[#F3EEE8] text-[#17645F] focus:border-[#17645F]"
                         )}
                       />
                       {pinError && (
-                        <p className="text-xs font-bold text-rose-500">
+                        <p className="text-xs font-bold text-[#A93232]">
                           {pinError}
                         </p>
                       )}
@@ -1083,8 +1188,8 @@ export function PartnerHomeView({
                     </div>
 
                     {sosDrawerOpen && (
-                      <div className="space-y-2 rounded-2xl border-2 border-rose-500 bg-rose-950/60 p-3.5 text-xs text-rose-100">
-                        <p className="font-extrabold">
+                      <div className="space-y-2 rounded-2xl border-2 border-[#A93232] bg-[#A93232]/15 p-3.5 text-xs">
+                        <p className="font-extrabold text-[#A93232]">
                           {locale === "sw"
                             ? "Thibitisha Dharura (SOS)"
                             : "Confirm Operator Emergency SOS"}
@@ -1114,15 +1219,8 @@ export function PartnerHomeView({
 
                 {/* Step 4: COMPLETED_UNPAID -> Receipt + Customer Rating */}
                 {tripStatus === TripStatus.COMPLETED_UNPAID && (
-                  <div
-                    className={cn(
-                      "space-y-3 rounded-2xl border p-4",
-                      sunlightMode
-                        ? "border-emerald-600 bg-emerald-50"
-                        : "border-emerald-500/40 bg-emerald-950/50"
-                    )}
-                  >
-                    <p className="text-sm font-extrabold text-emerald-500">
+                  <div className="space-y-3 rounded-2xl border border-[#17645F]/30 bg-[#17645F]/10 p-4">
+                    <p className="text-sm font-extrabold text-[#17645F]">
                       {t("partner.receiptTitle")}
                     </p>
                     <div className="space-y-1 text-xs">
@@ -1139,7 +1237,7 @@ export function PartnerHomeView({
                         </span>
                         <span>-{formatTzs(commissionTzs)}</span>
                       </div>
-                      <div className="flex justify-between border-t border-current/15 pt-1.5 text-sm font-black text-emerald-500">
+                      <div className="flex justify-between border-t border-current/15 pt-1.5 text-sm font-black text-[#17645F]">
                         <span>
                           {isBodabodaRider
                             ? "Rider Net Earnings"
@@ -1167,8 +1265,8 @@ export function PartnerHomeView({
                             <Star
                               className={`h-6 w-6 ${
                                 s <= customerRating
-                                  ? "fill-amber-400 text-amber-400"
-                                  : "text-slate-500"
+                                  ? "fill-[#B86B2B] text-[#B86B2B]"
+                                  : "text-[#17645F]/25"
                               }`}
                             />
                           </button>
@@ -1205,10 +1303,10 @@ export function PartnerHomeView({
                           type="button"
                           onClick={() => sendQuickPreset(p)}
                           className={cn(
-                            "rounded-full border px-2.5 py-1 text-[11px] font-semibold transition",
-                            sunlightMode
-                              ? "border-slate-300 bg-white text-slate-800 hover:bg-slate-100"
-                              : "border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700"
+                            "rounded-full border px-3 py-1 text-[11px] font-semibold transition",
+                            nightMode
+                              ? "border-[#F3EEE8]/25 bg-[#0D302E] text-[#F3EEE8] hover:bg-[#17645F]"
+                              : "border-[#17645F]/20 bg-[#F3EEE8] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
                           )}
                         >
                           {locale === "sw" ? p.sw : p.en}
@@ -1220,7 +1318,7 @@ export function PartnerHomeView({
                         {chatLog.map((m) => (
                           <div
                             key={m.id}
-                            className="flex items-center justify-between rounded-xl bg-teal-700/20 px-3 py-1.5 text-xs"
+                            className="flex items-center justify-between rounded-2xl bg-[#17645F]/15 px-3 py-1.5 text-xs"
                           >
                             <span>{m.text}</span>
                             <span className="ml-2 text-[10px] opacity-60">
@@ -1237,125 +1335,142 @@ export function PartnerHomeView({
 
             {/* Big Shift Online/Offline Card */}
             {!activeTrip && (
-              <div
-                className={cn(
-                  "rounded-3xl border-2 p-6 text-center transition",
-                  isOnline
-                    ? "border-emerald-500 bg-emerald-950/70 text-white"
-                    : sunlightMode
-                      ? "border-slate-900 bg-slate-50 text-slate-950"
-                      : "border-slate-800 bg-slate-900 text-white"
-                )}
-              >
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  <Badge tone={isOnline ? "emerald" : "slate"}>
-                    {isOnline
-                      ? t("partner.onlineLabel")
-                      : t("partner.offlineLabel")}
-                  </Badge>
-                </div>
-
-                <div className="mt-5 flex flex-col items-center gap-3">
-                  <Button
-                    size="lg"
-                    variant={isOnline ? "danger" : "amber"}
-                    onClick={() => {
-                      setIsOnline((v) => !v);
-                      setIncomingOffer(null);
-                    }}
-                    className="w-full max-w-xs text-lg font-extrabold"
-                  >
-                    <Power className="h-5 w-5" />
-                    {isOnline ? t("partner.goOffline") : t("partner.goOnline")}
-                  </Button>
-
-                  {isOnline && !incomingOffer && (
-                    <Button
-                      type="button"
-                      size="md"
-                      variant="outline"
-                      onClick={triggerDemoOffer}
-                      className="w-full max-w-xs border-emerald-400/50 bg-white/10 text-white hover:bg-white/20"
-                    >
-                      <BellRing className="h-4 w-4 text-amber-300" />
-                      {t("partner.simulateOffer")}
-                    </Button>
-                  )}
-                </div>
-
-                <p
+              <ScrollReveal delayMs={70}>
+                <div
                   className={cn(
-                    "mt-4 inline-flex items-center gap-1.5 text-xs font-medium",
+                    "rounded-3xl border-2 p-7 text-center transition shadow-sm",
                     isOnline
-                      ? "text-emerald-200"
-                      : sunlightMode
-                        ? "text-slate-700"
-                        : "text-slate-400"
+                      ? "border-[#17645F] bg-[#17645F] text-[#F3EEE8]"
+                      : nightMode
+                        ? "border-[#F3EEE8]/20 bg-[#123D3A] text-[#F3EEE8]"
+                        : "border-[#17645F]/20 bg-[#FAF7F2] text-[#122927]"
                   )}
                 >
-                  <MapPin className="h-3.5 w-3.5" />
-                  {t("partner.kituoLabel")}: {t("partner.kituoSample")}
-                </p>
-              </div>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <Badge tone={isOnline ? "emerald" : "slate"}>
+                      {isOnline
+                        ? t("partner.onlineLabel")
+                        : t("partner.offlineLabel")}
+                    </Badge>
+                  </div>
+
+                  <p className="mt-3 font-display text-3xl uppercase tracking-wide">
+                    {isOnline
+                      ? locale === "sw"
+                        ? "UKO HEWANI UNGUJA"
+                        : "LIVE ON UNGUJA DISPATCH"
+                      : locale === "sw"
+                        ? "TAYARI KWA ZAMU?"
+                        : "READY TO GO ONLINE?"}
+                  </p>
+
+                  <div className="mt-5 flex flex-col items-center gap-3">
+                    <Button
+                      size="lg"
+                      variant={isOnline ? "danger" : "primary"}
+                      onClick={() => {
+                        setIsOnline((v) => !v);
+                        setIncomingOffer(null);
+                      }}
+                      className="w-full max-w-xs text-base font-extrabold uppercase tracking-[0.14em]"
+                    >
+                      <Power className="h-5 w-5" />
+                      {isOnline ? t("partner.goOffline") : t("partner.goOnline")}
+                    </Button>
+
+                    {isOnline && !incomingOffer && (
+                      <Button
+                        type="button"
+                        size="md"
+                        variant="outline"
+                        onClick={triggerDemoOffer}
+                        className="w-full max-w-xs border-[#F3EEE8]/50 bg-[#F3EEE8]/10 text-[#F3EEE8] hover:bg-[#F3EEE8] hover:text-[#17645F]"
+                      >
+                        <BellRing className="h-4 w-4 text-[#E6C99E]" />
+                        {t("partner.simulateOffer")}
+                      </Button>
+                    )}
+                  </div>
+
+                  <p
+                    className={cn(
+                      "mt-4 inline-flex items-center gap-1.5 text-xs font-medium",
+                      isOnline ? "text-[#F3EEE8]/85" : "opacity-75"
+                    )}
+                  >
+                    <MapPin className="h-3.5 w-3.5" />
+                    {t("partner.kituoLabel")}: {kycKituo || t("partner.kituoSample")}
+                  </p>
+                </div>
+              </ScrollReveal>
             )}
 
             {/* Role-Specific Safety Reminder */}
-            <div
-              className={cn(
-                "flex items-start gap-3 rounded-2xl border p-4 text-sm font-medium",
-                sunlightMode
-                  ? "border-amber-600 bg-amber-100 text-slate-950"
-                  : "border-amber-500/30 bg-amber-500/10 text-amber-200"
-              )}
-            >
-              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
-              <span>
-                {isBodabodaRider
-                  ? t("partner.helmetReminder")
-                  : t("partner.bajajiReminder")}
-              </span>
-            </div>
+            <ScrollReveal delayMs={120}>
+              <div
+                className={cn(
+                  "flex items-start gap-3 rounded-3xl border p-4 text-xs font-semibold leading-relaxed",
+                  nightMode
+                    ? "border-[#E6C99E]/30 bg-[#123D3A] text-[#E6C99E]"
+                    : "border-[#B86B2B]/30 bg-[#B86B2B]/10 text-[#703C12]"
+                )}
+              >
+                <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-[#B86B2B]" />
+                <span>
+                  {isBodabodaRider
+                    ? t("partner.helmetReminder")
+                    : t("partner.bajajiReminder")}
+                </span>
+              </div>
+            </ScrollReveal>
 
             {/* Daily Earnings & Commission Float Cards */}
-            <div className="grid grid-cols-2 gap-3">
-              <div
-                className={cn(
-                  "rounded-2xl border p-4",
-                  sunlightMode
-                    ? "border-slate-300 bg-white"
-                    : "border-slate-800 bg-slate-900"
-                )}
-              >
-                <p className="text-xs font-semibold text-slate-400">
-                  {t("partner.todayEarnings")}
-                </p>
-                <p className="mt-1.5 text-2xl font-extrabold text-emerald-500">
-                  {formatTzs(todayNetTzs)}
-                </p>
-                <p className="mt-1 text-xs text-slate-400">
-                  {t("partner.tripsCompleted")}: {tripsToday}
-                </p>
-              </div>
+            <ScrollReveal delayMs={160}>
+              <div className="grid grid-cols-2 gap-3">
+                <div
+                  className={cn(
+                    "rounded-3xl border p-5 shadow-sm",
+                    nightMode
+                      ? "border-[#F3EEE8]/15 bg-[#123D3A]"
+                      : "border-[#17645F]/15 bg-[#FAF7F2]"
+                  )}
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] opacity-70">
+                    {t("partner.todayEarnings")}
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-1.5 font-display text-3xl leading-none",
+                      nightMode ? "text-[#A7DBD7]" : "text-[#17645F]"
+                    )}
+                  >
+                    {formatTzs(todayNetTzs)}
+                  </p>
+                  <p className="mt-1.5 text-xs opacity-70">
+                    {t("partner.tripsCompleted")}: {tripsToday}
+                  </p>
+                </div>
 
-              <div
-                className={cn(
-                  "rounded-2xl border p-4",
-                  sunlightMode
-                    ? "border-slate-300 bg-white"
-                    : "border-slate-800 bg-slate-900"
-                )}
-              >
-                <p className="text-xs font-semibold text-slate-400">
-                  {t("partner.commissionFloat")}
-                </p>
-                <p className="mt-1.5 text-2xl font-extrabold text-amber-500">
-                  {formatTzs(floatBalanceTzs)}
-                </p>
-                <p className="mt-1 text-[11px] text-slate-400">
-                  {t("partner.floatHealthy")}
-                </p>
+                <div
+                  className={cn(
+                    "rounded-3xl border p-5 shadow-sm",
+                    nightMode
+                      ? "border-[#F3EEE8]/15 bg-[#123D3A]"
+                      : "border-[#17645F]/15 bg-[#FAF7F2]"
+                  )}
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] opacity-70">
+                    {t("partner.commissionFloat")}
+                  </p>
+                  <p className="mt-1.5 font-display text-3xl leading-none text-[#B86B2B]">
+                    {formatTzs(floatBalanceTzs)}
+                  </p>
+                  <p className="mt-1.5 text-[11px] opacity-70">
+                    {t("partner.floatHealthy")}
+                  </p>
+                </div>
               </div>
-            </div>
+            </ScrollReveal>
           </>
         )}
       </main>
@@ -1363,19 +1478,23 @@ export function PartnerHomeView({
       {/* Bottom Partner Navigation */}
       <nav
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-30 border-t",
-          sunlightMode
-            ? "border-slate-300 bg-white"
-            : "border-slate-800 bg-slate-950"
+          "fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur",
+          nightMode
+            ? "border-[#F3EEE8]/15 bg-[#0F3F3C]/95"
+            : "border-[#17645F]/15 bg-[#FAF7F2]/95"
         )}
       >
-        <div className="mx-auto grid max-w-2xl grid-cols-5 py-2 text-center text-[11px] font-semibold">
+        <div className="mx-auto grid max-w-2xl grid-cols-5 py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.14em]">
           <button
             type="button"
             onClick={() => setActiveTab("shift")}
             className={cn(
               "flex flex-col items-center gap-1",
-              activeTab === "shift" ? "text-amber-500" : "text-slate-400"
+              activeTab === "shift"
+                ? nightMode
+                  ? "text-[#E6C99E]"
+                  : "text-[#17645F]"
+                : "opacity-55"
             )}
           >
             <Power className="h-5 w-5" />
@@ -1386,7 +1505,11 @@ export function PartnerHomeView({
             onClick={() => setActiveTab("earnings")}
             className={cn(
               "flex flex-col items-center gap-1",
-              activeTab === "earnings" ? "text-amber-500" : "text-slate-400"
+              activeTab === "earnings"
+                ? nightMode
+                  ? "text-[#E6C99E]"
+                  : "text-[#17645F]"
+                : "opacity-55"
             )}
           >
             <TrendingUp className="h-5 w-5" />
@@ -1397,7 +1520,11 @@ export function PartnerHomeView({
             onClick={() => setActiveTab("wallet")}
             className={cn(
               "flex flex-col items-center gap-1",
-              activeTab === "wallet" ? "text-amber-500" : "text-slate-400"
+              activeTab === "wallet"
+                ? nightMode
+                  ? "text-[#E6C99E]"
+                  : "text-[#17645F]"
+                : "opacity-55"
             )}
           >
             <Wallet className="h-5 w-5" />
@@ -1408,7 +1535,11 @@ export function PartnerHomeView({
             onClick={() => setActiveTab("kyc")}
             className={cn(
               "flex flex-col items-center gap-1",
-              activeTab === "kyc" ? "text-amber-500" : "text-slate-400"
+              activeTab === "kyc"
+                ? nightMode
+                  ? "text-[#E6C99E]"
+                  : "text-[#17645F]"
+                : "opacity-55"
             )}
           >
             <FileCheck2 className="h-5 w-5" />
@@ -1416,7 +1547,7 @@ export function PartnerHomeView({
           </button>
           <Link
             href="/safety"
-            className="flex flex-col items-center gap-1 text-slate-400 hover:text-amber-500"
+            className="flex flex-col items-center gap-1 opacity-55 hover:opacity-100"
           >
             <ShieldCheck className="h-5 w-5" />
             {locale === "sw" ? "Usalama" : "Safety"}

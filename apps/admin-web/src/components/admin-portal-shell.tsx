@@ -273,30 +273,30 @@ export function AdminPortalShell({
 
   return (
     <AdminPortalContext.Provider value={ctxValue}>
-      <div className="flex min-h-screen bg-slate-100">
-        {/* Desktop Sidebar */}
-        <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-slate-950 p-4 text-white lg:flex lg:flex-col">
-          <Link href="/admin/dashboard" className="px-1">
+      <div className="flex min-h-screen bg-[#F3EEE8] text-[#122927]">
+        {/* Desktop Sidebar — Deep Zanzibar Forest Teal */}
+        <aside className="hidden w-64 shrink-0 border-r border-[#114E4A] bg-[#17645F] p-4 text-[#F3EEE8] lg:flex lg:flex-col">
+          <Link href="/admin/dashboard" className="px-1.5">
             <BrandLogo dark subtitle="Unguja Admin" />
           </Link>
 
-          <nav className="mt-6 flex-1 space-y-5 overflow-y-auto pr-1">
+          <nav className="mt-7 flex-1 space-y-5 overflow-y-auto pr-1">
             {navGroups.map((group) => (
               <div key={group.heading}>
-                <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                <p className="px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#F3EEE8]/55">
                   {group.heading}
                 </p>
-                <div className="mt-1 space-y-0.5">
+                <div className="mt-1.5 space-y-1">
                   {group.items.map((item) => {
                     const active = isActiveHref(item.href);
                     return (
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium transition ${
+                        className={`flex w-full items-center justify-between gap-2 rounded-full px-3.5 py-2 text-left text-xs transition ${
                           active
-                            ? "bg-teal-700 text-white"
-                            : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                            ? "bg-[#F3EEE8] font-bold text-[#17645F] shadow-sm"
+                            : "font-medium text-[#F3EEE8]/85 hover:bg-[#114E4A] hover:text-[#F3EEE8]"
                         }`}
                       >
                         <span className="flex items-center gap-2.5 truncate">
@@ -305,12 +305,14 @@ export function AdminPortalShell({
                         </span>
                         {item.badge !== undefined && item.badge > 0 ? (
                           <span
-                            className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                               item.badgeTone === "rose"
-                                ? "bg-rose-600 text-white"
+                                ? "bg-[#A93232] text-white"
                                 : item.badgeTone === "amber"
-                                  ? "bg-amber-400 text-slate-950"
-                                  : "bg-teal-900 text-teal-100"
+                                  ? "bg-[#B86B2B] text-[#FAF7F2]"
+                                  : active
+                                    ? "bg-[#17645F] text-[#F3EEE8]"
+                                    : "bg-[#114E4A] text-[#F3EEE8]"
                             }`}
                           >
                             {item.badge}
@@ -329,8 +331,8 @@ export function AdminPortalShell({
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Active SOS Banner */}
           {openSosCount > 0 ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-rose-600 px-6 py-2.5 text-white">
-              <div className="flex items-center gap-2 text-xs font-bold">
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-[#A93232] px-6 py-2.5 text-white">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em]">
                 <Siren className="h-4 w-4" />
                 <span>
                   {openSosCount} open SOS alert{openSosCount > 1 ? "s" : ""}
@@ -340,14 +342,14 @@ export function AdminPortalShell({
                 <button
                   type="button"
                   onClick={playSosChime}
-                  className="inline-flex items-center gap-1 rounded-lg bg-rose-800 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-rose-900"
+                  className="inline-flex items-center gap-1 rounded-full bg-[#7A2222] px-3 py-1 text-[11px] font-bold text-white hover:bg-[#621A1A]"
                 >
                   <Volume2 className="h-3.5 w-3.5" />
                   Sound
                 </button>
                 <Link
                   href="/admin/sos"
-                  className="rounded-lg bg-white px-3 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-50"
+                  className="rounded-full bg-[#FAF7F2] px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-[#A93232] hover:bg-white"
                 >
                   Open SOS
                 </Link>
@@ -356,14 +358,14 @@ export function AdminPortalShell({
           ) : null}
 
           {/* Sticky Top Header */}
-          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white px-5 py-3">
+          <header className="sticky top-0 z-20 border-b border-[#17645F]/15 bg-[#FAF7F2]/95 px-5 py-3.5 backdrop-blur">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h1 className="text-base font-bold text-slate-900 sm:text-lg">
+                <h1 className="font-display text-2xl uppercase leading-none tracking-wide text-[#17645F] sm:text-3xl">
                   {t("admin.title")}
                 </h1>
                 {adminUser ? (
-                  <p className="text-xs text-slate-500">
+                  <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#17645F]/70">
                     {adminUser.name} • {adminUser.phone}
                   </p>
                 ) : null}
@@ -400,10 +402,10 @@ export function AdminPortalShell({
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium ${
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold transition ${
                       active
-                        ? "border-teal-700 bg-teal-700 text-white"
-                        : "border-slate-200 bg-slate-50 text-slate-700"
+                        ? "border-[#17645F] bg-[#17645F] text-[#F3EEE8]"
+                        : "border-[#17645F]/20 bg-[#F3EEE8] text-[#17645F] hover:border-[#17645F]"
                     }`}
                   >
                     <item.icon className="h-3.5 w-3.5" />
@@ -419,10 +421,10 @@ export function AdminPortalShell({
           <main className="mx-auto w-full max-w-7xl space-y-6 p-5 sm:p-6">
             {toast ? (
               <div
-                className={`flex items-center justify-between rounded-xl border px-4 py-3 text-xs font-medium ${
+                className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-xs font-semibold ${
                   toast.tone === "emerald"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                    : "border-rose-200 bg-rose-50 text-rose-900"
+                    ? "border-[#17645F]/30 bg-[#17645F]/10 text-[#17645F]"
+                    : "border-[#A93232]/30 bg-[#A93232]/10 text-[#A93232]"
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -432,7 +434,7 @@ export function AdminPortalShell({
                 <button
                   type="button"
                   onClick={() => setToast(null)}
-                  className="ml-4 text-[11px] underline"
+                  className="ml-4 text-[11px] font-bold underline"
                 >
                   Dismiss
                 </button>
@@ -440,14 +442,14 @@ export function AdminPortalShell({
             ) : null}
 
             {loadError ? (
-              <Card className="border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+              <Card className="border-[#A93232]/30 bg-[#A93232]/10 p-4 text-sm font-medium text-[#A93232]">
                 {loadError}
               </Card>
             ) : null}
 
             {!data && loading ? (
-              <Card className="p-8 text-center text-sm text-slate-500">
-                Loading...
+              <Card className="p-8 text-center text-sm font-semibold text-[#17645F]/75">
+                Loading Unguja operations...
               </Card>
             ) : (
               children

@@ -76,8 +76,8 @@ export default function AdminPromosAnalyticsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-            <Tag className="h-5 w-5 text-teal-700" />
+          <h2 className="flex items-center gap-2 font-display text-2xl uppercase tracking-wide text-[#17645F]">
+            <Tag className="h-5 w-5 text-[#17645F]" />
             Promo Usage &amp; Budgets
           </h2>
         </div>
@@ -89,22 +89,22 @@ export default function AdminPromosAnalyticsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="p-4">
-          <p className="text-xs font-semibold text-slate-500">Active Campaigns</p>
-          <p className="mt-1 text-2xl font-extrabold text-teal-800">{data?.summary.activeCampaigns ?? 0}</p>
+          <p className="text-xs font-semibold text-[#17645F]/70">Active Campaigns</p>
+          <p className="mt-1 text-2xl font-extrabold text-[#17645F]">{data?.summary.activeCampaigns ?? 0}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold text-slate-500">Total Redemptions</p>
-          <p className="mt-1 text-2xl font-extrabold text-slate-900">{data?.summary.totalRedemptions ?? 0}</p>
+          <p className="text-xs font-semibold text-[#17645F]/70">Total Redemptions</p>
+          <p className="mt-1 text-2xl font-extrabold text-[#122927]">{data?.summary.totalRedemptions ?? 0}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold text-slate-500">Platform Subsidy Burn</p>
-          <p className="mt-1 text-2xl font-extrabold text-amber-700">
+          <p className="text-xs font-semibold text-[#17645F]/70">Platform Subsidy Burn</p>
+          <p className="mt-1 text-2xl font-extrabold text-[#B86B2B]">
             {fmt(data?.summary.totalSubsidyBurnTzs ?? 0)}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold text-slate-500">Operator Net Protected</p>
-          <p className="mt-1 text-2xl font-extrabold text-emerald-700">
+          <p className="text-xs font-semibold text-[#17645F]/70">Operator Net Protected</p>
+          <p className="mt-1 text-2xl font-extrabold text-[#17645F]">
             {fmt(data?.summary.totalOperatorNetProtectedTzs ?? 0)}
           </p>
         </Card>
@@ -115,8 +115,8 @@ export default function AdminPromosAnalyticsPage() {
           <Card key={c.code} className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-mono text-base font-extrabold text-slate-900">{c.code}</h3>
-                <p className="text-xs text-slate-500">
+                <h3 className="font-mono text-base font-extrabold text-[#122927]">{c.code}</h3>
+                <p className="text-xs text-[#17645F]/70">
                   {c.discountType === "PERCENT"
                     ? `${c.discountValue}% off (max ${fmt(c.maxDiscountTzs)})`
                     : `${fmt(c.discountValue)} flat discount`}
@@ -131,18 +131,18 @@ export default function AdminPromosAnalyticsPage() {
 
             <div className="mt-4">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-500">
+                <span className="text-[#17645F]/70">
                   Subsidy Burn: <strong>{fmt(c.subsidyBurnTzs)}</strong> / {fmt(c.budgetCapTzs)}
                 </span>
-                <span className="font-bold text-teal-800">{c.budgetUtilizationPct}%</span>
+                <span className="font-bold text-[#17645F]">{c.budgetUtilizationPct}%</span>
               </div>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#EDE7DF]">
                 <div
-                  className="h-full rounded-full bg-teal-600"
+                  className="h-full rounded-full bg-[#17645F]"
                   style={{ width: `${c.budgetUtilizationPct}%` }}
                 />
               </div>
-              <p className="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-800">
+              <p className="mt-2 flex items-center gap-1.5 text-[11px] text-[#17645F]">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 {c.redemptionsCount} redemptions • Gross GMV {fmt(c.grossGmvTzs)} • Operators paid full net ({fmt(c.operatorNetProtectedTzs)})
               </p>
@@ -150,7 +150,7 @@ export default function AdminPromosAnalyticsPage() {
 
             <div className="mt-4 grid grid-cols-2 gap-2.5 text-xs">
               <label>
-                <span className="text-[11px] font-semibold text-slate-500">Max Redemptions</span>
+                <span className="text-[11px] font-semibold text-[#17645F]/70">Max Redemptions</span>
                 <input
                   type="number"
                   value={caps[c.code]?.maxRedemptions ?? c.maxRedemptions}
@@ -163,11 +163,11 @@ export default function AdminPromosAnalyticsPage() {
                       },
                     }))
                   }
-                  className="mt-1 h-9 w-full rounded-lg border border-slate-200 px-2.5 font-bold"
+                  className="mt-1 h-9 w-full rounded-lg border border-[#17645F]/15 px-2.5 font-bold"
                 />
               </label>
               <label>
-                <span className="text-[11px] font-semibold text-slate-500">Budget Cap (TZS)</span>
+                <span className="text-[11px] font-semibold text-[#17645F]/70">Budget Cap (TZS)</span>
                 <input
                   type="number"
                   value={caps[c.code]?.budgetCapTzs ?? c.budgetCapTzs}
@@ -180,7 +180,7 @@ export default function AdminPromosAnalyticsPage() {
                       },
                     }))
                   }
-                  className="mt-1 h-9 w-full rounded-lg border border-slate-200 px-2.5 font-bold"
+                  className="mt-1 h-9 w-full rounded-lg border border-[#17645F]/15 px-2.5 font-bold"
                 />
               </label>
             </div>

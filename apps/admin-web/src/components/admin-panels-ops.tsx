@@ -122,7 +122,7 @@ export function OperatorsKycPanel({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">
+          <h2 className="font-display text-2xl uppercase tracking-wide text-[#17645F]">
             Riders &amp; Drivers KYC
           </h2>
         </div>
@@ -131,7 +131,7 @@ export function OperatorsKycPanel({
           <button
             type="button"
             onClick={() => setShowRegister(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900 transition hover:bg-amber-100"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#B86B2B]/35 bg-[#B86B2B]/10 px-3 py-1.5 text-xs font-bold text-amber-900 transition hover:bg-amber-100"
           >
             <Plus className="h-3.5 w-3.5" />
             Register Rider-Driver
@@ -151,8 +151,8 @@ export function OperatorsKycPanel({
               onClick={() => setFilter(key)}
               className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                 filter === key
-                  ? "border-teal-700 bg-teal-700 text-white"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  ? "border-[#17645F] bg-[#17645F] text-white"
+                  : "border-[#17645F]/15 bg-[#FAF7F2] text-[#122927]/85 hover:bg-[#F3EEE8]"
               }`}
             >
               {label} ({counts[key]})
@@ -163,11 +163,11 @@ export function OperatorsKycPanel({
 
       {filtered.length === 0 ? (
         <Card className="p-8 text-center">
-          <ShieldCheck className="mx-auto h-8 w-8 text-teal-600" />
-          <p className="mt-2 text-sm font-bold text-slate-800">
+          <ShieldCheck className="mx-auto h-8 w-8 text-[#17645F]" />
+          <p className="mt-2 text-sm font-bold text-[#122927]">
             No operators in this filter
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[#17645F]/70">
             New Bodaboda Riders and Bajaji Drivers onboarding from the Rider-Driver
             PWA appear here automatically.
           </p>
@@ -190,7 +190,7 @@ export function OperatorsKycPanel({
                     <div
                       className={`flex h-10 w-10 items-center justify-center rounded-xl ${
                         isBoda
-                          ? "bg-teal-100 text-teal-800"
+                          ? "bg-[#17645F]/15 text-[#17645F]"
                           : "bg-amber-100 text-amber-800"
                       }`}
                     >
@@ -203,14 +203,14 @@ export function OperatorsKycPanel({
                     <div>
                       <Link
                         href={`/admin/operators/${op.id}`}
-                        className="inline-flex items-center gap-1 text-sm font-bold text-slate-900 hover:text-teal-700 hover:underline"
+                        className="inline-flex items-center gap-1 text-sm font-bold text-[#122927] hover:text-[#17645F] hover:underline"
                       >
                         {op.fullName}
-                        <ExternalLink className="h-3 w-3 text-teal-700" />
+                        <ExternalLink className="h-3 w-3 text-[#17645F]" />
                       </Link>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[#17645F]/70">
                         {isBoda ? "Bodaboda Rider" : "Bajaji Driver"} •{" "}
-                        <span className="font-mono font-semibold text-slate-700">
+                        <span className="font-mono font-semibold text-[#122927]/85">
                           {op.plateNumber}
                         </span>
                       </p>
@@ -226,32 +226,32 @@ export function OperatorsKycPanel({
                   </div>
                 </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3 text-xs">
+                <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-[#F3EEE8] p-3 text-xs">
                   <div>
-                    <span className="text-slate-400">Phone:</span>{" "}
-                    <span className="font-mono text-slate-800">{op.phone}</span>
+                    <span className="text-[#17645F]/55">Phone:</span>{" "}
+                    <span className="font-mono text-[#122927]">{op.phone}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400">Home Kituo:</span>{" "}
-                    <span className="font-medium text-slate-800">
+                    <span className="text-[#17645F]/55">Home Kituo:</span>{" "}
+                    <span className="font-medium text-[#122927]">
                       {op.homeKituo || "Unguja"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400">License:</span>{" "}
-                    <span className="font-mono text-slate-800">
+                    <span className="text-[#17645F]/55">License:</span>{" "}
+                    <span className="font-mono text-[#122927]">
                       {op.licenseNo}
                     </span>
                     {op.licenseExpiry ? (
-                      <span className="text-slate-500">
+                      <span className="text-[#17645F]/70">
                         {" "}
                         (exp {op.licenseExpiry.slice(0, 10)})
                       </span>
                     ) : null}
                   </div>
                   <div>
-                    <span className="text-slate-400">Insurance Exp:</span>{" "}
-                    <span className="font-medium text-slate-800">
+                    <span className="text-[#17645F]/55">Insurance Exp:</span>{" "}
+                    <span className="font-medium text-[#122927]">
                       {op.insuranceExpiry
                         ? op.insuranceExpiry.slice(0, 10)
                         : "On file"}
@@ -260,7 +260,7 @@ export function OperatorsKycPanel({
                 </div>
 
                 {op.rejectionReason ? (
-                  <p className="mt-2 rounded-lg bg-rose-50 px-3 py-1.5 text-xs text-rose-700">
+                  <p className="mt-2 rounded-lg bg-[#A93232]/10 px-3 py-1.5 text-xs text-[#A93232]">
                     Note: {op.rejectionReason}
                   </p>
                 ) : null}
@@ -276,12 +276,12 @@ export function OperatorsKycPanel({
                       }))
                     }
                     placeholder="Optional note / rejection reason..."
-                    className="h-9 flex-1 rounded-lg border border-slate-200 px-3 text-xs text-slate-800 focus:border-teal-600 focus:outline-none"
+                    className="h-9 flex-1 rounded-lg border border-[#17645F]/15 px-3 text-xs text-[#122927] focus:border-[#17645F] focus:outline-none"
                   />
                   <div className="flex flex-wrap gap-1.5">
                     <Link
                       href={`/admin/operators/${op.id}`}
-                      className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-teal-800 hover:bg-teal-50"
+                      className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#17645F]/15 bg-[#FAF7F2] px-3 text-xs font-semibold text-[#17645F] hover:bg-[#17645F]/10"
                     >
                       Details
                     </Link>
@@ -303,7 +303,7 @@ export function OperatorsKycPanel({
                         disabled={busyId === op.id}
                         onClick={() => handleReview(op, "REJECTED")}
                       >
-                        <XCircle className="h-3.5 w-3.5 text-rose-600" />
+                        <XCircle className="h-3.5 w-3.5 text-[#A93232]" />
                         Reject
                       </Button>
                     ) : null}
@@ -358,19 +358,19 @@ export function TripsMonitorPanel({ trips }: { trips: AdminTripRow[] }) {
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-5 py-4">
-        <h2 className="text-base font-bold text-slate-900">Trips</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#17645F]/15 px-5 py-4">
+        <h2 className="text-base font-bold text-[#122927]">Trips</h2>
         <Badge tone="teal">{trips.length}</Badge>
       </div>
 
       {trips.length === 0 ? (
-        <div className="p-8 text-center text-xs text-slate-500">
+        <div className="p-8 text-center text-xs text-[#17645F]/70">
           No trips recorded yet.
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 uppercase text-slate-500">
+            <thead className="bg-[#EDE7DF] uppercase text-[#17645F]/70">
               <tr>
                 <th className="px-4 py-3">Trip Code</th>
                 <th className="px-4 py-3">Transport &amp; Plate</th>
@@ -380,15 +380,15 @@ export function TripsMonitorPanel({ trips }: { trips: AdminTripRow[] }) {
                 <th className="px-4 py-3">Created</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#17645F]/10">
               {trips.map((tr) => {
                 const isBoda = tr.transportType === "BODABODA";
                 return (
-                  <tr key={tr.id} className="hover:bg-slate-50/70">
-                    <td className="px-4 py-3 font-mono font-bold text-slate-900">
+                  <tr key={tr.id} className="hover:bg-[#F3EEE8]/70">
+                    <td className="px-4 py-3 font-mono font-bold text-[#122927]">
                       <Link
                         href={`/admin/trips/${tr.id}`}
-                        className="inline-flex items-center gap-1 text-teal-800 hover:underline"
+                        className="inline-flex items-center gap-1 text-[#17645F] hover:underline"
                       >
                         {tr.tripCode}
                         <ExternalLink className="h-3 w-3" />
@@ -397,40 +397,40 @@ export function TripsMonitorPanel({ trips }: { trips: AdminTripRow[] }) {
                     <td className="px-4 py-3">
                       <span
                         className={`font-semibold ${
-                          isBoda ? "text-teal-800" : "text-amber-700"
+                          isBoda ? "text-[#17645F]" : "text-[#B86B2B]"
                         }`}
                       >
                         {isBoda
                           ? "Go.boda (Rider)"
                           : "Go.bajaji (Driver)"}
                       </span>
-                      <div className="font-mono text-[11px] text-slate-500">
+                      <div className="font-mono text-[11px] text-[#17645F]/70">
                         {tr.operatorPlate || "Unassigned"}
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex flex-wrap items-center gap-1.5 font-medium text-slate-800">
+                      <div className="flex flex-wrap items-center gap-1.5 font-medium text-[#122927]">
                         <span>{tr.pickupLabel}</span>
                         {tr.pickupSnapped ? (
                           <Badge tone="amber">Smart Snap</Badge>
                         ) : null}
                       </div>
-                      <div className="text-[11px] text-slate-500">
+                      <div className="text-[11px] text-[#17645F]/70">
                         → {tr.dropoffLabel}
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-bold text-slate-900">
+                      <div className="font-bold text-[#122927]">
                         {formatTzs(tr.finalFareTzs ?? tr.estimatedFareTzs)}
                       </div>
-                      <div className="text-[11px] text-slate-500">
+                      <div className="text-[11px] text-[#17645F]/70">
                         {tr.paymentMethod}
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <Badge tone={statusTone(tr.status)}>{tr.status}</Badge>
                     </td>
-                    <td className="px-4 py-3 text-slate-500">
+                    <td className="px-4 py-3 text-[#17645F]/70">
                       {formatDate(tr.createdAt)}
                     </td>
                   </tr>
@@ -524,17 +524,17 @@ function TariffEditorCard({
           <div
             className={`flex h-9 w-9 items-center justify-center rounded-xl ${
               isBoda
-                ? "bg-teal-100 text-teal-800"
+                ? "bg-[#17645F]/15 text-[#17645F]"
                 : "bg-amber-100 text-amber-800"
             }`}
           >
             {isBoda ? <Bike className="h-5 w-5" /> : <CarFront className="h-5 w-5" />}
           </div>
           <div>
-            <h3 className="text-sm font-extrabold text-slate-900">
+            <h3 className="text-sm font-extrabold text-[#122927]">
               {isBoda ? "Go.boda — Bodaboda Rider" : "Go.bajaji — Bajaji Driver"}
             </h3>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-[#17645F]/70">
               Max {tariff.maxPassengers} passenger(s) • 500 TZS rounding • Cap
               1.25x
             </p>
@@ -556,7 +556,7 @@ function TariffEditorCard({
             ] as const
           ).map(([field, label]) => (
             <label key={field} className="block">
-              <span className="text-[11px] font-semibold text-slate-600">
+              <span className="text-[11px] font-semibold text-[#17645F]/80">
                 {label}
               </span>
               <input
@@ -568,7 +568,7 @@ function TariffEditorCard({
                     [field]: Number(e.target.value),
                   }))
                 }
-                className="mt-1 h-9 w-full rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-900 focus:border-teal-600 focus:outline-none"
+                className="mt-1 h-9 w-full rounded-lg border border-[#17645F]/15 px-2.5 text-xs font-semibold text-[#122927] focus:border-[#17645F] focus:outline-none"
               />
             </label>
           ))}
@@ -576,7 +576,7 @@ function TariffEditorCard({
 
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-[11px] font-semibold text-slate-600">
+            <span className="text-[11px] font-semibold text-[#17645F]/80">
               Active Multiplier (1.00 – 1.25)
             </span>
             <input
@@ -591,11 +591,11 @@ function TariffEditorCard({
                   activeMultiplier: Number(e.target.value),
                 }))
               }
-              className="mt-1 h-9 w-full rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-900 focus:border-teal-600 focus:outline-none"
+              className="mt-1 h-9 w-full rounded-lg border border-[#17645F]/15 px-2.5 text-xs font-semibold text-[#122927] focus:border-[#17645F] focus:outline-none"
             />
           </label>
           <label className="block">
-            <span className="text-[11px] font-semibold text-slate-600">
+            <span className="text-[11px] font-semibold text-[#17645F]/80">
               Multiplier Reason
             </span>
             <input
@@ -608,13 +608,13 @@ function TariffEditorCard({
                 }))
               }
               placeholder="NORMAL / RAIN / NIGHT"
-              className="mt-1 h-9 w-full rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-900 focus:border-teal-600 focus:outline-none"
+              className="mt-1 h-9 w-full rounded-lg border border-[#17645F]/15 px-2.5 text-xs font-semibold text-[#122927] focus:border-[#17645F] focus:outline-none"
             />
           </label>
         </div>
 
         <div className="flex items-center justify-between pt-1">
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-[#17645F]/55">
             Updated: {formatDate(tariff.updatedAt)}
           </span>
           <Button type="submit" size="sm" variant={isBoda ? "primary" : "amber"} disabled={saving}>
@@ -751,7 +751,7 @@ export function ZonesTariffsPanel({
     <div className="space-y-6">
       {/* Live TZS Tariffs */}
       <div>
-        <h2 className="text-base font-bold text-slate-900">Tariffs (TZS)</h2>
+        <h2 className="text-base font-bold text-[#122927]">Tariffs (TZS)</h2>
         <div className="mt-3 grid gap-4 lg:grid-cols-2">
           {tariffs.map((tr) => (
             <TariffEditorCard
@@ -769,8 +769,8 @@ export function ZonesTariffsPanel({
         {/* Promo Codes */}
         <Card className="p-5">
           <div className="flex items-center gap-2">
-            <Tag className="h-4 w-4 text-teal-700" />
-            <h3 className="text-sm font-extrabold text-slate-900">
+            <Tag className="h-4 w-4 text-[#17645F]" />
+            <h3 className="text-sm font-extrabold text-[#122927]">
               Promo Codes (TZS Discounts)
             </h3>
           </div>
@@ -786,7 +786,7 @@ export function ZonesTariffsPanel({
               onChange={(e) =>
                 setPromoForm((p) => ({ ...p, code: e.target.value.toUpperCase() }))
               }
-              className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-mono font-bold uppercase focus:border-teal-600 focus:outline-none"
+              className="h-9 rounded-lg border border-[#17645F]/15 px-2.5 text-xs font-mono font-bold uppercase focus:border-[#17645F] focus:outline-none"
             />
             <select
               value={promoForm.discountType}
@@ -796,7 +796,7 @@ export function ZonesTariffsPanel({
                   discountType: e.target.value as "PERCENT" | "FLAT_TZS",
                 }))
               }
-              className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium"
+              className="h-9 rounded-lg border border-[#17645F]/15 bg-[#FAF7F2] px-2 text-xs font-medium"
             >
               <option value="PERCENT">Percent (%)</option>
               <option value="FLAT_TZS">Flat TZS</option>
@@ -812,7 +812,7 @@ export function ZonesTariffsPanel({
                 }))
               }
               placeholder="Value"
-              className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold"
+              className="h-9 rounded-lg border border-[#17645F]/15 px-2.5 text-xs font-semibold"
             />
             <input
               type="number"
@@ -825,7 +825,7 @@ export function ZonesTariffsPanel({
                 }))
               }
               placeholder="Max TZS"
-              className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs"
+              className="h-9 rounded-lg border border-[#17645F]/15 px-2.5 text-xs"
             />
             <input
               type="number"
@@ -838,7 +838,7 @@ export function ZonesTariffsPanel({
                 }))
               }
               placeholder="Min Fare TZS"
-              className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs"
+              className="h-9 rounded-lg border border-[#17645F]/15 px-2.5 text-xs"
             />
             <Button type="submit" size="sm" disabled={savingPromo}>
               <Plus className="h-3.5 w-3.5" />
@@ -846,17 +846,17 @@ export function ZonesTariffsPanel({
             </Button>
           </form>
 
-          <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-100">
+          <div className="mt-4 divide-y divide-[#17645F]/10 rounded-xl border border-[#17645F]/10">
             {promos.map((p) => (
               <div
                 key={p.code}
                 className="flex items-center justify-between gap-2 px-3 py-2.5 text-xs"
               >
                 <div>
-                  <span className="font-mono font-bold text-slate-900">
+                  <span className="font-mono font-bold text-[#122927]">
                     {p.code}
                   </span>
-                  <span className="ml-2 text-slate-500">
+                  <span className="ml-2 text-[#17645F]/70">
                     {p.discountType === "PERCENT"
                       ? `${p.discountValue}% off (max ${formatTzs(p.maxDiscountTzs)})`
                       : `${formatTzs(p.discountValue)} flat`}
@@ -879,8 +879,8 @@ export function ZonesTariffsPanel({
         {/* Unguja Landmarks & Vituo */}
         <Card className="p-5">
           <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-amber-600" />
-            <h3 className="text-sm font-bold text-slate-900">
+            <MapPin className="h-4 w-4 text-[#B86B2B]" />
+            <h3 className="text-sm font-bold text-[#122927]">
               Unguja Landmarks &amp; Vituo
             </h3>
           </div>
@@ -897,7 +897,7 @@ export function ZonesTariffsPanel({
               onChange={(e) =>
                 setLmForm((p) => ({ ...p, nameSw: e.target.value }))
               }
-              className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs"
+              className="h-9 rounded-lg border border-[#17645F]/15 px-2.5 text-xs"
             />
             <input
               type="text"
@@ -907,7 +907,7 @@ export function ZonesTariffsPanel({
               onChange={(e) =>
                 setLmForm((p) => ({ ...p, nameEn: e.target.value }))
               }
-              className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs"
+              className="h-9 rounded-lg border border-[#17645F]/15 px-2.5 text-xs"
             />
             <input
               type="text"
@@ -917,9 +917,9 @@ export function ZonesTariffsPanel({
               onChange={(e) =>
                 setLmForm((p) => ({ ...p, area: e.target.value }))
               }
-              className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs"
+              className="h-9 rounded-lg border border-[#17645F]/15 px-2.5 text-xs"
             />
-            <label className="flex items-center gap-2 rounded-lg border border-slate-200 px-2.5 text-xs text-slate-700">
+            <label className="flex items-center gap-2 rounded-lg border border-[#17645F]/15 px-2.5 text-xs text-[#122927]/85">
               <input
                 type="checkbox"
                 checked={lmForm.isKituo}
@@ -937,7 +937,7 @@ export function ZonesTariffsPanel({
                 setLmForm((p) => ({ ...p, lat: Number(e.target.value) }))
               }
               placeholder="Latitude"
-              className="h-9 rounded-lg border border-slate-200 px-2.5 font-mono text-xs"
+              className="h-9 rounded-lg border border-[#17645F]/15 px-2.5 font-mono text-xs"
             />
             <input
               type="number"
@@ -947,7 +947,7 @@ export function ZonesTariffsPanel({
                 setLmForm((p) => ({ ...p, lng: Number(e.target.value) }))
               }
               placeholder="Longitude"
-              className="h-9 rounded-lg border border-slate-200 px-2.5 font-mono text-xs"
+              className="h-9 rounded-lg border border-[#17645F]/15 px-2.5 font-mono text-xs"
             />
             <div className="col-span-2 flex justify-end">
               <Button type="submit" size="sm" variant="amber" disabled={savingLm}>
@@ -957,21 +957,21 @@ export function ZonesTariffsPanel({
             </div>
           </form>
 
-          <div className="mt-4 max-h-56 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-100">
+          <div className="mt-4 max-h-56 divide-y divide-[#17645F]/10 overflow-y-auto rounded-xl border border-[#17645F]/10">
             {landmarks.slice(0, 20).map((lm) => (
               <div
                 key={lm.id}
                 className="flex items-center justify-between gap-2 px-3 py-2 text-xs"
               >
                 <div>
-                  <span className="font-semibold text-slate-900">
+                  <span className="font-semibold text-[#122927]">
                     {lm.nameEn}
                   </span>
-                  <span className="ml-1.5 text-slate-400">({lm.area})</span>
+                  <span className="ml-1.5 text-[#17645F]/55">({lm.area})</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   {lm.isKituo ? <Badge tone="teal">Kituo</Badge> : null}
-                  <span className="font-mono text-[10px] text-slate-400">
+                  <span className="font-mono text-[10px] text-[#17645F]/55">
                     {Number(lm.lat).toFixed(3)}, {Number(lm.lng).toFixed(3)}
                   </span>
                 </div>

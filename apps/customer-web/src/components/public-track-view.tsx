@@ -116,13 +116,13 @@ export function PublicTrackView({ shareToken }: { shareToken: string }) {
       : [];
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-12">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+    <div className="min-h-screen bg-[#F3EEE8] pb-12 text-[#122927]">
+      <header className="sticky top-0 z-30 border-b border-[#17645F]/15 bg-[#F3EEE8]/95 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3.5 sm:px-6">
           <BrandLogo
             subtitle={
               locale === "sw"
-                ? "Ufuatiliaji wa Safari Moja kwa Moja • Unguja"
+                ? "Ufuatiliaji wa Safari • Unguja"
                 : "Live Public Trip Tracker • Unguja"
             }
           />
@@ -130,7 +130,7 @@ export function PublicTrackView({ shareToken }: { shareToken: string }) {
             <button
               type="button"
               onClick={() => setLocale((l) => (l === "en" ? "sw" : "en"))}
-              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100"
+              className="rounded-full border border-[#17645F]/30 bg-[#FAF7F2] px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
             >
               {locale === "en" ? "Kiswahili" : "English"}
             </button>
@@ -138,7 +138,7 @@ export function PublicTrackView({ shareToken }: { shareToken: string }) {
               type="button"
               onClick={() => void fetchSnapshot()}
               aria-label="Refresh live location"
-              className="rounded-full border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-teal-50 hover:text-teal-700"
+              className="rounded-full border border-[#17645F]/30 bg-[#FAF7F2] p-2 text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
             >
               <RefreshCw
                 className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
@@ -148,27 +148,27 @@ export function PublicTrackView({ shareToken }: { shareToken: string }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl space-y-4 px-4 pt-4">
+      <main className="mx-auto max-w-3xl space-y-4 px-4 pt-6 sm:px-6">
         {errorCode ? (
-          <Card className="p-6 text-center">
-            <AlertTriangle className="mx-auto h-8 w-8 text-amber-500" />
-            <h1 className="mt-3 text-lg font-extrabold text-slate-900">
+          <Card className="p-7 text-center">
+            <AlertTriangle className="mx-auto h-8 w-8 text-[#B86B2B]" />
+            <h1 className="mt-3 font-display text-3xl uppercase text-[#17645F]">
               {errorCode === "SHARE_LINK_EXPIRED"
                 ? locale === "sw"
-                  ? "Kiungo cha Safari Kimeisha Muda"
+                  ? "Kiungo Kimeisha Muda"
                   : "Live Share Link Expired"
                 : locale === "sw"
                   ? "Safari Haikupatikana"
                   : "Tracking Link Not Found"}
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1.5 text-xs text-[#17645F]/75">
               {locale === "sw"
                 ? "Viungo vya ufuatiliaji wa Go.boda huisha muda kiotomatiki kwa usalama wa Mteja."
                 : "Go.boda share links automatically expire to protect Customer privacy."}
             </p>
           </Card>
         ) : !data ? (
-          <Card className="p-8 text-center text-sm text-slate-500">
+          <Card className="p-8 text-center text-sm font-semibold text-[#17645F]/75">
             {locale === "sw"
               ? "Inapakia eneo la moja kwa moja Unguja..."
               : "Loading live Unguja trip location..."}
@@ -176,8 +176,8 @@ export function PublicTrackView({ shareToken }: { shareToken: string }) {
         ) : (
           <>
             {data.activeSos && (
-              <div className="flex items-start gap-3 rounded-2xl border-2 border-rose-500 bg-rose-50 p-4 text-rose-950 shadow-sm">
-                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
+              <div className="flex items-start gap-3 rounded-3xl border-2 border-[#A93232] bg-[#A93232]/10 p-4 text-[#6B1D1D] shadow-sm">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[#A93232]" />
                 <div className="space-y-1 text-xs">
                   <p className="text-sm font-black uppercase">
                     {locale === "sw"
@@ -191,7 +191,7 @@ export function PublicTrackView({ shareToken }: { shareToken: string }) {
                   </p>
                   <a
                     href="tel:112"
-                    className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1.5 font-bold text-white"
+                    className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-[#A93232] px-3.5 py-1.5 font-bold text-white"
                   >
                     <PhoneCall className="h-3.5 w-3.5" />
                     Call Zanzibar Emergency 112
@@ -200,32 +200,39 @@ export function PublicTrackView({ shareToken }: { shareToken: string }) {
               </div>
             )}
 
-            <UngujaMap
-              locale={locale}
-              vehicles={vehicles}
-              pickup={data.trip.pickup}
-              dropoff={data.trip.dropoff}
-              routeGeometry={{
-                type: "LineString",
-                coordinates: [
-                  [data.trip.pickup.lng, data.trip.pickup.lat],
-                  ...(data.livePosition
-                    ? [[data.livePosition.lng, data.livePosition.lat] as [number, number]]
-                    : []),
-                  [data.trip.dropoff.lng, data.trip.dropoff.lat],
-                ],
-              }}
-              pinMode="dropoff"
-            />
+            <div className="overflow-hidden rounded-3xl border border-[#17645F]/20 shadow-sm">
+              <UngujaMap
+                locale={locale}
+                vehicles={vehicles}
+                pickup={data.trip.pickup}
+                dropoff={data.trip.dropoff}
+                routeGeometry={{
+                  type: "LineString",
+                  coordinates: [
+                    [data.trip.pickup.lng, data.trip.pickup.lat],
+                    ...(data.livePosition
+                      ? [
+                          [data.livePosition.lng, data.livePosition.lat] as [
+                            number,
+                            number,
+                          ],
+                        ]
+                      : []),
+                    [data.trip.dropoff.lng, data.trip.dropoff.lat],
+                  ],
+                }}
+                pinMode="dropoff"
+              />
+            </div>
 
-            <Card className="space-y-4 p-4">
+            <Card className="space-y-4 p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`flex h-12 w-12 items-center justify-center rounded-xl ${
+                    className={`flex h-12 w-12 items-center justify-center rounded-full ${
                       data.trip.transportType === "BODABODA"
-                        ? "bg-teal-700 text-white"
-                        : "bg-amber-500 text-slate-950"
+                        ? "bg-[#17645F] text-[#F3EEE8]"
+                        : "bg-[#B86B2B] text-[#FAF7F2]"
                     }`}
                   >
                     {data.trip.transportType === "BODABODA" ? (
@@ -235,16 +242,16 @@ export function PublicTrackView({ shareToken }: { shareToken: string }) {
                     )}
                   </div>
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#17645F]/75">
                       {data.trip.tripCode} •{" "}
                       {data.trip.transportType === "BODABODA"
                         ? "Bodaboda Rider"
                         : "Bajaji Driver"}
                     </p>
-                    <p className="text-base font-extrabold text-slate-900">
+                    <p className="text-base font-extrabold text-[#122927]">
                       {data.trip.operatorName ?? "Verified Operator"}
                     </p>
-                    <p className="font-mono text-xs font-bold text-teal-800">
+                    <p className="font-mono text-xs font-bold text-[#17645F]">
                       Plate: {data.trip.operatorPlate ?? "Z-UNGUJA"}
                     </p>
                   </div>
@@ -254,27 +261,27 @@ export function PublicTrackView({ shareToken }: { shareToken: string }) {
                 </Badge>
               </div>
 
-              <div className="space-y-2 rounded-xl bg-slate-50 p-3 text-sm">
+              <div className="space-y-2 rounded-2xl bg-[#F3EEE8] p-3.5 text-sm">
                 <div className="flex items-start gap-2">
-                  <Navigation className="mt-0.5 h-4 w-4 shrink-0 text-teal-700" />
-                  <span className="font-semibold text-slate-900">
+                  <Navigation className="mt-0.5 h-4 w-4 shrink-0 text-[#17645F]" />
+                  <span className="font-semibold text-[#122927]">
                     {data.trip.pickup.label}
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                  <span className="font-semibold text-slate-900">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#B86B2B]" />
+                  <span className="font-semibold text-[#122927]">
                     {data.trip.dropoff.label}
                   </span>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#17645F]/75">
                 <span className="inline-flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5" />
                   {data.trip.distanceKm} km • ~{data.trip.durationMinutes} min
                 </span>
-                <span className="inline-flex items-center gap-1 text-teal-700">
+                <span className="inline-flex items-center gap-1 font-semibold text-[#17645F]">
                   <ShieldCheck className="h-3.5 w-3.5" />
                   {locale === "sw"
                     ? "Kiungo salama"

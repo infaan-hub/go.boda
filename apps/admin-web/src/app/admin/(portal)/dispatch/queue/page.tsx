@@ -88,8 +88,8 @@ export default function AdminDispatchQueuePage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-            <Radar className="h-5 w-5 text-teal-700" />
+          <h2 className="flex items-center gap-2 font-display text-2xl uppercase tracking-wide text-[#17645F]">
+            <Radar className="h-5 w-5 text-[#17645F]" />
             Dispatch Queue
           </h2>
         </div>
@@ -101,30 +101,30 @@ export default function AdminDispatchQueuePage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="p-4">
-          <p className="text-xs font-semibold text-slate-500">Searching</p>
-          <p className="mt-1 text-2xl font-extrabold text-amber-700">{data?.summary.searchingCount ?? 0}</p>
+          <p className="text-xs font-semibold text-[#17645F]/70">Searching</p>
+          <p className="mt-1 text-2xl font-extrabold text-[#B86B2B]">{data?.summary.searchingCount ?? 0}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold text-slate-500">Active 20s Offers</p>
-          <p className="mt-1 text-2xl font-extrabold text-teal-800">{data?.summary.offeredCount ?? 0}</p>
+          <p className="text-xs font-semibold text-[#17645F]/70">Active 20s Offers</p>
+          <p className="mt-1 text-2xl font-extrabold text-[#17645F]">{data?.summary.offeredCount ?? 0}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold text-slate-500">No Operator Found</p>
-          <p className="mt-1 text-2xl font-extrabold text-rose-700">{data?.summary.noOperatorFoundCount ?? 0}</p>
+          <p className="text-xs font-semibold text-[#17645F]/70">No Operator Found</p>
+          <p className="mt-1 text-2xl font-extrabold text-[#A93232]">{data?.summary.noOperatorFoundCount ?? 0}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold text-slate-500">Idle Online Fleet</p>
-          <p className="mt-1 text-2xl font-extrabold text-emerald-700">{data?.summary.availableFleetCount ?? 0}</p>
+          <p className="text-xs font-semibold text-[#17645F]/70">Idle Online Fleet</p>
+          <p className="mt-1 text-2xl font-extrabold text-[#17645F]">{data?.summary.availableFleetCount ?? 0}</p>
         </Card>
       </div>
 
       {/* Pending / Unmatched Trips + Manual Override */}
       <Card className="p-5">
-        <h3 className="text-sm font-extrabold text-slate-900">
+        <h3 className="text-sm font-extrabold text-[#122927]">
           Pending &amp; Unmatched Unguja Requests ({data?.pendingTrips.length ?? 0})
         </h3>
         {(data?.pendingTrips.length ?? 0) === 0 ? (
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-3 text-xs text-[#17645F]/70">
             No pending requests.
           </p>
         ) : (
@@ -136,13 +136,13 @@ export default function AdminDispatchQueuePage() {
               return (
                 <div
                   key={tr.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3.5 text-xs"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#17645F]/15 p-3.5 text-xs"
                 >
                   <div>
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/admin/trips/${tr.id}`}
-                        className="font-mono font-extrabold text-teal-800 hover:underline"
+                        className="font-mono font-extrabold text-[#17645F] hover:underline"
                       >
                         {tr.tripCode}
                       </Link>
@@ -151,7 +151,7 @@ export default function AdminDispatchQueuePage() {
                       </Badge>
                       <Badge tone="slate">{tr.transportType}</Badge>
                     </div>
-                    <p className="mt-1 text-slate-700">
+                    <p className="mt-1 text-[#122927]/85">
                       {tr.pickupLabel} → <strong>{tr.dropoffLabel}</strong> • TZS{" "}
                       {tr.estimatedFareTzs.toLocaleString("en-TZ")}
                     </p>
@@ -162,7 +162,7 @@ export default function AdminDispatchQueuePage() {
                       onChange={(e) =>
                         setSelectedOp((p) => ({ ...p, [tr.id]: e.target.value }))
                       }
-                      className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs"
+                      className="h-9 rounded-lg border border-[#17645F]/15 bg-[#FAF7F2] px-2.5 text-xs"
                     >
                       <option value="">Select idle {tr.transportType === "BODABODA" ? "Rider" : "Driver"}...</option>
                       {eligible.map((f) => (
@@ -189,15 +189,15 @@ export default function AdminDispatchQueuePage() {
 
       {/* Recent Dispatch Offer Waves */}
       <Card className="overflow-hidden">
-        <div className="border-b border-slate-200 px-5 py-3.5 text-sm font-extrabold text-slate-900">
+        <div className="border-b border-[#17645F]/15 px-5 py-3.5 text-sm font-extrabold text-[#122927]">
           Recent Dispatch Offer Waves (1.5 / 3.5 / 6.0 km)
         </div>
         {(data?.activeOffers.length ?? 0) === 0 ? (
-          <p className="p-6 text-center text-xs text-slate-500">No dispatch offer waves logged yet.</p>
+          <p className="p-6 text-center text-xs text-[#17645F]/70">No dispatch offer waves logged yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 uppercase text-slate-500">
+              <thead className="bg-[#EDE7DF] uppercase text-[#17645F]/70">
                 <tr>
                   <th className="px-4 py-2.5">Trip</th>
                   <th className="px-4 py-2.5">Plate</th>
@@ -207,7 +207,7 @@ export default function AdminDispatchQueuePage() {
                   <th className="px-4 py-2.5">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[#17645F]/10">
                 {data!.activeOffers.map((o) => (
                   <tr key={o.id}>
                     <td className="px-4 py-2.5 font-mono font-bold">{o.tripCode ?? "—"}</td>
@@ -215,7 +215,7 @@ export default function AdminDispatchQueuePage() {
                     <td className="px-4 py-2.5">
                       Round {o.roundNumber} ({o.searchRadiusKm} km)
                     </td>
-                    <td className="px-4 py-2.5 font-mono font-bold text-teal-800">
+                    <td className="px-4 py-2.5 font-mono font-bold text-[#17645F]">
                       {Number(o.matchScore).toFixed(2)}
                     </td>
                     <td className="px-4 py-2.5">{o.etaMinutes} min</td>

@@ -94,7 +94,7 @@ export function AdminUngujaMap({
       const el = document.createElement("div");
       el.style.cssText = `
         width: 30px; height: 30px; border-radius: 9999px;
-        background: ${v.isBusy ? "#2563eb" : isBoda ? "#0f766e" : "#f59e0b"};
+        background: ${v.isBusy ? "#2563eb" : isBoda ? "#17645F" : "#B86B2B"};
         color: ${isBoda || v.isBusy ? "#ffffff" : "#0f172a"};
         border: 2px solid #ffffff; box-shadow: 0 2px 8px rgba(15,23,42,0.32);
         display: flex; align-items: center; justify-content: center;
@@ -105,7 +105,7 @@ export function AdminUngujaMap({
         `<div style="font-family:system-ui,sans-serif;font-size:12px;">
           <strong>${isBoda ? "Bodaboda Rider" : "Bajaji Driver"}</strong> (${v.plateNumber})<br/>
           <span>${v.homeKituo || "Unguja"} • ★ ${Number(v.ratingAvg).toFixed(1)}</span><br/>
-          <span style="color:${v.isBusy ? "#2563eb" : "#0f766e"};font-weight:700;">${
+          <span style="color:${v.isBusy ? "#2563eb" : "#17645F"};font-weight:700;">${
             v.isBusy ? "ON ACTIVE TRIP" : "ONLINE AVAILABLE"
           }</span>
         </div>`
@@ -125,7 +125,7 @@ export function AdminUngujaMap({
       const el = document.createElement("div");
       el.style.cssText = `
         padding: 0 8px; height: 28px; border-radius: 9999px;
-        background: #e11d48; color: #ffffff; border: 2px solid #ffffff;
+        background: #A93232; color: #ffffff; border: 2px solid #ffffff;
         box-shadow: 0 0 0 6px rgba(225,29,72,0.32);
         display: flex; align-items: center; justify-content: center;
         font-size: 11px; font-weight: 900; cursor: pointer;
@@ -133,7 +133,7 @@ export function AdminUngujaMap({
       el.textContent = "SOS";
       const popup = new maplibregl.Popup({ offset: 18 }).setHTML(
         `<div style="font-family:system-ui,sans-serif;font-size:12px;">
-          <strong style="color:#be123c;">${s.alertCode} (${s.status})</strong><br/>
+          <strong style="color:#A93232;">${s.alertCode} (${s.status})</strong><br/>
           <span>Plate: ${s.operatorPlate ?? "N/A"}</span><br/>
           <span>${s.reason}</span>
         </div>`
@@ -149,28 +149,28 @@ export function AdminUngujaMap({
 
   if (mapError) {
     return (
-      <div className="flex h-[380px] flex-col items-center justify-center rounded-2xl border border-slate-200 bg-slate-900 p-6 text-center text-white">
+      <div className="flex h-[380px] flex-col items-center justify-center rounded-2xl border border-[#17645F]/15 bg-[#17645F] p-6 text-center text-white">
         <Compass className="h-8 w-8 text-amber-400" />
         <p className="mt-2 text-sm font-bold">Unguja Live Operations Map</p>
-        <p className="mt-1 text-xs text-slate-400">{mapError}</p>
+        <p className="mt-1 text-xs text-[#17645F]/55">{mapError}</p>
       </div>
     );
   }
 
   return (
-    <div className="relative h-[420px] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm">
+    <div className="relative h-[420px] w-full overflow-hidden rounded-2xl border border-[#17645F]/15 bg-[#EDE7DF] shadow-sm">
       <div ref={containerRef} className="h-full w-full" />
       <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-wrap gap-1.5">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-slate-800 shadow-sm">
-          <span className="h-2.5 w-2.5 rounded-full bg-teal-700" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF7F2]/95 px-2.5 py-1 text-[11px] font-bold text-[#122927] shadow-sm">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#17645F]" />
           Bodaboda Rider (B)
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-slate-800 shadow-sm">
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF7F2]/95 px-2.5 py-1 text-[11px] font-bold text-[#122927] shadow-sm">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#B86B2B]" />
           Bajaji Driver (3W)
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-rose-700 shadow-sm">
-          <span className="h-2.5 w-2.5 rounded-full bg-rose-600" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF7F2]/95 px-2.5 py-1 text-[11px] font-bold text-[#A93232] shadow-sm">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#A93232]" />
           Open SOS
         </span>
       </div>

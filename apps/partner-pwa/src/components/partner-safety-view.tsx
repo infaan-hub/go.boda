@@ -191,25 +191,26 @@ export function PartnerSafetyView({
 
   const isBodaboda = role === "BODABODA_RIDER";
   const atLimit = contacts.length >= 3;
+  const nightMode = sunlightMode;
 
   return (
     <div
       className={cn(
         "min-h-screen pb-24 transition-colors",
-        sunlightMode ? "bg-white text-slate-950" : "bg-slate-950 text-white"
+        nightMode ? "bg-[#0F3F3C] text-[#F3EEE8]" : "bg-[#F3EEE8] text-[#122927]"
       )}
     >
       <header
         className={cn(
           "sticky top-0 z-30 border-b backdrop-blur",
-          sunlightMode
-            ? "border-slate-300 bg-white"
-            : "border-slate-800 bg-slate-950/95"
+          nightMode
+            ? "border-[#F3EEE8]/15 bg-[#0F3F3C]/95"
+            : "border-[#17645F]/15 bg-[#F3EEE8]/95"
         )}
       >
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3.5 sm:px-6">
           <BrandLogo
-            dark={!sunlightMode}
+            dark={nightMode}
             subtitle={sw ? "Usalama" : "Safety"}
           />
           <div className="flex items-center gap-2">
@@ -217,14 +218,14 @@ export function PartnerSafetyView({
               type="button"
               onClick={() => setSunlightMode((v) => !v)}
               className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold",
-                sunlightMode
-                  ? "border-slate-900 bg-amber-400 text-slate-950"
-                  : "border-slate-700 bg-slate-900 text-amber-400"
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em]",
+                nightMode
+                  ? "border-[#F3EEE8]/30 bg-[#17645F] text-[#F3EEE8]"
+                  : "border-[#17645F]/30 bg-[#FAF7F2] text-[#17645F]"
               )}
             >
               <Sun className="h-3.5 w-3.5" />
-              {sw ? "Jua" : "Sun"}
+              {nightMode ? (sw ? "Mchana" : "Day") : sw ? "Usiku" : "Night"}
             </button>
             <LanguageSwitchLink
               currentLocale={locale}
@@ -235,22 +236,41 @@ export function PartnerSafetyView({
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl space-y-5 px-4 pt-4">
+      <main className="mx-auto max-w-3xl space-y-5 px-4 pt-6 sm:px-6">
+        <div
+          className={cn(
+            "border-b pb-4",
+            nightMode ? "border-[#F3EEE8]/15" : "border-[#17645F]/15"
+          )}
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] opacity-75">
+            OPERATOR SHIFT PROTECTION • UNGUJA
+          </p>
+          <h1
+            className={cn(
+              "mt-1 font-display text-4xl uppercase leading-none",
+              nightMode ? "text-[#F3EEE8]" : "text-[#17645F]"
+            )}
+          >
+            {sw ? "USALAMA WA ZAMU" : "OPERATOR SAFETY"}
+          </h1>
+        </div>
+
         {/* Emergency Contacts */}
         <section
           className={cn(
-            "rounded-2xl border p-5",
-            sunlightMode
-              ? "border-rose-300 bg-white text-slate-950"
-              : "border-rose-500/40 bg-slate-900 text-white"
+            "rounded-3xl border p-5 shadow-sm",
+            nightMode
+              ? "border-[#A93232]/50 bg-[#123D3A] text-[#F3EEE8]"
+              : "border-[#A93232]/25 bg-[#FAF7F2] text-[#122927]"
           )}
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5 text-rose-500" />
-              <h1 className="text-base font-bold">
+              <ShieldAlert className="h-5 w-5 text-[#A93232]" />
+              <h2 className="text-sm font-extrabold uppercase tracking-[0.14em]">
                 {sw ? "Namba za Dharura" : "Emergency Contacts"}
-              </h1>
+              </h2>
             </div>
             {partnerName ? (
               <span className="text-xs opacity-75">
@@ -263,16 +283,16 @@ export function PartnerSafetyView({
           <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
             <a
               href="tel:112"
-              className="flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-rose-700"
+              className="flex items-center justify-center gap-2 rounded-full bg-[#A93232] px-4 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-white hover:bg-[#8A2626]"
             >
               <PhoneCall className="h-4 w-4" />
               {sw ? "Piga 112" : "Call 112"}
             </a>
             <a
               href={`tel:${OPS_DESK_PHONE}`}
-              className="flex items-center justify-center gap-2 rounded-xl bg-slate-800 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-700"
+              className="flex items-center justify-center gap-2 rounded-full bg-[#17645F] px-4 py-2.5 text-xs font-bold text-[#F3EEE8] hover:bg-[#114E4A]"
             >
-              <PhoneCall className="h-4 w-4 text-amber-400" />
+              <PhoneCall className="h-4 w-4 text-[#E6C99E]" />
               <span>{OPS_DESK_DISPLAY}</span>
             </a>
             <a
@@ -283,7 +303,12 @@ export function PartnerSafetyView({
               )}`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
+              className={cn(
+                "flex items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-xs font-bold uppercase tracking-[0.12em] transition",
+                nightMode
+                  ? "border-[#F3EEE8]/40 bg-transparent text-[#F3EEE8] hover:bg-[#F3EEE8] hover:text-[#17645F]"
+                  : "border-[#17645F] bg-[#FAF7F2] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
+              )}
             >
               <MessageCircle className="h-4 w-4" />
               WhatsApp
@@ -294,22 +319,20 @@ export function PartnerSafetyView({
         {!partnerRole && (
           <div
             className={cn(
-              "grid grid-cols-2 gap-2 rounded-xl border p-1",
-              sunlightMode
-                ? "border-slate-300 bg-slate-100"
-                : "border-slate-800 bg-slate-900"
+              "grid grid-cols-2 gap-2 rounded-full border p-1.5",
+              nightMode
+                ? "border-[#F3EEE8]/15 bg-[#123D3A]"
+                : "border-[#17645F]/15 bg-[#FAF7F2]"
             )}
           >
             <button
               type="button"
               onClick={() => setRole("BODABODA_RIDER")}
               className={cn(
-                "flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition",
+                "flex items-center justify-center gap-2 rounded-full py-2 text-xs font-bold transition",
                 isBodaboda
-                  ? "bg-teal-600 text-white"
-                  : sunlightMode
-                    ? "text-slate-700"
-                    : "text-slate-400"
+                  ? "bg-[#17645F] text-[#F3EEE8]"
+                  : "opacity-75 hover:opacity-100"
               )}
             >
               <Bike className="h-4 w-4" />
@@ -319,12 +342,10 @@ export function PartnerSafetyView({
               type="button"
               onClick={() => setRole("BAJAJI_DRIVER")}
               className={cn(
-                "flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition",
+                "flex items-center justify-center gap-2 rounded-full py-2 text-xs font-bold transition",
                 !isBodaboda
-                  ? "bg-amber-500 text-slate-950"
-                  : sunlightMode
-                    ? "text-slate-700"
-                    : "text-slate-400"
+                  ? "bg-[#B86B2B] text-[#FAF7F2]"
+                  : "opacity-75 hover:opacity-100"
               )}
             >
               <CarFront className="h-4 w-4" />
@@ -336,15 +357,15 @@ export function PartnerSafetyView({
         {/* Trusted Contacts (Up to 3) */}
         <section
           className={cn(
-            "space-y-4 rounded-2xl border p-5",
-            sunlightMode
-              ? "border-slate-300 bg-white text-slate-950"
-              : "border-slate-800 bg-slate-900 text-white"
+            "space-y-4 rounded-3xl border p-5 shadow-sm",
+            nightMode
+              ? "border-[#F3EEE8]/15 bg-[#123D3A] text-[#F3EEE8]"
+              : "border-[#17645F]/15 bg-[#FAF7F2] text-[#122927]"
           )}
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="text-base font-bold">
+              <h2 className="text-sm font-extrabold uppercase tracking-[0.14em]">
                 {sw ? "Watu wa Kuaminika" : "Trusted Contacts"}
               </h2>
               <p className="mt-0.5 text-xs opacity-70">
@@ -361,10 +382,10 @@ export function PartnerSafetyView({
           {feedback && (
             <div
               className={cn(
-                "flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs font-medium",
+                "flex items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-xs font-semibold",
                 feedback.tone === "ok"
-                  ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
-                  : "border-rose-500/40 bg-rose-500/15 text-rose-400"
+                  ? "border-[#17645F]/35 bg-[#17645F]/15 text-[#17645F]"
+                  : "border-[#A93232]/35 bg-[#A93232]/10 text-[#A93232]"
               )}
             >
               {feedback.tone === "ok" ? (
@@ -378,14 +399,14 @@ export function PartnerSafetyView({
 
           {loading ? (
             <div className="flex items-center gap-2 py-4 text-xs opacity-75">
-              <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+              <Loader2 className="h-4 w-4 animate-spin text-[#17645F]" />
               {sw ? "Inapakia..." : "Loading..."}
             </div>
           ) : contacts.length === 0 ? (
             <p
               className={cn(
-                "rounded-xl border border-dashed p-4 text-center text-xs opacity-75",
-                sunlightMode ? "border-slate-300" : "border-slate-700"
+                "rounded-2xl border border-dashed p-4 text-center text-xs opacity-75",
+                nightMode ? "border-[#F3EEE8]/25" : "border-[#17645F]/25"
               )}
             >
               {sw ? "Hakuna watu waliohifadhiwa." : "No contacts saved yet."}
@@ -396,14 +417,14 @@ export function PartnerSafetyView({
                 <div
                   key={c.id}
                   className={cn(
-                    "flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3",
-                    sunlightMode
-                      ? "border-slate-200 bg-slate-50"
-                      : "border-slate-800 bg-slate-950"
+                    "flex flex-wrap items-center justify-between gap-2 rounded-2xl border p-3",
+                    nightMode
+                      ? "border-[#F3EEE8]/15 bg-[#0D302E]"
+                      : "border-[#17645F]/15 bg-[#F3EEE8]/70"
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#17645F] text-[#F3EEE8]">
                       <UserCheck className="h-4 w-4" />
                     </div>
                     <div>
@@ -423,7 +444,7 @@ export function PartnerSafetyView({
                       href={buildWhatsAppShareUrl(c)}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                      className="inline-flex items-center gap-1 rounded-full bg-[#17645F] px-3.5 py-1.5 text-xs font-bold text-[#F3EEE8] hover:bg-[#114E4A]"
                     >
                       <Share2 className="h-3.5 w-3.5" />
                       Share
@@ -432,7 +453,7 @@ export function PartnerSafetyView({
                       type="button"
                       disabled={deletingId === c.id}
                       onClick={() => void handleDelete(c.id)}
-                      className="rounded-lg border border-rose-500/40 p-1.5 text-rose-400 hover:bg-rose-500/10 disabled:opacity-50"
+                      className="rounded-full border border-[#A93232]/30 p-1.5 text-[#A93232] hover:bg-[#A93232]/10 disabled:opacity-50"
                       aria-label="Delete contact"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -453,10 +474,10 @@ export function PartnerSafetyView({
                 onChange={(e) => setContactName(e.target.value)}
                 placeholder={sw ? "Jina kamili" : "Full name"}
                 className={cn(
-                  "rounded-lg border px-3 py-2 text-xs",
-                  sunlightMode
-                    ? "border-slate-300 bg-slate-50 text-slate-950"
-                    : "border-slate-700 bg-slate-950 text-white"
+                  "rounded-2xl border px-3.5 py-2 text-xs",
+                  nightMode
+                    ? "border-[#F3EEE8]/20 bg-[#0D302E] text-[#F3EEE8]"
+                    : "border-[#17645F]/20 bg-[#F3EEE8]/70 text-[#122927]"
                 )}
               />
               <input
@@ -467,10 +488,10 @@ export function PartnerSafetyView({
                 onChange={(e) => setContactPhone(e.target.value)}
                 placeholder="+255 777 000 000"
                 className={cn(
-                  "rounded-lg border px-3 py-2 text-xs",
-                  sunlightMode
-                    ? "border-slate-300 bg-slate-50 text-slate-950"
-                    : "border-slate-700 bg-slate-950 text-white"
+                  "rounded-2xl border px-3.5 py-2 text-xs",
+                  nightMode
+                    ? "border-[#F3EEE8]/20 bg-[#0D302E] text-[#F3EEE8]"
+                    : "border-[#17645F]/20 bg-[#F3EEE8]/70 text-[#122927]"
                 )}
               />
               <select
@@ -478,10 +499,10 @@ export function PartnerSafetyView({
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
                 className={cn(
-                  "rounded-lg border px-3 py-2 text-xs font-medium",
-                  sunlightMode
-                    ? "border-slate-300 bg-slate-50 text-slate-950"
-                    : "border-slate-700 bg-slate-950 text-white"
+                  "rounded-2xl border px-3.5 py-2 text-xs font-semibold",
+                  nightMode
+                    ? "border-[#F3EEE8]/20 bg-[#0D302E] text-[#F3EEE8]"
+                    : "border-[#17645F]/20 bg-[#F3EEE8]/70 text-[#122927]"
                 )}
               >
                 <option value="Family">{sw ? "Familia" : "Family"}</option>
@@ -501,14 +522,14 @@ export function PartnerSafetyView({
                   checked={autoShareTrips}
                   disabled={atLimit || saving}
                   onChange={(e) => setAutoShareTrips(e.target.checked)}
-                  className="h-4 w-4 rounded"
+                  className="h-4 w-4 rounded accent-[#17645F]"
                 />
                 {sw ? "Washa tahadhari ya SOS" : "Notify on SOS"}
               </label>
               <Button
                 type="submit"
                 size="sm"
-                variant="amber"
+                variant="primary"
                 disabled={atLimit || saving}
               >
                 {saving ? (
@@ -532,16 +553,16 @@ export function PartnerSafetyView({
       {/* Bottom Navigation */}
       <nav
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-30 border-t",
-          sunlightMode
-            ? "border-slate-300 bg-white"
-            : "border-slate-800 bg-slate-950"
+          "fixed bottom-0 left-0 right-0 z-30 border-t backdrop-blur",
+          nightMode
+            ? "border-[#F3EEE8]/15 bg-[#0F3F3C]/95"
+            : "border-[#17645F]/15 bg-[#FAF7F2]/95"
         )}
       >
-        <div className="mx-auto grid max-w-2xl grid-cols-2 py-2.5 text-center text-xs font-semibold">
+        <div className="mx-auto grid max-w-2xl grid-cols-2 py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.16em]">
           <Link
             href={partnerId ? "/partner/dashboard" : "/partner/login"}
-            className="flex items-center justify-center gap-2 text-slate-400 hover:text-amber-400"
+            className="flex items-center justify-center gap-2 opacity-65 hover:opacity-100"
           >
             <Power className="h-4 w-4" />
             {partnerId
@@ -554,7 +575,10 @@ export function PartnerSafetyView({
           </Link>
           <Link
             href="/safety"
-            className="flex items-center justify-center gap-2 text-amber-400"
+            className={cn(
+              "flex items-center justify-center gap-2",
+              nightMode ? "text-[#E6C99E]" : "text-[#17645F]"
+            )}
           >
             <ShieldCheck className="h-4 w-4" />
             {sw ? "Usalama" : "Safety"}

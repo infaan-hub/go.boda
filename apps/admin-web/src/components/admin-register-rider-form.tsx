@@ -87,56 +87,56 @@ export function AdminRegisterRiderForm({
   }
 
   const inputClass =
-    "mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-none";
-  const labelClass = "block text-xs font-semibold text-slate-700";
+    "mt-1.5 w-full rounded-xl border border-[#17645F]/25 bg-[#FAF7F2] px-3 py-2.5 text-sm text-[#122927] placeholder:text-[#17645F]/45 focus:border-[#17645F] focus:outline-none";
+  const labelClass = "block text-xs font-semibold text-[#122927]/85";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/60 p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#122927]/65 p-4">
       <Card className="relative my-6 w-full max-w-2xl p-5 sm:p-6">
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+          className="absolute right-3 top-3 rounded-lg p-1.5 text-[#17645F]/70 hover:bg-[#EDE7DF]"
           aria-label="Close"
         >
           <X className="h-4 w-4" />
         </button>
 
         <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#B86B2B]/10 text-[#B86B2B]">
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-base font-extrabold text-slate-900">
+            <h2 className="text-base font-extrabold text-[#122927]">
               Register a Rider-Driver
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#17645F]/70">
               Admin-only. Account is auto-approved and ready to sign in.
             </p>
           </div>
         </div>
 
         {registered ? (
-          <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+          <div className="mt-4 rounded-2xl border border-[#17645F]/25 bg-[#17645F]/10 p-4 text-sm text-[#17645F]">
             <p className="flex items-center gap-2 font-bold">
               <ShieldCheck className="h-4 w-4" />
               Rider-Driver registered!
             </p>
-            <p className="mt-1 text-xs text-emerald-700">
+            <p className="mt-1 text-xs text-[#17645F]">
               {registered.name} • {registered.transportType} • @{registered.username}
             </p>
           </div>
         ) : null}
 
         {error ? (
-          <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-medium text-rose-700">
+          <div className="mt-4 rounded-xl border border-[#A93232]/25 bg-[#A93232]/10 px-3.5 py-2.5 text-xs font-medium text-[#A93232]">
             {error}
           </div>
         ) : null}
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-5">
           <section className="space-y-3">
-            <h3 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wide text-slate-500">
+            <h3 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wide text-[#17645F]/70">
               <KeyRound className="h-4 w-4" />
               Rider-Driver credentials
             </h3>
@@ -168,7 +168,7 @@ export function AdminRegisterRiderForm({
           </section>
 
           <section className="space-y-3">
-            <h3 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wide text-slate-500">
+            <h3 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wide text-[#17645F]/70">
               <UserRound className="h-4 w-4" />
               Full operator information
             </h3>
@@ -204,8 +204,8 @@ export function AdminRegisterRiderForm({
                   onClick={() => setTransportType("BODABODA")}
                   className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition ${
                     transportType === "BODABODA"
-                      ? "border-teal-600 bg-teal-600 text-white"
-                      : "border-slate-300 bg-white text-slate-700"
+                      ? "border-[#17645F] bg-[#17645F] text-white"
+                      : "border-[#17645F]/25 bg-[#FAF7F2] text-[#122927]/85"
                   }`}
                 >
                   <Bike className="h-4 w-4" />
@@ -216,8 +216,8 @@ export function AdminRegisterRiderForm({
                   onClick={() => setTransportType("BAJAJI")}
                   className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition ${
                     transportType === "BAJAJI"
-                      ? "border-amber-500 bg-amber-500 text-slate-950"
-                      : "border-slate-300 bg-white text-slate-700"
+                      ? "border-[#B86B2B] bg-[#B86B2B] text-[#122927]"
+                      : "border-[#17645F]/25 bg-[#FAF7F2] text-[#122927]/85"
                   }`}
                 >
                   <CarFront className="h-4 w-4" />
@@ -325,12 +325,12 @@ export function AdminRegisterRiderForm({
             </label>
 
             {transportType === "BODABODA" ? (
-              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-700">
+              <label className="flex items-center gap-2 rounded-xl border border-[#17645F]/15 bg-[#F3EEE8] px-3 py-2.5 text-xs font-semibold text-[#122927]/85">
                 <input
                   name="helmetVerified"
                   type="checkbox"
                   defaultChecked
-                  className="h-4 w-4 accent-teal-600"
+                  className="h-4 w-4 accent-[#17645F]"
                 />
                 2 clean helmets verified
               </label>

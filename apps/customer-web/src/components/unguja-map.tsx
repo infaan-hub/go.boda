@@ -107,7 +107,7 @@ function buildVehicleElement(v: MapVehicle): HTMLDivElement {
     width: 30px;
     height: 30px;
     border-radius: 9999px;
-    background: ${isBodaboda ? "#0f766e" : "#f59e0b"};
+    background: ${isBodaboda ? "#17645F" : "#B86B2B"};
     color: ${isBodaboda ? "#ffffff" : "#0f172a"};
     border: 2px solid #ffffff;
     box-shadow: 0 2px 8px rgba(15,23,42,0.3);
@@ -202,7 +202,7 @@ export function UngujaMap({
         source: ROUTE_SOURCE_ID,
         layout: { "line-join": "round", "line-cap": "round" },
         paint: {
-          "line-color": "#0f766e",
+          "line-color": "#17645F",
           "line-width": 4.5,
         },
       });
@@ -275,7 +275,7 @@ export function UngujaMap({
       }).setHTML(
         `<div style="font-family:system-ui,sans-serif;font-size:12px;line-height:1.35;padding:2px 4px;">
           <strong style="color:#0f172a;">${roleLabel}</strong><br/>
-          <span style="color:#0f766e;font-weight:700;">~${v.etaMinutes} min</span>
+          <span style="color:#17645F;font-weight:700;">~${v.etaMinutes} min</span>
           <span style="color:#64748b;"> • ★ ${Number(v.ratingAvg).toFixed(1)}</span><br/>
           <span style="color:#475569;font-size:11px;">${v.homeKituo || "Unguja"}</span>
         </div>`
@@ -300,7 +300,7 @@ export function UngujaMap({
     // Original pickup pin
     const pickupEl = buildPinElement(
       snappedPickup ? "Walk" : "A",
-      snappedPickup ? "#64748b" : "#0f766e",
+      snappedPickup ? "#64748b" : "#17645F",
       "#ffffff",
       pickup.label
     );
@@ -314,7 +314,7 @@ export function UngujaMap({
     if (snappedPickup) {
       const gateEl = buildPinElement(
         "Gate",
-        "#0f766e",
+        "#17645F",
         "#ffffff",
         snappedPickup.label
       );
@@ -434,37 +434,37 @@ export function UngujaMap({
 
   if (mapError) {
     return (
-      <div className="flex h-[320px] flex-col items-center justify-center rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-950 via-teal-900 to-emerald-900 p-6 text-center text-white">
+      <div className="flex h-[320px] flex-col items-center justify-center rounded-2xl border border-[#17645F]/25 bg-gradient-to-br from-teal-950 via-teal-900 to-emerald-900 p-6 text-center text-white">
         <Compass className="h-8 w-8 text-amber-300" />
         <p className="mt-2 text-sm font-bold">
           {locale === "sw"
             ? "Ramani ya Unguja (Hali ya Kawaida)"
             : "Unguja Live Map (Fallback View)"}
         </p>
-        <p className="mt-1 text-xs text-teal-100/80">{mapError}</p>
+        <p className="mt-1 text-xs text-[#F3EEE8]/80">{mapError}</p>
       </div>
     );
   }
 
   return (
-    <div className="relative h-[340px] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm sm:h-[400px]">
+    <div className="relative h-[340px] w-full overflow-hidden rounded-2xl border border-[#17645F]/15 bg-[#EDE7DF] shadow-sm sm:h-[400px]">
       <div ref={containerRef} className="h-full w-full" />
 
       {/* Top-left fleet legend */}
       <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-wrap items-center gap-1.5">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-slate-800 shadow-sm ring-1 ring-slate-200/80">
-          <span className="h-2.5 w-2.5 rounded-full bg-teal-700" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF7F2]/95 px-2.5 py-1 text-[11px] font-bold text-[#122927] shadow-sm ring-1 ring-slate-200/80">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#17645F]" />
           Bodaboda (B)
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-slate-800 shadow-sm ring-1 ring-slate-200/80">
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF7F2]/95 px-2.5 py-1 text-[11px] font-bold text-[#122927] shadow-sm ring-1 ring-slate-200/80">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#B86B2B]" />
           Bajaji (3W)
         </span>
       </div>
 
       {/* Top-right pin mode hint + Stone Town recenter */}
       <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5">
-        <span className="pointer-events-none rounded-full bg-slate-900/85 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm backdrop-blur">
+        <span className="pointer-events-none rounded-full bg-[#17645F]/90 px-3 py-1 text-[11px] font-semibold text-[#F3EEE8] shadow-sm backdrop-blur">
           {pinMode === "pickup"
             ? locale === "sw"
               ? "Gusa ramani: Kuchukuliwa (A)"
@@ -477,7 +477,7 @@ export function UngujaMap({
           type="button"
           onClick={handleRecenter}
           title={locale === "sw" ? "Rudi Stone Town" : "Recenter Stone Town"}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-teal-50 hover:text-teal-700"
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FAF7F2]/95 text-[#122927]/85 shadow-sm ring-1 ring-slate-200 hover:bg-[#17645F]/10 hover:text-[#17645F]"
         >
           <Crosshair className="h-3.5 w-3.5" />
         </button>

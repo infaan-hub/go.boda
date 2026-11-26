@@ -141,7 +141,7 @@ export default function AdminOperatorDetailPage() {
 
   if (loading) {
     return (
-      <Card className="p-8 text-center text-sm text-slate-500">
+      <Card className="p-8 text-center text-sm text-[#17645F]/70">
         Loading operator...
       </Card>
     );
@@ -149,7 +149,7 @@ export default function AdminOperatorDetailPage() {
 
   if (error || !detail) {
     return (
-      <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-800">
+      <Card className="border-[#A93232]/25 bg-[#A93232]/10 p-6 text-sm text-[#A93232]">
         <p>{error || "Operator not found"}</p>
         <Link href="/admin/operators" className="mt-3 inline-block font-bold underline">
           ← Back to Riders &amp; Drivers KYC
@@ -166,7 +166,7 @@ export default function AdminOperatorDetailPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/admin/operators"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-800 hover:underline"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#17645F] hover:underline"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Riders &amp; Drivers KYC Queue
@@ -201,15 +201,15 @@ export default function AdminOperatorDetailPage() {
           <div className="flex items-center gap-3.5">
             <div
               className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
-                isBoda ? "bg-teal-100 text-teal-800" : "bg-amber-100 text-amber-800"
+                isBoda ? "bg-[#17645F]/15 text-[#17645F]" : "bg-amber-100 text-amber-800"
               }`}
             >
               {isBoda ? <Bike className="h-6 w-6" /> : <CarFront className="h-6 w-6" />}
             </div>
             <div>
-              <h2 className="text-lg font-extrabold text-slate-900">{profile.fullName}</h2>
-              <p className="text-xs text-slate-500">
-                Plate <strong className="font-mono text-slate-800">{profile.plateNumber}</strong> •{" "}
+              <h2 className="font-display text-2xl uppercase tracking-wide text-[#17645F]">{profile.fullName}</h2>
+              <p className="text-xs text-[#17645F]/70">
+                Plate <strong className="font-mono text-[#122927]">{profile.plateNumber}</strong> •{" "}
                 {profile.vehicleColor} {profile.vehicleModel} • Home Kituo:{" "}
                 <strong>{profile.homeKituo}</strong>
               </p>
@@ -222,14 +222,14 @@ export default function AdminOperatorDetailPage() {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Audit / rejection note..."
-              className="h-9 w-56 rounded-lg border border-slate-200 px-3 text-xs focus:border-teal-600 focus:outline-none"
+              className="h-9 w-56 rounded-lg border border-[#17645F]/15 px-3 text-xs focus:border-[#17645F] focus:outline-none"
             />
             <Button size="sm" variant="primary" disabled={busy} onClick={() => submitDecision("APPROVED")}>
               <CheckCircle2 className="h-3.5 w-3.5" />
               Approve
             </Button>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => submitDecision("REJECTED")}>
-              <XCircle className="h-3.5 w-3.5 text-rose-600" />
+              <XCircle className="h-3.5 w-3.5 text-[#A93232]" />
               Reject
             </Button>
             <Button size="sm" variant="danger" disabled={busy} onClick={() => submitDecision("SUSPENDED")}>
@@ -238,37 +238,37 @@ export default function AdminOperatorDetailPage() {
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 rounded-xl bg-slate-50 p-4 text-xs sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid gap-3 rounded-xl bg-[#F3EEE8] p-4 text-xs sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="text-slate-400">Phone / Payout</p>
-            <p className="font-mono font-bold text-slate-900">{profile.phone}</p>
-            <p className="font-mono text-[11px] text-slate-500">Payout: {profile.payoutMobileNumber}</p>
+            <p className="text-[#17645F]/55">Phone / Payout</p>
+            <p className="font-mono font-bold text-[#122927]">{profile.phone}</p>
+            <p className="font-mono text-[11px] text-[#17645F]/70">Payout: {profile.payoutMobileNumber}</p>
           </div>
           <div>
-            <p className="text-slate-400">National ID &amp; License</p>
-            <p className="font-mono font-semibold text-slate-900">{profile.nationalIdNo}</p>
-            <p className="font-mono text-[11px] text-slate-600">
+            <p className="text-[#17645F]/55">National ID &amp; License</p>
+            <p className="font-mono font-semibold text-[#122927]">{profile.nationalIdNo}</p>
+            <p className="font-mono text-[11px] text-[#17645F]/80">
               DL: {profile.licenseNo} (exp {profile.licenseExpiry?.slice(0, 10) || "N/A"})
             </p>
           </div>
           <div>
-            <p className="text-slate-400">Insurance &amp; Trips</p>
-            <p className="font-semibold text-slate-900">
+            <p className="text-[#17645F]/55">Insurance &amp; Trips</p>
+            <p className="font-semibold text-[#122927]">
               Exp: {profile.insuranceExpiry?.slice(0, 10) || "On file"}
             </p>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-[#17645F]/70">
               {tripsSummary.completedTrips} completed / {tripsSummary.totalTrips} trips (Net TZS{" "}
               {Number(tripsSummary.totalNetTzs ?? 0).toLocaleString("en-TZ")})
             </p>
           </div>
           <div>
-            <p className="text-slate-400">TZS Wallets</p>
+            <p className="text-[#17645F]/55">TZS Wallets</p>
             {wallets.length === 0 ? (
-              <p className="text-slate-500">Provisioned on approval</p>
+              <p className="text-[#17645F]/70">Provisioned on approval</p>
             ) : (
               wallets.map((w) => (
-                <p key={w.accountType} className="font-mono text-[11px] font-bold text-slate-800">
-                  <Wallet className="mr-1 inline h-3 w-3 text-teal-700" />
+                <p key={w.accountType} className="font-mono text-[11px] font-bold text-[#122927]">
+                  <Wallet className="mr-1 inline h-3 w-3 text-[#17645F]" />
                   {w.accountType}: TZS {Number(w.balanceTzs).toLocaleString("en-TZ")}
                 </p>
               ))
@@ -281,8 +281,8 @@ export default function AdminOperatorDetailPage() {
       <Card className="p-5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <FileCheck2 className="h-4 w-4 text-teal-700" />
-            <h3 className="text-sm font-bold text-slate-900">
+            <FileCheck2 className="h-4 w-4 text-[#17645F]" />
+            <h3 className="text-sm font-bold text-[#122927]">
               KYC Documents ({checklist.filter((c) => c.uploaded).length}/{checklist.length})
             </h3>
           </div>
@@ -294,21 +294,21 @@ export default function AdminOperatorDetailPage() {
               key={doc.docType}
               type="button"
               onClick={() => setZoomDoc(doc)}
-              className={`group rounded-xl border p-3.5 text-left transition hover:border-slate-300 ${
+              className={`group rounded-xl border p-3.5 text-left transition hover:border-[#17645F]/25 ${
                 doc.uploaded
-                  ? "border-emerald-200 bg-emerald-50/40"
-                  : "border-dashed border-slate-300 bg-slate-50"
+                  ? "border-[#17645F]/25 bg-emerald-50/40"
+                  : "border-dashed border-[#17645F]/25 bg-[#F3EEE8]"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900">
+                <span className="text-xs font-bold text-[#122927]">
                   {doc.docType.replace(/_/g, " ")}
                 </span>
-                <Maximize2 className="h-3.5 w-3.5 text-slate-400 group-hover:text-teal-700" />
+                <Maximize2 className="h-3.5 w-3.5 text-[#17645F]/55 group-hover:text-[#17645F]" />
               </div>
-              <div className="mt-2 flex h-20 flex-col items-center justify-center rounded-lg bg-slate-900 p-2 text-center text-[11px] text-slate-200">
+              <div className="mt-2 flex h-20 flex-col items-center justify-center rounded-lg bg-[#17645F] p-2 text-center text-[11px] text-slate-200">
                 <ShieldCheck
-                  className={`h-5 w-5 ${doc.uploaded ? "text-emerald-400" : "text-slate-500"}`}
+                  className={`h-5 w-5 ${doc.uploaded ? "text-emerald-400" : "text-[#17645F]/70"}`}
                 />
                 <span className="mt-1 text-[11px] text-slate-300">
                   {doc.uploaded ? "Uploaded" : "Pending upload"}
@@ -325,15 +325,15 @@ export default function AdminOperatorDetailPage() {
       {/* Activity Log & Helmet Checks */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-5">
-          <h3 className="text-sm font-bold text-slate-900">Activity Log</h3>
+          <h3 className="text-sm font-bold text-[#122927]">Activity Log</h3>
           {auditEvents.length === 0 ? (
-            <p className="mt-3 text-xs text-slate-500">No activity recorded yet.</p>
+            <p className="mt-3 text-xs text-[#17645F]/70">No activity recorded yet.</p>
           ) : (
-            <div className="mt-3 divide-y divide-slate-100">
+            <div className="mt-3 divide-y divide-[#17645F]/10">
               {auditEvents.map((ev) => (
                 <div key={ev.id} className="flex items-center justify-between py-2.5 text-xs">
-                  <span className="font-medium text-slate-800">{ev.subject}</span>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="font-medium text-[#122927]">{ev.subject}</span>
+                  <span className="text-[11px] text-[#17645F]/55">
                     {new Date(ev.createdAt).toLocaleString("en-GB")}
                   </span>
                 </div>
@@ -343,18 +343,18 @@ export default function AdminOperatorDetailPage() {
         </Card>
 
         <Card className="p-5">
-          <h3 className="text-sm font-bold text-slate-900">Helmet Checks</h3>
+          <h3 className="text-sm font-bold text-[#122927]">Helmet Checks</h3>
           {helmetLogs.length === 0 ? (
-            <p className="mt-3 text-xs text-slate-500">No helmet checks yet.</p>
+            <p className="mt-3 text-xs text-[#17645F]/70">No helmet checks yet.</p>
           ) : (
-            <div className="mt-3 divide-y divide-slate-100">
+            <div className="mt-3 divide-y divide-[#17645F]/10">
               {helmetLogs.map((h) => (
                 <div key={h.id} className="flex items-center justify-between py-2.5 text-xs">
                   <div>
-                    <p className="font-medium text-slate-800">
+                    <p className="font-medium text-[#122927]">
                       {h.helmetProvided ? "Helmet provided" : "Missing helmet"}
                     </p>
-                    <p className="text-[11px] text-slate-500">{h.note || "Trip rating"}</p>
+                    <p className="text-[11px] text-[#17645F]/70">{h.note || "Trip rating"}</p>
                   </div>
                   <Badge tone={h.helmetProvided ? "emerald" : "rose"}>
                     {h.helmetProvided ? "PASS" : "FLAG"}
@@ -373,7 +373,7 @@ export default function AdminOperatorDetailPage() {
           onClick={() => setZoomDoc(null)}
         >
           <div
-            className="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900 p-6 text-white shadow-2xl"
+            className="w-full max-w-xl rounded-2xl border border-slate-700 bg-[#17645F] p-6 text-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -388,13 +388,13 @@ export default function AdminOperatorDetailPage() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="mt-4 flex h-56 flex-col items-center justify-center rounded-xl border border-slate-700 bg-slate-950 p-6 text-center">
+            <div className="mt-4 flex h-56 flex-col items-center justify-center rounded-xl border border-slate-700 bg-[#122927] p-6 text-center">
               <ShieldCheck className="h-10 w-10 text-teal-400" />
               <p className="mt-3 text-sm font-semibold">
                 {zoomDoc.uploaded ? "Document on file" : "Not uploaded yet"}
               </p>
               {zoomDoc.storageKey ? (
-                <p className="mt-1 break-all font-mono text-xs text-slate-400">
+                <p className="mt-1 break-all font-mono text-xs text-[#17645F]/55">
                   {zoomDoc.storageKey}
                 </p>
               ) : null}

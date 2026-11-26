@@ -25,7 +25,7 @@ export interface WalletLedgerRow {
 interface PartnerWalletPanelProps {
   mode: "earnings" | "wallet";
   locale: "sw" | "en";
-  sunlightMode: boolean;
+  nightMode: boolean;
   isBodabodaRider: boolean;
   withdrawableEarningsTzs: number;
   todayNetTzs: number;
@@ -47,7 +47,7 @@ const MOBILE_CHANNELS = [
 export function PartnerWalletPanel({
   mode,
   locale,
-  sunlightMode,
+  nightMode,
   isBodabodaRider,
   withdrawableEarningsTzs,
   todayNetTzs,
@@ -77,17 +77,26 @@ export function PartnerWalletPanel({
   const grossEstTzs = Math.round(todayNetTzs / 0.88);
   const commEstTzs = Math.max(0, grossEstTzs - todayNetTzs);
 
-  const cardTone = sunlightMode
-    ? "border-slate-300 bg-white text-slate-950"
-    : "border-slate-800 bg-slate-900 text-white";
+  const cardTone = nightMode
+    ? "border-[#F3EEE8]/15 bg-[#123D3A] text-[#F3EEE8]"
+    : "border-[#17645F]/15 bg-[#FAF7F2] text-[#122927]";
+
+  const subCardTone = nightMode
+    ? "border-[#F3EEE8]/15 bg-[#0D302E]"
+    : "border-[#17645F]/15 bg-[#F3EEE8]";
 
   if (mode === "earnings") {
     return (
       <section className="space-y-4">
-        <div className={cn("rounded-3xl border p-5", cardTone)}>
+        <div className={cn("rounded-3xl border p-5 shadow-sm", cardTone)}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-emerald-500">
+              <p
+                className={cn(
+                  "text-[10px] font-bold uppercase tracking-[0.2em]",
+                  nightMode ? "text-[#E6C99E]" : "text-[#17645F]/75"
+                )}
+              >
                 {isBodabodaRider
                   ? locale === "sw"
                     ? "Mapato ya Rider wa Bodaboda"
@@ -96,7 +105,12 @@ export function PartnerWalletPanel({
                     ? "Mapato ya Dereva wa Bajaji"
                     : "Bajaji Driver Net Earnings"}
               </p>
-              <p className="mt-1 text-3xl font-black text-emerald-500">
+              <p
+                className={cn(
+                  "mt-1 font-display text-4xl leading-none",
+                  nightMode ? "text-[#F3EEE8]" : "text-[#17645F]"
+                )}
+              >
                 {formatTzs(todayNetTzs)}
               </p>
             </div>
@@ -107,15 +121,8 @@ export function PartnerWalletPanel({
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-            <div
-              className={cn(
-                "rounded-2xl border p-3",
-                sunlightMode
-                  ? "border-slate-200 bg-slate-50"
-                  : "border-slate-800 bg-slate-950/70"
-              )}
-            >
-              <div className="flex items-center gap-1.5 font-bold text-amber-500">
+            <div className={cn("rounded-2xl border p-3.5", subCardTone)}>
+              <div className="flex items-center gap-1.5 font-bold text-[#B86B2B]">
                 <Banknote className="h-4 w-4" />
                 {locale === "sw" ? "Pesa Taslimu (Cash)" : "Cash Trips (TZS)"}
               </div>
@@ -123,15 +130,13 @@ export function PartnerWalletPanel({
                 {formatTzs(cashShareTzs)}
               </p>
             </div>
-            <div
-              className={cn(
-                "rounded-2xl border p-3",
-                sunlightMode
-                  ? "border-slate-200 bg-slate-50"
-                  : "border-slate-800 bg-slate-950/70"
-              )}
-            >
-              <div className="flex items-center gap-1.5 font-bold text-teal-400">
+            <div className={cn("rounded-2xl border p-3.5", subCardTone)}>
+              <div
+                className={cn(
+                  "flex items-center gap-1.5 font-bold",
+                  nightMode ? "text-[#A7DBD7]" : "text-[#17645F]"
+                )}
+              >
                 <Smartphone className="h-4 w-4" />
                 {locale === "sw"
                   ? "Pesa kwa Simu / Kadi"
@@ -156,7 +161,7 @@ export function PartnerWalletPanel({
                   ? "Kamisheni ya Go.boda (12%)"
                   : "Go.boda Platform Commission (12%)"}
               </span>
-              <span className="font-bold text-amber-500">
+              <span className="font-bold text-[#B86B2B]">
                 -{formatTzs(commEstTzs)}
               </span>
             </div>
@@ -164,8 +169,8 @@ export function PartnerWalletPanel({
         </div>
 
         {/* Recent Ledger Breakdown */}
-        <div className={cn("space-y-2.5 rounded-3xl border p-4", cardTone)}>
-          <h2 className="text-xs font-bold uppercase tracking-wide opacity-75">
+        <div className={cn("space-y-2.5 rounded-3xl border p-5 shadow-sm", cardTone)}>
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] opacity-75">
             {locale === "sw"
               ? "Muhtasari wa Miamala ya Hivi Karibuni"
               : "Recent Per-Trip Ledger"}
@@ -185,7 +190,11 @@ export function PartnerWalletPanel({
                 <span
                   className={cn(
                     "font-mono text-sm font-extrabold",
-                    row.deltaTzs >= 0 ? "text-emerald-500" : "text-amber-500"
+                    row.deltaTzs >= 0
+                      ? nightMode
+                        ? "text-[#A7DBD7]"
+                        : "text-[#17645F]"
+                      : "text-[#B86B2B]"
                   )}
                 >
                   {row.deltaTzs >= 0 ? "+" : ""}
@@ -202,9 +211,16 @@ export function PartnerWalletPanel({
   return (
     <section className="space-y-4">
       {feedback && (
-        <div className="flex items-center justify-between rounded-2xl border border-emerald-500/50 bg-emerald-950/60 px-4 py-3 text-xs font-bold text-emerald-200">
+        <div
+          className={cn(
+            "flex items-center justify-between rounded-2xl border px-4 py-3 text-xs font-bold",
+            nightMode
+              ? "border-[#A7DBD7]/35 bg-[#123D3A] text-[#F3EEE8]"
+              : "border-[#17645F]/30 bg-[#17645F]/10 text-[#17645F]"
+          )}
+        >
           <span className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            <CheckCircle2 className="h-4 w-4" />
             {feedback}
           </span>
           <button type="button" onClick={() => setFeedback(null)}>
@@ -214,18 +230,18 @@ export function PartnerWalletPanel({
       )}
 
       {/* Commission Float Health Gauge */}
-      <div className={cn("space-y-3 rounded-3xl border p-5", cardTone)}>
+      <div className={cn("space-y-3.5 rounded-3xl border p-5 shadow-sm", cardTone)}>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-amber-500">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#B86B2B]">
               {locale === "sw"
                 ? "Salio la Kamisheni (Float)"
                 : "Commission Float Account"}
             </p>
             <p
               className={cn(
-                "mt-1 text-3xl font-black",
-                isBlocked ? "text-rose-500" : "text-amber-500"
+                "mt-1 font-display text-4xl leading-none",
+                isBlocked ? "text-[#A93232]" : "text-[#B86B2B]"
               )}
             >
               {formatTzs(floatBalanceTzs)}
@@ -243,15 +259,20 @@ export function PartnerWalletPanel({
         </div>
 
         <div className="space-y-1">
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-800">
+          <div
+            className={cn(
+              "h-2.5 w-full overflow-hidden rounded-full",
+              nightMode ? "bg-[#0D302E]" : "bg-[#F3EEE8]"
+            )}
+          >
             <div
               className={cn(
                 "h-full transition-all",
                 isBlocked
-                  ? "bg-rose-500"
+                  ? "bg-[#A93232]"
                   : floatBalanceTzs < 0
-                    ? "bg-amber-400"
-                    : "bg-emerald-500"
+                    ? "bg-[#B86B2B]"
+                    : "bg-[#17645F]"
               )}
               style={{ width: `${healthPct}%` }}
             />
@@ -267,8 +288,8 @@ export function PartnerWalletPanel({
         </div>
 
         {isBlocked && (
-          <div className="flex items-start gap-2 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-300">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+          <div className="flex items-start gap-2 rounded-2xl border border-[#A93232]/35 bg-[#A93232]/10 p-3 text-xs text-[#A93232]">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>
               {locale === "sw"
                 ? "Ongeza salio la kamisheni kwa Mobile Money ili kurejea mtandaoni."
@@ -285,12 +306,12 @@ export function PartnerWalletPanel({
               type="button"
               onClick={() => setSelectedChannel(ch.id)}
               className={cn(
-                "rounded-xl border px-2 py-2 text-[11px] font-bold transition",
+                "rounded-full border px-2 py-2 text-[11px] font-bold transition",
                 selectedChannel === ch.id
-                  ? "border-amber-400 bg-amber-400 text-slate-950"
-                  : sunlightMode
-                    ? "border-slate-300 bg-slate-50 text-slate-700"
-                    : "border-slate-700 bg-slate-950 text-slate-300"
+                  ? "border-[#17645F] bg-[#17645F] text-[#F3EEE8]"
+                  : nightMode
+                    ? "border-[#F3EEE8]/20 bg-[#0D302E] text-[#F3EEE8]/80"
+                    : "border-[#17645F]/20 bg-[#F3EEE8] text-[#17645F]"
               )}
             >
               {ch.label}
@@ -299,7 +320,7 @@ export function PartnerWalletPanel({
         </div>
 
         {/* 1-Tap Float Top-Up */}
-        <div className="space-y-2 border-t border-current/10 pt-3">
+        <div className="space-y-2.5 border-t border-current/10 pt-3">
           <div className="flex items-center justify-between text-xs font-bold">
             <span>
               {locale === "sw"
@@ -313,10 +334,12 @@ export function PartnerWalletPanel({
                   type="button"
                   onClick={() => setTopupAmount(amt)}
                   className={cn(
-                    "rounded-full px-2.5 py-0.5 text-[11px] font-bold",
+                    "rounded-full px-3 py-0.5 text-[11px] font-bold transition",
                     topupAmount === amt
-                      ? "bg-teal-600 text-white"
-                      : "bg-slate-800 text-slate-300"
+                      ? "bg-[#17645F] text-[#F3EEE8]"
+                      : nightMode
+                        ? "bg-[#0D302E] text-[#F3EEE8]/75"
+                        : "bg-[#F3EEE8] text-[#17645F]"
                   )}
                 >
                   +{amt / 1000}k
@@ -346,19 +369,34 @@ export function PartnerWalletPanel({
       </div>
 
       {/* Withdrawable Earnings + 1-Tap Instant Payout */}
-      <div className={cn("space-y-3 rounded-3xl border p-5", cardTone)}>
+      <div className={cn("space-y-3 rounded-3xl border p-5 shadow-sm", cardTone)}>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-emerald-500">
+            <p
+              className={cn(
+                "text-[10px] font-bold uppercase tracking-[0.2em]",
+                nightMode ? "text-[#A7DBD7]" : "text-[#17645F]/75"
+              )}
+            >
               {locale === "sw"
                 ? "Mapato Yanayoweza Kutolewa (Earnings)"
                 : "Withdrawable Digital Earnings"}
             </p>
-            <p className="mt-1 text-3xl font-black text-emerald-500">
+            <p
+              className={cn(
+                "mt-1 font-display text-4xl leading-none",
+                nightMode ? "text-[#F3EEE8]" : "text-[#17645F]"
+              )}
+            >
               {formatTzs(withdrawableEarningsTzs)}
             </p>
           </div>
-          <Wallet className="h-7 w-7 text-emerald-500" />
+          <Wallet
+            className={cn(
+              "h-7 w-7",
+              nightMode ? "text-[#A7DBD7]" : "text-[#17645F]"
+            )}
+          />
         </div>
 
         <p className="text-xs opacity-75">
@@ -375,10 +413,10 @@ export function PartnerWalletPanel({
             value={withdrawAmount}
             onChange={(e) => setWithdrawAmount(Number(e.target.value) || 0)}
             className={cn(
-              "w-36 rounded-xl border px-3 py-2 font-mono text-sm font-bold focus:outline-none",
-              sunlightMode
-                ? "border-slate-300 bg-slate-50 text-slate-950"
-                : "border-slate-700 bg-slate-950 text-white"
+              "w-36 rounded-full border px-4 py-2 font-mono text-sm font-bold focus:outline-none",
+              nightMode
+                ? "border-[#F3EEE8]/25 bg-[#0D302E] text-[#F3EEE8]"
+                : "border-[#17645F]/25 bg-[#F3EEE8] text-[#122927]"
             )}
           />
           <Button

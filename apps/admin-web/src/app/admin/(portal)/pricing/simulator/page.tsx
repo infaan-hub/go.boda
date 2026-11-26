@@ -180,17 +180,17 @@ export default function AdminPricingSimulatorPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-            <Calculator className="h-5 w-5 text-teal-700" />
+          <h2 className="flex items-center gap-2 font-display text-2xl uppercase tracking-wide text-[#17645F]">
+            <Calculator className="h-5 w-5 text-[#17645F]" />
             Fare Simulator
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[#17645F]/70">
             Estimate Unguja fares with surge multipliers (up to 1.25x) and promo codes.
           </p>
         </div>
         <Link
           href="/admin/zones"
-          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-[#17645F]/15 bg-[#FAF7F2] px-3 py-2 text-xs font-semibold text-[#122927]/85 hover:bg-[#F3EEE8]"
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
           Edit Tariffs
@@ -201,13 +201,13 @@ export default function AdminPricingSimulatorPage() {
       <Card className="space-y-4 p-5">
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">
+            <label className="text-xs font-bold text-[#122927]/85">
               Unguja Route Preset
             </label>
             <select
               value={routeId}
               onChange={(e) => handleSelectPreset(e.target.value)}
-              className="h-10 w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-900"
+              className="h-10 w-full rounded-xl border border-[#17645F]/25 bg-[#FAF7F2] px-3 text-xs font-semibold text-[#122927]"
             >
               {PRESET_ROUTES.map((r) => (
                 <option key={r.id} value={r.id}>
@@ -218,12 +218,12 @@ export default function AdminPricingSimulatorPage() {
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+            <div className="flex items-center justify-between text-xs font-bold text-[#122927]/85">
               <span className="flex items-center gap-1">
-                <CloudRain className="h-3.5 w-3.5 text-teal-700" />
+                <CloudRain className="h-3.5 w-3.5 text-[#17645F]" />
                 Rain / Night Multiplier
               </span>
-              <span className="font-mono text-teal-800">
+              <span className="font-mono text-[#17645F]">
                 {multiplier.toFixed(2)}x (cap 1.25x)
               </span>
             </div>
@@ -236,7 +236,7 @@ export default function AdminPricingSimulatorPage() {
               onChange={(e) => setMultiplier(Number(e.target.value))}
               className="w-full accent-teal-700"
             />
-            <div className="flex justify-between text-[10px] font-medium text-slate-400">
+            <div className="flex justify-between text-[10px] font-medium text-[#17645F]/55">
               <span>1.00x Standard</span>
               <span>1.15x Rain / Peak</span>
               <span>1.25x Max</span>
@@ -244,8 +244,8 @@ export default function AdminPricingSimulatorPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="flex items-center gap-1 text-xs font-bold text-slate-700">
-              <Tag className="h-3.5 w-3.5 text-amber-600" />
+            <label className="flex items-center gap-1 text-xs font-bold text-[#122927]/85">
+              <Tag className="h-3.5 w-3.5 text-[#B86B2B]" />
               Promo Code (Optional)
             </label>
             <div className="flex gap-2">
@@ -254,7 +254,7 @@ export default function AdminPricingSimulatorPage() {
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                 placeholder="e.g. KARIBU"
-                className="h-10 flex-1 rounded-xl border border-slate-300 px-3 font-mono text-xs font-bold uppercase text-slate-900"
+                className="h-10 flex-1 rounded-xl border border-[#17645F]/25 px-3 font-mono text-xs font-bold uppercase text-[#122927]"
               />
               <Button
                 type="button"
@@ -281,7 +281,7 @@ export default function AdminPricingSimulatorPage() {
                       setPromoCode(p.code);
                       void runSimulation({ promo: p.code });
                     }}
-                    className="rounded-full bg-amber-50 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-800 hover:bg-amber-100"
+                    className="rounded-full bg-[#B86B2B]/10 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-800 hover:bg-amber-100"
                   >
                     {p.code}
                   </button>
@@ -292,52 +292,52 @@ export default function AdminPricingSimulatorPage() {
         </div>
 
         {/* Fine-Grained Coordinates */}
-        <div className="grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-4">
-          <label className="text-[11px] font-semibold text-slate-500">
+        <div className="grid gap-3 border-t border-[#17645F]/10 pt-3 sm:grid-cols-4">
+          <label className="text-[11px] font-semibold text-[#17645F]/70">
             Pickup Lat
             <input
               type="number"
               step="0.0001"
               value={pickupLat}
               onChange={(e) => setPickupLat(Number(e.target.value))}
-              className="mt-1 h-9 w-full rounded-lg border border-slate-200 px-2.5 font-mono text-xs font-bold text-slate-900"
+              className="mt-1 h-9 w-full rounded-lg border border-[#17645F]/15 px-2.5 font-mono text-xs font-bold text-[#122927]"
             />
           </label>
-          <label className="text-[11px] font-semibold text-slate-500">
+          <label className="text-[11px] font-semibold text-[#17645F]/70">
             Pickup Lng
             <input
               type="number"
               step="0.0001"
               value={pickupLng}
               onChange={(e) => setPickupLng(Number(e.target.value))}
-              className="mt-1 h-9 w-full rounded-lg border border-slate-200 px-2.5 font-mono text-xs font-bold text-slate-900"
+              className="mt-1 h-9 w-full rounded-lg border border-[#17645F]/15 px-2.5 font-mono text-xs font-bold text-[#122927]"
             />
           </label>
-          <label className="text-[11px] font-semibold text-slate-500">
+          <label className="text-[11px] font-semibold text-[#17645F]/70">
             Dropoff Lat
             <input
               type="number"
               step="0.0001"
               value={dropoffLat}
               onChange={(e) => setDropoffLat(Number(e.target.value))}
-              className="mt-1 h-9 w-full rounded-lg border border-slate-200 px-2.5 font-mono text-xs font-bold text-slate-900"
+              className="mt-1 h-9 w-full rounded-lg border border-[#17645F]/15 px-2.5 font-mono text-xs font-bold text-[#122927]"
             />
           </label>
-          <label className="text-[11px] font-semibold text-slate-500">
+          <label className="text-[11px] font-semibold text-[#17645F]/70">
             Dropoff Lng
             <input
               type="number"
               step="0.0001"
               value={dropoffLng}
               onChange={(e) => setDropoffLng(Number(e.target.value))}
-              className="mt-1 h-9 w-full rounded-lg border border-slate-200 px-2.5 font-mono text-xs font-bold text-slate-900"
+              className="mt-1 h-9 w-full rounded-lg border border-[#17645F]/15 px-2.5 font-mono text-xs font-bold text-[#122927]"
             />
           </label>
         </div>
       </Card>
 
       {errorMsg && (
-        <Card className="flex items-center gap-2 border-rose-200 bg-rose-50 p-4 text-xs font-bold text-rose-800">
+        <Card className="flex items-center gap-2 border-[#A93232]/25 bg-[#A93232]/10 p-4 text-xs font-bold text-[#A93232]">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           {errorMsg}
         </Card>
@@ -348,45 +348,45 @@ export default function AdminPricingSimulatorPage() {
           {/* Route & Policy Summary */}
           <div className="grid gap-4 sm:grid-cols-4">
             <Card className="p-4">
-              <p className="text-xs font-semibold text-slate-500">Est. Route Distance</p>
-              <p className="mt-1 text-2xl font-extrabold text-slate-900">
+              <p className="text-xs font-semibold text-[#17645F]/70">Est. Route Distance</p>
+              <p className="mt-1 text-2xl font-extrabold text-[#122927]">
                 {result.route.distanceKm} km
               </p>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-[#17645F]/70">
                 ~{result.route.durationMinutes} min travel
               </p>
             </Card>
             <Card className="p-4">
-              <p className="text-xs font-semibold text-slate-500">Multiplier Applied</p>
-              <p className="mt-1 text-2xl font-extrabold text-teal-800">
+              <p className="text-xs font-semibold text-[#17645F]/70">Multiplier Applied</p>
+              <p className="mt-1 text-2xl font-extrabold text-[#17645F]">
                 {result.multiplierApplied.toFixed(2)}x
               </p>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-[#17645F]/70">
                 {result.capEnforced
                   ? `Requested ${result.multiplierRequested}x capped at 1.25x`
                   : "Within Unguja 1.25x policy"}
               </p>
             </Card>
             <Card className="p-4">
-              <p className="text-xs font-semibold text-slate-500">Stone Town Smart Snap</p>
-              <p className="mt-1 flex items-center gap-1.5 text-base font-extrabold text-slate-900">
-                <Footprints className="h-4 w-4 text-teal-700" />
+              <p className="text-xs font-semibold text-[#17645F]/70">Stone Town Smart Snap</p>
+              <p className="mt-1 flex items-center gap-1.5 text-base font-extrabold text-[#122927]">
+                <Footprints className="h-4 w-4 text-[#17645F]" />
                 {result.route.smartSnapped
                   ? result.route.snapGateName
                   : "Direct Pickup"}
               </p>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-[#17645F]/70">
                 {result.route.smartSnapped
                   ? `${result.route.walkMeters}m perimeter walk`
                   : "Outside pedestrian alleys"}
               </p>
             </Card>
             <Card className="p-4">
-              <p className="text-xs font-semibold text-slate-500">Promo Evaluation</p>
-              <p className="mt-1 text-lg font-extrabold text-amber-700">
+              <p className="text-xs font-semibold text-[#17645F]/70">Promo Evaluation</p>
+              <p className="mt-1 text-lg font-extrabold text-[#B86B2B]">
                 {result.promoStatus}
               </p>
-              <p className="text-[11px] text-emerald-700">
+              <p className="text-[11px] text-[#17645F]">
                 Operator net always gross-protected
               </p>
             </Card>
@@ -402,15 +402,15 @@ export default function AdminPricingSimulatorPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {isBoda ? (
-                        <Bike className="h-5 w-5 text-teal-700" />
+                        <Bike className="h-5 w-5 text-[#17645F]" />
                       ) : (
-                        <CarFront className="h-5 w-5 text-amber-600" />
+                        <CarFront className="h-5 w-5 text-[#B86B2B]" />
                       )}
                       <div>
-                        <h3 className="text-base font-extrabold text-slate-900">
+                        <h3 className="text-base font-extrabold text-[#122927]">
                           {isBoda ? "Go.boda" : "Go.bajaji"} — {tier.operatorRole}
                         </h3>
-                        <p className="text-[11px] text-slate-500">
+                        <p className="text-[11px] text-[#17645F]/70">
                           Base {fmt(tier.tariffUsed.baseFareTzs)} •{" "}
                           {fmt(tier.tariffUsed.perKmTzs)}/km •{" "}
                           {fmt(tier.tariffUsed.perMinTzs)}/min
@@ -422,41 +422,41 @@ export default function AdminPricingSimulatorPage() {
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 rounded-2xl bg-slate-50 p-4 text-xs">
+                  <div className="grid grid-cols-2 gap-3 rounded-2xl bg-[#F3EEE8] p-4 text-xs">
                     <div>
-                      <p className="text-slate-500">Gross Fare (Rounded 500 TZS)</p>
-                      <p className="mt-0.5 text-base font-extrabold text-slate-900">
+                      <p className="text-[#17645F]/70">Gross Fare (Rounded 500 TZS)</p>
+                      <p className="mt-0.5 text-base font-extrabold text-[#122927]">
                         {fmt(tier.grossFareTzs)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-slate-500">Customer Pays Upfront</p>
-                      <p className="mt-0.5 text-base font-extrabold text-teal-800">
+                      <p className="text-[#17645F]/70">Customer Pays Upfront</p>
+                      <p className="mt-0.5 text-base font-extrabold text-[#17645F]">
                         {fmt(tier.customerPaysTzs)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-slate-500">Platform Promo Subsidy</p>
-                      <p className="mt-0.5 font-bold text-amber-700">
+                      <p className="text-[#17645F]/70">Platform Promo Subsidy</p>
+                      <p className="mt-0.5 font-bold text-[#B86B2B]">
                         {tier.platformSubsidyTzs > 0
                           ? `-${fmt(tier.platformSubsidyTzs)} (${tier.promoApplied})`
                           : "TZS 0"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-slate-500">Platform Net Revenue</p>
-                      <p className="mt-0.5 font-bold text-slate-700">
+                      <p className="text-[#17645F]/70">Platform Net Revenue</p>
+                      <p className="mt-0.5 font-bold text-[#122927]/85">
                         {fmt(tier.platformNetRevenueTzs)}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs">
+                  <div className="flex items-center justify-between rounded-xl border border-[#17645F]/25 bg-[#17645F]/10 px-3.5 py-2.5 text-xs">
                     <span className="flex items-center gap-1.5 font-bold text-emerald-900">
                       <ShieldCheck className="h-4 w-4" />
                       Guaranteed {tier.operatorRole} Net (88% of Gross)
                     </span>
-                    <span className="font-mono text-sm font-extrabold text-emerald-800">
+                    <span className="font-mono text-sm font-extrabold text-[#17645F]">
                       {fmt(tier.operatorNetTzs)}
                     </span>
                   </div>
