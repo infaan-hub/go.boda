@@ -1,148 +1,165 @@
-# Go.boda — App Flow & System Interaction Blueprint
+# Go.boda — App Flow & Microservice Interaction Blueprint
 
-> **Companion Document to:** [prd.md](file:///E:/Go.boda/prd.md) & [implementation.md](file:///E:/Go.boda/implementation.md)  
-> **Scope:** End-to-end UX journeys, Mermaid architecture & flow diagrams, trip state machine, real-time nearby matching sequence, per-trip payment settlement flows, edge-case matrix, and Next.js App Router structure for **Go.boda** (Unguja Island).
+> **Document Version:** 2.0 (Microservices Edition)  
+> **Companion Documents:** [prd.md](file:///E:/Go.boda/prd.md) | [architecture.md](file:///E:/Go.boda/architecture.md) | [implementation.md](file:///E:/Go.boda/implementation.md)  
+> **Scope:** Cross-service sequence choreography, Trip State Machine, UX flowcharts for `customer-web`, `partner-pwa`, and `admin-web`, per-trip payment settlement flows, and edge-case recovery for **Go.boda** (Unguja Island).
 
 ---
 
-## 1. Canonical Role & System Overview
+## 1. Canonical Roles & Microservice Ecosystem Overview
 
-* **Customer:** Requests nearby transport on Unguja Island (chooses either **Bodaboda** or **Bajaji**).
-* **Rider:** Verified **Bodaboda** operator who receives Bodaboda requests, completes trips, and receives payment per trip.
-* **Driver:** Verified **Bajaji** operator who receives Bajaji requests, completes trips, and receives payment per trip.
-* **Admin:** Go.boda operations team managing KYC verification, zones, tariffs, live safety alerts, and payouts.
+* **Customer** (`customer-web`): Views nearby Bodabodas and Bajajis on Unguja Island and requests either transport type.
+* **Rider** (`partner-pwa` — Bodaboda mode): Verified Bodaboda operator fulfilling `Go.boda` trips and earning per trip.
+* **Driver** (`partner-pwa` — Bajaji mode): Verified Bajaji operator fulfilling `Go.bajaji` trips and earning per trip.
+* **Admin** (`admin-web`): Operations team managing KYC, Unguja zones/tariffs, live safety alerts, and financial ledgers.
 
 ```mermaid
 flowchart LR
-    subgraph Clients["Clients (Unified Next.js Web + PWA)"]
-        C["Customer Web & PWA"]
-        O["Rider (Bodaboda) & Driver (Bajaji) PWA"]
-        A["Admin Operations Dashboard"]
+    subgraph Apps["Next.js Web & PWA Apps"]
+        CW["customer-web"]
+        PP["partner-pwa (Riders & Drivers)"]
+        AW["admin-web"]
     end
 
-    subgraph Core["Go.boda Backend Platform"]
-        API["Next.js App Router API & Auth"]
-        RT["Realtime Dispatch & Socket Service"]
-        GEO["Redis Geospatial Index (Nearby Bodabodas & Bajajis)"]
-        DB[("PostgreSQL + PostGIS (Unguja Polygons & Ledger)")]
-    end
+    GW["api-gateway (HTTPS / WSS + JWT + RBAC)"]
+    BUS(("Event Bus"))
 
-    subgraph External["External Services"]
-        MAP["MapLibre / OSM / OSRM Routing"]
-        PAY["Mobile Money (AzamPay/Selcom) & Card Gateway"]
-        MSG["WhatsApp OTP / SMS / Web Push"]
-    end
+    CW <--> GW
+    PP <--> GW
+    AW <--> GW
 
-    C <-->|HTTPS & Live Map| API
-    C <-->|Nearby Fleet & Trip GPS| RT
-    O <-->|HTTPS & Wallet| API
-    O <-->|GPS Telemetry & Requests| RT
-    A <-->|HTTPS & Admin APIs| API
-    A <-->|Live Fleet & SOS Feed| RT
+    GW --> Auth["auth-service"]
+    GW --> Op["operator-service"]
+    GW --> Geo["geo-zone-service (PostGIS)"]
+    GW <--> Loc["location-service (Redis Geo + WS)"]
+    GW --> Price["pricing-service"]
+    GW --> Disp["dispatch-service"]
+    GW --> Trip["trip-service"]
+    GW --> Pay["payment-wallet-service"]
+    GW <--> Notif["notification-service"]
+    GW --> Safe["safety-service"]
 
-    API <--> DB
-    RT <--> GEO
-    RT <--> DB
-    API <--> MAP
-    API <--> PAY
-    API <--> MSG
-    RT -->|Push Alert| MSG
+    Op <--> BUS
+    Loc <--> BUS
+    Disp <--> BUS
+    Trip <--> BUS
+    Pay <--> BUS
+    Notif <--> BUS
+    Safe <--> BUS
 ```
 
 ---
 
-## 2. End-to-End Trip Lifecycle (Sequence Diagram)
+## 2. End-to-End Cross-Service Trip Lifecycle (Sequence Diagram)
 
-Illustrates the complete interaction from a Customer viewing nearby Bodabodas and Bajajis on Unguja Island through matching with a Bodaboda **Rider** or Bajaji **Driver**, trip completion, and per-trip payment settlement.
+Traces every synchronous API call (via `api-gateway`) and asynchronous Event Bus message across the 10 microservices from live nearby discovery to final Rider/Driver payout.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Customer as Customer (Web/PWA)
-    participant API as Next.js API + PostGIS
-    participant Dispatch as Dispatch Engine + Redis Geo
+    actor Customer as Customer (customer-web)
+    participant GW as api-gateway
+    participant Loc as location-service
+    participant Geo as geo-zone-service
+    participant Price as pricing-service
+    participant Trip as trip-service
+    participant Disp as dispatch-service
+    participant Notif as notification-service
     actor Operator as Rider (Bodaboda) / Driver (Bajaji)
-    participant Pay as Mobile Money / Card Gateway
+    participant Pay as payment-wallet-service
 
-    Customer->>Dispatch: Open App at Unguja GPS Location
-    Dispatch-->>Customer: Stream Nearby Online Bodabodas & Bajajis on Map
+    Customer->>GW: Open App (Unguja GPS)
+    GW->>Loc: Subscribe Nearby Fleet (WS)
+    Loc-->>Customer: Stream Live Nearby Bodabodas & Bajajis
 
-    Customer->>API: Choose Pickup, Dropoff & Transport Type (Bodaboda or Bajaji)
-    API->>API: Validate Unguja Island Polygon (PostGIS)
-    API->>API: Snap to Stone Town Perimeter Gate (if inside pedestrian alleys)
-    API-->>Customer: Return Route, ETA & Upfront TZS Fares (Go.boda & Go.bajaji)
+    Customer->>GW: Request Fare Quote (Pickup, Dropoff)
+    GW->>Geo: Validate Unguja Polygon + Stone Town Snap + Route
+    Geo-->>GW: Validated Snapped Points, Distance & ETA
+    GW->>Price: Compute Upfront TZS Fares (Go.boda & Go.bajaji)
+    Price-->>Customer: Return Upfront TZS Fares & Walking Path (if snapped)
 
-    Customer->>API: Confirm Transport Request (Bodaboda or Bajaji + Payment Method)
-    API->>Dispatch: Create Trip (SEARCHING) & Query Nearest Matching Operators
-    Dispatch->>Dispatch: Redis GEOSEARCH by Transport Type (1.5km -> 3km -> 5km)
-    Dispatch->>Operator: Push Nearby Request (Socket + Web Push + Chime, 20s TTL)
+    Customer->>GW: Confirm Request (Bodaboda OR Bajaji + Payment Method)
+    GW->>Trip: Create Trip (SEARCHING)
+    Trip-->>Disp: Event: trip.requested
+    Disp->>Loc: Query Nearest Eligible Riders OR Drivers (1.5km -> 3km -> 5km)
+    Loc-->>Disp: Ranked Nearby Candidates
+    Disp-->>Notif: Event: dispatch.offer_sent (20s TTL)
+    Notif->>Operator: WebSocket + Web Push + Audio Chime Offer
 
-    Operator->>Dispatch: Tap Accept (Atomic Lock)
-    Dispatch-->>Customer: Assigned (Rider/Driver Photo, Z-Plate, Live ETA, 4-Digit PIN)
-    Dispatch-->>Operator: Send Pickup Pin, Note & Customer Contact
+    Operator->>GW: Tap Accept
+    GW->>Disp: Acquire Atomic Redis Lock & Accept Offer
+    Disp-->>Trip: Event: dispatch.operator_assigned
+    Trip->>Trip: Generate 4-Digit PIN & Set ASSIGNED
+    Trip-->>Notif: Event: trip.assigned
+    Notif-->>Customer: Driver/Rider Card, Z-Plate, 4-Digit PIN & Live ETA
 
     loop Every 3-5 Seconds
-        Operator->>Dispatch: Stream GPS (lat, lng, heading)
-        Dispatch-->>Customer: Update Live Marker & ETA on Map
+        Operator->>Loc: Stream GPS Telemetry (WS)
+        Loc-->>Customer: Update Live Marker & ETA (trip room)
     end
 
-    Operator->>API: Tap "Arrived at Pickup"
-    API-->>Customer: Notify "Your Rider/Driver has arrived" (Start 5m Wait Timer)
+    Operator->>GW: Tap "Arrived at Pickup"
+    GW->>Trip: Set ARRIVED_AT_PICKUP (Start 5m Wait Timer)
+    Trip-->>Notif: Event: trip.arrived -> Push to Customer
 
-    Customer->>Operator: Meet at Pickup & Share 4-Digit Trip PIN
-    Operator->>API: Verify 4-Digit PIN -> Start Trip (IN_PROGRESS)
-    API-->>Customer: Trip Started (Enable Live WhatsApp Share & SOS)
+    Customer->>Operator: Share 4-Digit PIN at Pickup
+    Operator->>GW: Submit 4-Digit PIN
+    GW->>Trip: Verify PIN -> Set IN_PROGRESS
+    Trip-->>Notif: Event: trip.started (Enable WhatsApp Share & SOS)
 
-    Operator->>API: Reach Dropoff -> Tap "Complete Trip"
+    Operator->>GW: Tap "Complete Trip" at Dropoff
+    GW->>Trip: Set COMPLETED_UNPAID
+    Trip-->>Pay: Event: trip.completed
+
     alt Cash Payment (TZS)
-        API-->>Operator: Show Exact TZS Fare to Collect
+        Pay-->>Operator: Display Exact TZS Cash to Collect
         Customer->>Operator: Pay Cash in TZS
-        Operator->>API: Tap "Cash Received"
-        API->>API: Deduct 12% Platform Commission from Commission Float Wallet
+        Operator->>GW: Tap "Cash Received"
+        GW->>Pay: Debit 12% Commission from Commission Float Wallet
+        Pay-->>Trip: Event: payment.confirmed
     else Mobile Money (STK Push) or Card
-        API->>Pay: Initiate Per-Trip Payment Charge
-        Pay-->>Customer: Mobile Money STK Push / Card Authorization
-        Customer->>Pay: Approve Payment
-        Pay-->>API: Verified Payment Webhook
-        API->>API: Credit 88% Net Trip Earnings to Operator Earnings Wallet
+        Pay->>Customer: Trigger Mobile Money STK Push / Card Charge
+        Customer->>Pay: Approve Payment (Gateway Webhook)
+        Pay->>Pay: Credit 88% Net Earnings to Operator Earnings Wallet
+        Pay-->>Trip: Event: payment.confirmed
     end
 
-    API-->>Customer: Show Digital Receipt + Helmet Check (if Bodaboda) + Rate Rider/Driver
-    API-->>Operator: Show Net Trip Earnings + Rate Customer -> Return to Online Queue
+    Trip->>Trip: Set PAID_COMPLETED
+    Trip-->>Notif: Send Digital Receipt + Helmet Check + Rating Prompt
 ```
 
 ---
 
-## 3. Trip State Machine
+## 3. Trip State Machine (`trip-service`)
 
-All trip transitions are strictly validated server-side so no client can skip PIN verification, double-accept a trip, or double-settle payment.
+`trip-service` is the sole authority for mutating trip states; all other services react to emitted events.
 
 ```mermaid
 stateDiagram-v2
     [*] --> DRAFT: Customer views nearby fleet & fare quote
-    DRAFT --> SEARCHING: Customer requests Bodaboda or Bajaji
+    DRAFT --> SEARCHING: Customer confirms Bodaboda or Bajaji request
 
-    SEARCHING --> OFFERED_TO_OPERATOR: Nearest Rider (Bodaboda) or Driver (Bajaji) found
+    SEARCHING --> OFFERED_TO_OPERATOR: dispatch-service selects nearest Rider/Driver
     OFFERED_TO_OPERATOR --> SEARCHING: Declined or 20s timeout
     SEARCHING --> NO_OPERATOR_FOUND: Max radius & retries exhausted
-    SEARCHING --> CANCELLED_BY_CUSTOMER: Customer cancels while searching
+    SEARCHING --> CANCELLED_BY_CUSTOMER: Customer cancels during search
 
-    OFFERED_TO_OPERATOR --> ASSIGNED: Rider or Driver accepts (Atomic Lock)
-    ASSIGNED --> CANCELLED_BY_CUSTOMER: Customer cancels before arrival
-    ASSIGNED --> CANCELLED_BY_OPERATOR: Rider or Driver cancels (auto-requeue)
-    ASSIGNED --> ARRIVED_AT_PICKUP: Rider or Driver taps Arrived near pickup
+    OFFERED_TO_OPERATOR --> ASSIGNED: Atomic Accept Lock succeeds
+    ASSIGNED --> CANCELLED_BY_CUSTOMER: Customer cancels before pickup
+    ASSIGNED --> CANCELLED_BY_OPERATOR: Rider/Driver cancels (auto-requeue)
+    ASSIGNED --> ARRIVED_AT_PICKUP: Rider/Driver marks arrived
 
-    ARRIVED_AT_PICKUP --> IN_PROGRESS: Valid 4-digit PIN entered
+    ARRIVED_AT_PICKUP --> IN_PROGRESS: Valid 4-digit PIN submitted
     ARRIVED_AT_PICKUP --> CANCELLED_BY_CUSTOMER: Customer cancels (wait/cancel fee check)
     ARRIVED_AT_PICKUP --> CANCELLED_BY_OPERATOR: Customer no-show after 5 mins
 
-    IN_PROGRESS --> SOS_ACTIVE: Customer, Rider, or Driver triggers SOS
+    IN_PROGRESS --> SOS_ACTIVE: safety-service emits safety.sos_triggered
     SOS_ACTIVE --> IN_PROGRESS: Admin resolves false alarm
-    SOS_ACTIVE --> COMPLETED_UNPAID: Trip closed under Admin supervision
+    SOS_ACTIVE --> COMPLETED_UNPAID: Trip closed under Admin oversight
 
-    IN_PROGRESS --> COMPLETED_UNPAID: Rider or Driver taps Complete at dropoff
-    COMPLETED_UNPAID --> PAID_COMPLETED: Cash confirmed OR Digital Webhook OK
-    COMPLETED_UNPAID --> PAYMENT_DISPUTED: Failed digital pay / unresolved dispute
+    IN_PROGRESS --> COMPLETED_UNPAID: Rider/Driver marks complete at dropoff
+    COMPLETED_UNPAID --> PAID_COMPLETED: payment-wallet-service emits payment.confirmed
+    COMPLETED_UNPAID --> PAYMENT_DISPUTED: Failed payment / unresolved dispute
 
     NO_OPERATOR_FOUND --> [*]
     CANCELLED_BY_CUSTOMER --> [*]
@@ -153,35 +170,35 @@ stateDiagram-v2
 
 ---
 
-## 4. Customer App Flow (Web & PWA)
+## 4. Customer App Flow (`apps/customer-web`)
 
 ```mermaid
 flowchart TD
-    Start(["Open Go.boda Web or PWA"]) --> Lang["Select / Toggle Language (Kiswahili / English)"]
-    Lang --> HomeMap["Unguja Map Home (Shows Live Nearby Bodabodas & Bajajis)"]
+    Start(["Open Go.boda (customer-web / PWA)"]) --> Lang["Select / Toggle Language (Kiswahili / English)"]
+    Lang --> HomeMap["Unguja Map Home (location-service streams live nearby Bodabodas & Bajajis)"]
 
-    HomeMap --> SetLoc["Set Pickup (GPS / Pin / Unguja Landmark) & Dropoff"]
-    SetLoc --> GeoCheck{"Both Points Inside Unguja Island?"}
-    GeoCheck -->|No| OutsideMsg["Display Unguja-Only Notice (Pemba/Mainland Blocked)"]
+    HomeMap --> SetLoc["Pick Pickup (GPS / Pin / Landmark) & Dropoff"]
+    SetLoc --> GeoCheck{"geo-zone-service: Inside Unguja Island?"}
+    GeoCheck -->|No| OutsideMsg["Display Unguja-Only Notice (Pemba & Mainland Blocked)"]
     OutsideMsg --> SetLoc
 
-    GeoCheck -->|Yes| StoneTown{"Pin in Stone Town Pedestrian Core?"}
-    StoneTown -->|Yes| Snap["Snap to Nearest Perimeter Road Gate + Show Walking Path"]
+    GeoCheck -->|Yes| StoneTown{"Pin Inside Stone Town Pedestrian Core?"}
+    StoneTown -->|Yes| Snap["Snap to Nearest Perimeter Gate + Show Walking Path"]
     StoneTown -->|No| ChooseType["Choose Nearby Transport: Bodaboda (Rider) or Bajaji (Driver)"]
     Snap --> ChooseType
 
     ChooseType --> PayPick["Select Payment: Cash (with Change Note) / Mobile Money / Card"]
-    PayPick --> LoginGate{"Customer Signed In?"}
+    PayPick --> LoginGate{"Signed In via auth-service?"}
     LoginGate -->|No| OTP["Quick Sign-In: WhatsApp OTP / SMS OTP / Google"]
     OTP --> Confirm["Tap Request Nearby Transport"]
     LoginGate -->|Yes| Confirm
 
-    Confirm --> Searching["Contacting Nearest Bodaboda Rider or Bajaji Driver"]
+    Confirm --> Searching["dispatch-service Contacting Nearest Rider (Bodaboda) or Driver (Bajaji)"]
     Searching -->|None Available| Retry["No Nearby Transport Found -> Retry or Switch Bodaboda/Bajaji"]
-    Searching -->|Accepted| Assigned["Matched! View Rider/Driver Photo, Z-Plate, Live Map, 4-Digit PIN"]
+    Searching -->|Matched| Assigned["View Rider/Driver Photo, Z-Plate, Live Map, 4-Digit PIN, Chat/Call"]
 
-    Assigned --> Arrived["Arrived Notification -> Meet & Share 4-Digit PIN"]
-    Arrived --> InTrip["Trip In Progress (Live Tracking + WhatsApp Share + SOS)"]
+    Assigned --> Arrived["Arrived Push Alert -> Meet & Share 4-Digit PIN"]
+    Arrived --> InTrip["Trip In Progress (Live Tracking + safety-service WhatsApp Share & SOS)"]
     InTrip --> Complete["Arrived at Dropoff"]
 
     Complete --> PayMode{"Payment Method?"}
@@ -189,218 +206,140 @@ flowchart TD
     PayMode -->|Mobile Money| STK["Approve Mobile Money STK Push"]
     PayMode -->|Card| CardPay["Confirm Card Charge"]
 
-    PayCash --> Receipt["Digital Receipt + Helmet Check (Bodaboda) + Rate Rider/Driver"]
+    PayCash --> Receipt["Digital Receipt + Bodaboda Helmet Check + Rate Rider/Driver"]
     STK --> Receipt
     CardPay --> Receipt
     Receipt --> HomeMap
 ```
 
-### Customer Next.js Route Map
-| Route | Screen / Purpose | Key Components |
+### `apps/customer-web` Route Map
+| Route | Screen | Backing Microservices (via `api-gateway`) |
 | :--- | :--- | :--- |
-| `/` | Unguja Live Map Home | MapLibre Unguja map, live nearby Bodaboda & Bajaji icons, SW/EN switcher, "Where to?" sheet |
-| `/auth` | Customer Sign-In | WhatsApp/SMS OTP input, Google/Email sign-in, Profile name & language preference |
-| `/book` | Request & Fare Confirmation | Landmark autocomplete, Stone Town perimeter snap alert, Bodaboda vs Bajaji selector, TZS fare & payment mode |
-| `/trips/[id]` | Live Trip Tracker | Live Rider/Driver GPS stream, 4-digit PIN display, bilingual quick-chat, Call/WhatsApp button, Share Trip & SOS |
-| `/trips/[id]/receipt` | Payment, Receipt & Review | Payment status, TZS trip breakdown, Bodaboda helmet check, 5-star rating & optional tip |
-| `/track/[shareToken]` | Public Shared Trip View | Read-only live tracking page opened via shared WhatsApp/SMS link |
-| `/history` | Customer Trip History | Past Bodaboda & Bajaji rides, downloadable receipts, quick rebook |
-| `/profile` | Account & Safety Settings | Saved Unguja places, Emergency Contact, Language, Payment methods |
+| `/[locale]` | Unguja Live Nearby Map | `location-service`, `geo-zone-service` |
+| `/[locale]/auth` | Sign-In & OTP | `auth-service`, `notification-service` |
+| `/[locale]/book` | Route, Stone Town Snap & Fare Quote | `geo-zone-service`, `pricing-service`, `trip-service` |
+| `/[locale]/trips/[id]` | Live Trip Tracker & Safety Drawer | `trip-service`, `location-service`, `notification-service`, `safety-service` |
+| `/[locale]/trips/[id]/receipt` | Payment, Receipt, Helmet Check & Rating | `payment-wallet-service`, `trip-service`, `safety-service` |
+| `/[locale]/track/[shareToken]` | Public WhatsApp Shared Live Tracker | `safety-service`, `location-service` |
+| `/[locale]/history` | Customer Trip History | `trip-service` |
+| `/[locale]/profile` | Saved Places, Emergency Contact & Language | `auth-service`, `safety-service` |
 
 ---
 
-## 5. Rider (Bodaboda) & Driver (Bajaji) PWA Flow
-
-The `/partner` portal dynamically renders **Rider** terminology/checklists for Bodaboda accounts and **Driver** terminology/guidance for Bajaji accounts.
+## 5. Rider (Bodaboda) & Driver (Bajaji) PWA Flow (`apps/partner-pwa`)
 
 ```mermaid
 flowchart TD
-    PStart(["Open Go.boda Rider & Driver PWA (/partner)"]) --> PAuth["Sign In via Phone OTP"]
-    PAuth --> KYCStatus{"Account Verification Status?"}
+    PStart(["Open Go.boda Partner PWA (partner-pwa)"]) --> PAuth["Sign In via Phone OTP (auth-service)"]
+    PAuth --> KYCStatus{"operator-service Verification Status?"}
 
     KYCStatus -->|New / Rejected| RoleSelect["Choose Role: Bodaboda Rider OR Bajaji Driver"]
-    RoleSelect --> KYCForm["Submit KYC: ID, License, Z-Plate, Vehicle Photos, Helmet Photo (Rider), Kituo"]
+    RoleSelect --> KYCForm["Submit KYC & Photos (ID, License, Z-Plate, Helmet Photo for Rider, Kituo)"]
     KYCForm --> Pending["Pending Admin Approval Screen"]
     KYCStatus -->|Pending| Pending
 
-    KYCStatus -->|Approved| Dashboard["Operator Home (Offline + Daily TZS Earnings + Float Balance)"]
+    KYCStatus -->|Approved| Dashboard["Adaptive Home (Offline + Daily TZS Earnings + Float Balance)"]
     Dashboard --> GoOnline{"Tap Go Online"}
-    GoOnline --> PreCheck{"GPS Active + Commission Float Above Minimum Limit?"}
+    GoOnline --> PreCheck{"GPS Active + Float Not Blocked by payment-wallet-service?"}
 
-    PreCheck -->|Low Float| TopUp["Top Up Commission Float via Mobile Money STK Push"]
+    PreCheck -->|Float Blocked| TopUp["Top Up Commission Float via Mobile Money STK Push"]
     TopUp --> Dashboard
-    PreCheck -->|Ready| Online["Online in Nearby Queue (Wake Lock Active + Streaming GPS)"]
+    PreCheck -->|Ready| Online["Online in location-service Pool (Wake Lock + GPS Stream)"]
 
-    Online --> Offer["Incoming Nearby Request (Audio Chime + Vibration + 20s Timer)"]
+    Online --> Offer["Incoming Request Modal from dispatch-service (Chime + Vibration + 20s Timer)"]
     Offer -->|Decline or Timeout| Online
-    Offer -->|Accept| NavPickup["Navigate to Customer Pickup (In-App Map + Open Google Maps)"]
+    Offer -->|Accept| NavPickup["Navigate to Pickup (In-App Map + Open Google Maps)"]
 
-    NavPickup --> MarkArrived["Tap Arrived at Pickup (5-Min Wait Timer Starts)"]
+    NavPickup --> MarkArrived["Tap Arrived at Pickup (trip-service 5m Wait Timer)"]
     MarkArrived --> EnterPIN["Enter Customer 4-Digit PIN to Start Trip"]
-    EnterPIN -->|Invalid PIN| EnterPIN
+    EnterPIN -->|Wrong PIN| EnterPIN
     EnterPIN -->|Valid PIN| ActiveRide["Trip In Progress (Live GPS + Dropoff Nav + SOS)"]
 
     ActiveRide --> EndTrip["Tap Complete Trip at Dropoff"]
     EndTrip --> PayCheck{"Trip Payment Mode?"}
 
-    PayCheck -->|Cash| CollectCash["Collect TZS Cash -> Tap Cash Received"]
-    CollectCash --> DeductFloat["Deduct 12% Commission from Commission Float"]
+    PayCheck -->|Cash| CollectCash["Collect TZS Cash -> Confirm Cash Received"]
+    CollectCash --> DeductFloat["payment-wallet-service Debits 12% Commission from Float"]
     DeductFloat --> RateCust["Rate Customer & View Net Trip Earnings"]
 
-    PayCheck -->|Mobile Money / Card| WaitPay["Await Payment Gateway Webhook"]
+    PayCheck -->|Mobile Money / Card| WaitPay["Wait for payment-wallet-service Webhook Confirmation"]
     WaitPay -->|Confirmed| CreditEarn["Credit 88% Net Earnings to Withdrawable Wallet"]
-    WaitPay -->|Failed / Timeout| FallbackCash["Switch to Cash Collection (Customer & Operator Confirm)"]
+    WaitPay -->|Failed / Timeout| FallbackCash["Mutual Switch to Cash Collection"]
     FallbackCash --> CollectCash
     CreditEarn --> RateCust
 
     RateCust --> Online
 ```
 
-### Rider & Driver Next.js Route Map (`/partner`)
-| Route | Screen / Purpose | Key Components |
+### `apps/partner-pwa` Route Map
+| Route | Screen | Backing Microservices (via `api-gateway`) |
 | :--- | :--- | :--- |
-| `/partner/onboarding` | Multi-Step KYC Registration | Bodaboda Rider vs Bajaji Driver selector, camera document uploads, *Kituo* & Mobile Money payout setup |
-| `/partner/home` | Shift Control & Status | High-contrast sunlight Online/Offline switch, Today's TZS earnings, Float balance badge, GPS status |
-| `/partner/trip/[id]` | Active Job Console | 20s request overlay, pickup/dropoff landmarks, Google Maps launcher, PIN keypad, Cash/Digital payment screen |
-| `/partner/earnings` | Trip Earnings History | Daily/Weekly breakdown of completed trips, gross fares, commissions, cash vs digital totals |
-| `/partner/wallet` | Wallet & Payouts | **Earnings Wallet** (1-tap Mobile Money withdrawal) + **Commission Float** (STK Push top-up) |
-| `/partner/profile` | Profile & Documents | Vehicle & Z-plate details, License/Insurance expiry reminders, Language (SW/EN), Support shortcut |
+| `/[locale]/onboarding` | Multi-Step Rider/Driver KYC | `operator-service`, `auth-service` |
+| `/[locale]/home` | Sunlight Shift Dashboard | `operator-service`, `location-service`, `payment-wallet-service` |
+| `/[locale]/trip/[id]` | Active Job Console & PIN Pad | `dispatch-service`, `trip-service`, `location-service`, `payment-wallet-service`, `safety-service` |
+| `/[locale]/earnings` | Trip-by-Trip Earnings Log | `trip-service`, `payment-wallet-service` |
+| `/[locale]/wallet` | Earnings Payouts & Float Top-Up | `payment-wallet-service` |
+| `/[locale]/profile` | Vehicle, Z-Plate & Expiry Reminders | `operator-service`, `auth-service` |
 
 ---
 
-## 6. Admin Operations Dashboard Flow (`/admin`)
+## 6. Admin Operations Portal Flow (`apps/admin-web`)
 
 ```mermaid
 flowchart TD
-    ALogin(["Admin Login (RBAC + 2FA)"]) --> AHome["Go.boda Operations Overview"]
+    ALogin(["Admin Login (auth-service RBAC + 2FA)"]) --> AHome["Go.boda Operations Command Center"]
 
-    AHome --> LiveMap["Live Unguja Map (Online Riders, Online Drivers, Active Trips)"]
-    AHome --> SOSDesk["SOS Incident Monitor (Real-Time Alert Banner & Sound)"]
-    AHome --> KYCQueue["Verification Queue (Approve/Reject Bodaboda Riders & Bajaji Drivers)"]
-    AHome --> ZoneConfig["Unguja Geofence, Stone Town Snap Gates, Landmarks & Tariffs"]
-    AHome --> Finance["Finance Ledger (GMV, Commissions, Float Audits, Mobile Money Payouts)"]
-    AHome --> Support["Disputes, Cancellations & Bodaboda Helmet Flags"]
+    AHome --> LiveMap["Live Unguja Map (location-service + trip-service)"]
+    AHome --> SOSDesk["SOS Incident Console (safety-service Real-Time Alarm)"]
+    AHome --> KYCQueue["Rider & Driver KYC Queue (operator-service)"]
+    AHome --> ZoneConfig["Unguja Polygons, Stone Town Snap Gates, Landmarks & Tariffs (geo-zone + pricing)"]
+    AHome --> Finance["Finance Ledger & Mobile Money Payouts (payment-wallet-service)"]
+    AHome --> Support["Disputes, Cancellations & Helmet Non-Compliance (trip-service + safety-service)"]
 ```
 
-### Admin Next.js Route Map
-| Route | Purpose |
-| :--- | :--- |
-| `/admin` | Executive dashboard (live trips, online Bodaboda Riders, online Bajaji Drivers, daily GMV, open SOS alerts) |
-| `/admin/live-map` | Fullscreen Unguja map with filters by Bodaboda/Bajaji and clickable trip telemetry |
-| `/admin/operators` | Rider & Driver KYC approval queue, active directory, document expiry alerts, suspend/reactivate |
-| `/admin/trips` | Searchable trip list, route playback, manual cancellation/dispute resolution |
-| `/admin/zones` | Unguja polygon viewer, Stone Town snap gates editor, curated landmarks manager, Bodaboda & Bajaji tariff rules |
-| `/admin/finance` | Double-entry commission ledger, Rider/Driver wallet overview, Mobile Money payout logs |
-| `/admin/sos` | Active & historical SOS incidents, emergency contact actions, resolution log |
-
 ---
 
-## 7. Nearby Discovery, Matching & Pricing Backend Pipeline
-
-1. **Live Nearby Map Feed (Pre-Booking):**
-   * Customer app sends current Unguja `(lat, lng)` -> Backend runs Redis `GEOSEARCH` on both `operators:online:BODABODA` and `operators:online:BAJAJI` within a `4 km` radius -> returns anonymized vehicle markers + approximate ETA for each transport type.
-2. **Geofence & Stone Town Perimeter Snap (PostGIS):**
-   * Confirm `ST_Contains(unguja_polygon, pickup)` and `ST_Contains(unguja_polygon, dropoff)`.
-   * If `ST_Contains(stone_town_pedestrian_polygon, pickup)` is true, snap pickup to the closest `SnapPoint` perimeter gate and compute walking distance.
-3. **Fare Calculation:**
-   * Fetch driving route distance & duration from OSRM / Mapbox Directions.
-   * Compute upfront fare in TZS using `TariffConfig` for the chosen type (`BODABODA` or `BAJAJI`), rounded to nearest `500 TZS`.
-4. **Targeted Nearby Dispatch (Redis + DB):**
-   * Query Redis `GEOSEARCH` strictly for the Customer's chosen pool (`operators:online:BODABODA` -> **Riders**, or `operators:online:BAJAJI` -> **Drivers**).
-   * Expanding search tiers: **Tier 1:** `1.5 km` -> **Tier 2:** `3.0 km` -> **Tier 3:** `5.0 km` (up to `6.0 km` in lower-density coastal zones).
-   * Filter out operators who are busy on a trip, stale (`lastSeenAt > 45s`), already declined this trip, or below the Commission Float minimum threshold.
-5. **Sequential Scored Offer & Atomic Lock:**
-   * Rank nearby candidates by: **Proximity (60%)** + **Rating & Safety Score (25%)** + **Idle Fairness (15%)**.
-   * Push offer to Candidate #1 via WebSocket + Web Push with a **20-second TTL**.
-   * On Accept: execute an atomic Redis/DB lock transitioning `Trip` to `ASSIGNED` and generating the **4-digit Start PIN**.
-   * On Decline or 20s Timeout: automatically advance to Candidate #2 (up to 6 candidates or 90 seconds total before returning `NO_OPERATOR_FOUND`).
-
----
-
-## 8. Per-Trip Payment & Wallet Settlement Flow
+## 7. Per-Trip Payment & Wallet Settlement Flow (`payment-wallet-service`)
 
 ```mermaid
 flowchart TD
-    TripEnd(["Trip Completed (Final Fare = F)"]) --> Split["Compute Commission C = 12% of F, Operator Net N = 88% of F"]
+    TripEnd(["Event Received: trip.completed (Final Fare = F)"]) --> Split["Calculate Commission C = 12% of F, Net Payout N = 88% of F"]
     Split --> PayType{"Payment Method"}
 
     PayType -->|Cash TZS| CashDone["Rider/Driver Confirms Cash Collected from Customer"]
-    CashDone --> DebitFloat["Debit C from Operator Commission Float Wallet"]
-    DebitFloat --> LimitCheck{"Float Below -5,000 TZS?"}
-    LimitCheck -->|Yes| PauseOp["Pause Dispatch Until Float Top-Up via Mobile Money"]
-    LimitCheck -->|No| Settled(["Trip Settled & Receipts Generated"])
+    CashDone --> DebitFloat["Idempotent Debit C from COMMISSION_FLOAT"]
+    DebitFloat --> LimitCheck{"Float Balance Below -5,000 TZS?"}
+    LimitCheck -->|Yes| EmitBlock["Emit wallet.float_blocked -> operator-service Pauses Dispatch"]
+    LimitCheck -->|No| EmitPaid(["Emit payment.confirmed -> trip-service Closes Trip"])
+    EmitBlock --> EmitPaid
 
-    PayType -->|Mobile Money / Card| Charge["Trigger Payment Gateway (STK Push / Card)"]
-    Charge --> Webhook{"Payment Webhook Result"}
-    Webhook -->|Success| Offset{"Does Operator Have Negative Float?"}
-    Offset -->|Yes| ClearNeg["Offset Negative Float First, Credit Remaining N to Earnings Wallet"]
-    Offset -->|No| CreditFull["Credit Full N to Withdrawable Earnings Wallet"]
-    ClearNeg --> Settled
-    CreditFull --> Settled
+    PayType -->|Mobile Money / Card| Charge["Trigger Gateway Charge (AzamPay/Selcom STK Push or Card)"]
+    Charge --> Webhook{"HMAC-Verified Webhook Result"}
+    Webhook -->|Success| Offset{"Negative Float Balance Present?"}
+    Offset -->|Yes| ClearNeg["Auto-Clear Negative Float First, Credit Remaining N to EARNINGS"]
+    Offset -->|No| CreditFull["Credit Full N to Withdrawable EARNINGS Wallet"]
+    ClearNeg --> RestoreCheck{"Float Back Above Limit?"}
+    RestoreCheck -->|Yes| EmitRestore["Emit wallet.float_restored"]
+    RestoreCheck -->|No| EmitPaid
+    EmitRestore --> EmitPaid
+    CreditFull --> EmitPaid
 
-    Webhook -->|Timeout / Failed| Fallback["Allow Retry OR Mutual Switch to Cash Collection"]
+    Webhook -->|Timeout / Failed| Fallback["Emit payment.failed -> Retry OR Mutual Switch to Cash"]
     Fallback --> CashDone
 ```
 
 ---
 
-## 9. Edge Cases & Recovery Matrix
+## 8. Edge Cases & Distributed Recovery Matrix
 
-| Scenario | Expected System Handling |
-| :--- | :--- |
-| **Customer outside Unguja (Pemba / Mainland)** | PostGIS check rejects booking with a clear notice: *"Go.boda currently operates exclusively on Unguja Island, Zanzibar."* |
-| **Pin inside Stone Town pedestrian alley** | Auto-snaps to closest drivable perimeter gate, displays walking time to Customer, and shows exact gate name to the Rider/Driver. |
-| **No Bodabodas nearby, but Bajajis are nearby** | Suggests 1-tap switch: *"No Bodaboda Riders nearby right now — a Bajaji Driver is 3 mins away."* (And vice versa.) |
-| **Cellular 3G drop mid-trip** | PWA caches active trip state and GPS points in IndexedDB; resyncs cleanly on reconnect without dropping the screen. |
-| **Mobile Money STK Push fails/times out** | Customer can tap *"Retry Payment"* or both parties confirm switching the trip to **Cash (TZS)**. |
-| **Customer no-show at pickup** | After 5 minutes in `ARRIVED_AT_PICKUP`, Rider/Driver unlocks *"Cancel (Customer No-Show)"* with zero penalty. |
-| **Two operators tap Accept simultaneously** | Atomic lock awards trip to first commit; second operator sees *"Trip already accepted"* and stays online. |
-| **Rider/Driver cancels after accepting** | Trip automatically returns to `SEARCHING` for the next closest Rider/Driver without making the Customer rebook. |
-| **SOS button triggered mid-trip** | Creates `SafetyAlert`, raises live audio/visual alarm in `/admin/sos`, and sends live tracking link + Z-Plate to emergency contact. |
-
----
-
-## 10. Proposed Full-Stack Next.js Monorepo Structure
-
-```text
-E:\Go.boda\
-├── prd.md                             # Product Requirements Document
-├── app-flow.md                        # App Flow & System Interaction Blueprint
-├── implementation.md                  # Project Scope & Phased Implementation Plan
-├── public/
-│   ├── manifest.webmanifest           # PWA manifest (standalone, icons, theme colors)
-│   ├── icons/                         # Adaptive PWA icons (192x192, 512x512, maskable)
-│   └── sounds/                        # Incoming trip chime & SOS alert audio
-├── prisma/
-│   ├── schema.prisma                  # PostgreSQL + PostGIS models & financial ledger
-│   └── seed-unguja.ts                 # Unguja boundary, Stone Town snap gates, 150 landmarks
-├── src/
-│   ├── app/
-│   │   ├── [locale]/                  # next-intl (/sw and /en)
-│   │   │   ├── (customer)/            # Customer Web & PWA (/, /book, /trips/[id], /history)
-│   │   │   ├── partner/               # Bodaboda Rider & Bajaji Driver PWA (/partner/*)
-│   │   │   ├── admin/                 # Admin Ops Portal (/admin/*)
-│   │   │   └── track/[shareToken]/    # Public WhatsApp live trip tracking page
-│   │   ├── api/
-│   │   │   ├── auth/                  # WhatsApp/SMS OTP, Google OAuth, sessions
-│   │   │   ├── geo/                   # Unguja polygon check, Stone Town snap, landmarks, fare quote
-│   │   │   ├── nearby/                # Live nearby Bodaboda & Bajaji availability query
-│   │   │   ├── trips/                 # Request, accept, arrive, PIN start, complete, cancel, SOS
-│   │   │   ├── partner/               # Rider/Driver KYC, online status, GPS ping, wallet & payout
-│   │   │   ├── payments/              # Mobile Money STK Push, Card checkout, HMAC webhooks
-│   │   │   └── admin/                 # KYC approval, tariffs, zones, ledger, SOS management
-│   │   └── sw.ts                      # Serwist Service Worker (offline cache + Web Push)
-│   ├── components/
-│   │   ├── map/                       # MapLibre GL Unguja map, Bodaboda/Bajaji markers, snap badge
-│   │   ├── customer/                  # Nearby picker, booking sheet, PIN card, payment & SOS drawer
-│   │   ├── partner/                   # Sunlight dashboard, 20s offer modal, PIN pad, wallet cards
-│   │   └── admin/                     # Live map, KYC queue, tariff & landmark editors
-│   ├── lib/
-│   │   ├── geo/                       # PostGIS queries, Unguja polygon helpers, fare engine
-│   │   ├── dispatch/                  # Redis GEOSEARCH matching engine & atomic locks
-│   │   ├── payments/                  # Mobile Money (AzamPay/Selcom) & Card gateway adapters
-│   │   ├── notifications/             # Web Push (VAPID), WhatsApp Cloud API, SMS fallback
-│   │   └── i18n/                      # Kiswahili (sw.json) & English (en.json) dictionaries
-│   └── realtime/                      # Lightweight Socket.IO server (or managed realtime bridge)
-└── package.json
-```
+| Scenario | Owning Service(s) | System Recovery Behavior |
+| :--- | :--- | :--- |
+| **Request outside Unguja (Pemba / Mainland)** | `geo-zone-service` | PostGIS `ST_Contains` fails immediately; returns clear Unguja-only message before creating a trip. |
+| **Pin inside Stone Town pedestrian alley** | `geo-zone-service` | Snaps to closest perimeter `SnapPoint`, returns walking time to Customer and exact gate name to Rider/Driver. |
+| **No Bodabodas nearby, but Bajajis are nearby** | `dispatch-service`, `location-service` | Suggests 1-tap switch to Bajaji (or vice versa) with live ETA. |
+| **Cellular 3G drop mid-trip** | `customer-web`, `partner-pwa`, `location-service` | PWAs persist active trip state in IndexedDB and reconnect WebSockets automatically with GPS sync. |
+| **Mobile Money STK Push fails/times out** | `payment-wallet-service`, `trip-service` | Emits `payment.failed`; offers 1-tap Retry or mutual confirmation to settle in Cash (TZS). |
+| **Two Riders/Drivers tap Accept at once** | `dispatch-service` | Redis atomic lock (`SET NX`) awards trip to first caller; second immediately receives *"Trip already taken"*. |
+| **Rider/Driver cancels after accepting** | `trip-service`, `dispatch-service` | Emits `trip.cancelled_by_operator`; `dispatch-service` auto-requeues next closest Rider/Driver seamlessly. |
+| **Notification or WhatsApp provider down** | `notification-service` | BullMQ retries with exponential backoff; WhatsApp OTP falls back automatically to SMS OTP. |
+| **SOS button triggered mid-trip** | `safety-service`, `notification-service` | Creates priority incident, triggers audible alarm on `admin-web`, and sends live tracking link + Z-Plate to emergency contact. |

@@ -1,48 +1,49 @@
-# Go.boda — Project Scope & Phased Implementation Plan
+# Go.boda — Project Scope & Phased Microservices Implementation Plan
 
+> **Document Version:** 2.0 (Microservices Edition)  
 > **Project Name:** **Go.boda**  
-> **Companion Documents:** [prd.md](file:///E:/Go.boda/prd.md) | [app-flow.md](file:///E:/Go.boda/app-flow.md)  
-> **Target Location:** Unguja Island, Zanzibar (Strictly Geofenced)  
-> **Stack:** Full-Stack Next.js (App Router, TypeScript) + PWA + PostgreSQL/PostGIS + Redis Geospatial + Realtime WebSockets
+> **Companion Documents:** [prd.md](file:///E:/Go.boda/prd.md) | [architecture.md](file:///E:/Go.boda/architecture.md) | [app-flow.md](file:///E:/Go.boda/app-flow.md)  
+> **Target Area:** Unguja Island, Zanzibar (Strictly Geofenced)  
+> **Architecture:** 3 Next.js Web/PWA Apps + API Gateway + Event Bus + 10 Distributed Microservices in a pnpm/Turborepo Monorepo
 
 ---
 
 ## 1. Project Scope
 
 ### 1.1 Core Objective
-Build and launch **Go.boda**, a production-ready full-stack Next.js Web and Progressive Web App (PWA) where **Customers** on Unguja Island can see and request nearby **Bodaboda** or **Bajaji** transport, and verified **Bodaboda Riders** and **Bajaji Drivers** accept nearby requests, complete trips safely, and receive payment according to each trip.
+Design, build, and launch **Go.boda** on a distributed microservice architecture where **Customers** on Unguja Island discover and request nearby **Bodaboda** or **Bajaji** transport via Next.js Web/PWA, and verified **Bodaboda Riders** and **Bajaji Drivers** accept requests, complete trips safely, and receive payment according to each trip.
 
 ### 1.2 In-Scope Deliverables (Release 1 — MVP)
-| Domain | Included Capabilities |
+| Layer / Scope | Included Deliverables |
 | :--- | :--- |
-| **Customer Web & PWA (`/`)** | Bilingual UI (Kiswahili & English), WhatsApp/SMS OTP & Google auth, live nearby Bodaboda & Bajaji map, Unguja-only geofence, Stone Town perimeter snapping, curated Unguja landmark search, upfront TZS fare quotes, Bodaboda/Bajaji booking, live GPS tracking, 4-digit Trip PIN, preset chat + Call/WhatsApp, WhatsApp live trip share, SOS button, Bodaboda helmet check, Cash/Mobile Money/Card checkout, digital receipts, ratings & tips. |
-| **Rider & Driver PWA (`/partner`)** | Adaptive UI for **Bodaboda Riders** and **Bajaji Drivers**, multi-step KYC registration with mobile camera uploads, Online/Offline shift toggle with Wake Lock + Web Push + chime/vibration, 20-second incoming request modal, Google Maps navigation launcher, arrival timer, 4-digit PIN start, per-trip Cash & Digital settlement, dual-balance wallet (Earnings Wallet + Commission Float), Mobile Money float top-up & instant withdrawal. |
-| **Admin Portal (`/admin`)** | RBAC + 2FA login, Rider & Driver KYC approval queue, live Unguja fleet & active trip map, real-time SOS incident console, Unguja zone/Stone Town snap/landmark/tariff editors, double-entry financial ledger & payout tracking, support & helmet non-compliance monitoring. |
-| **Core Backend & Realtime** | Next.js App Router API, PostgreSQL + PostGIS geospatial validation, Redis `GEOSEARCH` nearby lookup & sequential dispatch with atomic accept locks, WebSocket telemetry server, MapLibre GL + OSM + OSRM routing, payment webhook verification, Serwist PWA offline caching. |
+| **3 Next.js Web & PWA Apps** | `apps/customer-web` (Customers), `apps/partner-pwa` (adaptive Bodaboda Rider & Bajaji Driver PWA), `apps/admin-web` (Operations Dashboard) — all bilingual (`Kiswahili` & `English`). |
+| **Edge & Messaging Backbone** | `services/api-gateway` (HTTPS/WSS, JWT, RBAC, rate limiting, tracing) + Event Bus (NATS JetStream / RabbitMQ) + shared `packages/*` (`shared-types`, `events`, `i18n`, `ui`, `logger`). |
+| **10 Distributed Microservices** | `auth-service`, `operator-service`, `geo-zone-service` (PostGIS Unguja + Stone Town snap), `location-service` (WebSocket + Redis Geo nearby fleet), `pricing-service`, `dispatch-service` (expanding radius + atomic Accept lock), `trip-service` (State Machine + 4-digit PIN), `payment-wallet-service` (Cash TZS + Mobile Money STK Push/Payouts + Card + ACID wallets), `notification-service` (VAPID Web Push, WhatsApp, SMS, quick-chat), `safety-service` (SOS + `/track/[shareToken]` + helmet flags). |
+| **Infrastructure & Ops** | Local Docker Compose (isolated Postgres DBs + PostGIS, Redis, Event Bus), individual Dockerfiles per app/service, CI/CD test pipeline, OpenTelemetry structured logging. |
 
-### 1.3 Out of Scope for Release 1 (Planned for Post-MVP)
-* Service outside Unguja Island (Pemba Island or Mainland Tanzania).
-* `Go.parcel` on-demand package/courier delivery.
-* Fleet Owner (*Mkataba / Hesabu*) multi-vehicle management dashboard.
-* Scheduled future bookings & multi-stop trips.
-* Native App Store builds (Capacitor Android/iOS background-GPS shell for Riders & Drivers).
+### 1.3 Out of Scope for Release 1 (Deferred to Post-MVP)
+* Expansion outside Unguja Island (Pemba Island or Mainland Tanzania).
+* `parcel-service` (`Go.parcel` on-demand package delivery).
+* `fleet-owner-service` (multi-vehicle *Mkataba / Hesabu* owner portal).
+* Scheduled future rides & commuter subscription passes.
+* Native App Store wrapper (Capacitor Android/iOS background-GPS build for `partner-pwa`).
 
 ---
 
-## 2. Architecture & Environment Baseline
+## 2. Technology Baseline
 
-| Component | Baseline Choice | Notes |
-| :--- | :--- | :--- |
-| **App Framework** | Next.js 15+ (App Router, React 19, TypeScript) | Single full-stack codebase in `E:\Go.boda` |
-| **Styling & UI** | Tailwind CSS + shadcn/ui + Lucide Icons | Mobile-first responsive + Sunlight Mode for `/partner` |
-| **i18n** | `next-intl` (`sw`, `en`) | Default toggle persisted per user & cookie |
-| **PWA** | Serwist (`@serwist/next`) + `web-push` | Manifest, offline shell, push notifications, Wake Lock |
-| **Database** | PostgreSQL 16 + PostGIS + Prisma ORM | Geospatial polygons + ACID trip & wallet ledger |
-| **Realtime & Geo** | Redis (Geospatial + Pub/Sub) + Socket.IO server | Companion lightweight Node realtime server (or Supabase Realtime / Ably) |
-| **Maps & Routing** | MapLibre GL JS + OpenStreetMap + OSRM / Mapbox Directions | Low per-trip cost suitable for TZS micro-fares |
-| **Auth & Messaging** | Auth.js / JWT + WhatsApp Cloud API / Africa's Talking SMS | Reliable Tanzanian OTP delivery |
-| **Payments** | AzamPay / Selcom / ClickPesa (TZ Mobile Money) + Stripe / Flutterwave (Card) | Adapter pattern so gateways can be swapped cleanly |
-| **Storage** | Cloudflare R2 / AWS S3 | Private presigned uploads for KYC documents |
+| Component | Standard Choice |
+| :--- | :--- |
+| **Monorepo Orchestrator** | pnpm Workspaces + Turborepo |
+| **Frontend Apps** | Next.js 15+ (App Router, React 19, TypeScript), Tailwind CSS, shadcn/ui, `next-intl`, Serwist PWA |
+| **Microservices Runtime** | Node.js 22 LTS + TypeScript + Fastify + Zod validation |
+| **API Gateway** | Fastify Gateway (or Kong / NGINX) with JWT JWKS & WebSocket proxy |
+| **Event Bus** | NATS JetStream (or RabbitMQ) + Transactional Outbox pattern |
+| **Databases** | PostgreSQL 16 (isolated database per service) + PostGIS (`geo_db`) + Prisma ORM |
+| **Realtime & Caching** | Redis 7 (Redis Geo, Atomic Locks, Pub/Sub, BullMQ queues) + Socket.IO |
+| **Maps & Routing** | MapLibre GL JS + OpenStreetMap + OSRM / Mapbox Directions |
+| **Payments & Comms** | AzamPay / Selcom / ClickPesa (TZ Mobile Money), Stripe / Flutterwave (Card), WhatsApp Cloud API, Africa's Talking SMS, VAPID Web Push |
+| **Media & Observability** | Cloudflare R2 / AWS S3 (presigned KYC uploads), Pino JSON logs, OpenTelemetry, Sentry |
 
 ---
 
@@ -50,178 +51,182 @@ Build and launch **Go.boda**, a production-ready full-stack Next.js Web and Prog
 
 ```mermaid
 flowchart LR
-    P0["Phase 0: Setup & PWA Shell (Wk 1)"] --> P1["Phase 1: DB, PostGIS & Auth (Wk 2-3)"]
-    P1 --> P2["Phase 2: Unguja Map, Nearby & Fares (Wk 4)"]
-    P2 --> P3["Phase 3: Realtime Dispatch & State Machine (Wk 5-6)"]
-    P3 --> P4["Phase 4: Customer & Partner UI + Safety (Wk 7-8)"]
-    P4 --> P5["Phase 5: Per-Trip Payments & Wallets (Wk 9)"]
-    P5 --> P6["Phase 6: Admin Operations Portal (Wk 10)"]
-    P6 --> P7["Phase 7: QA, PWA Hardening & Pilot Launch (Wk 11-12)"]
-    P7 --> P8["Phase 8: Post-MVP Growth (Months 4+)"]
+    P0["Phase 0: Monorepo, Gateway & Infra (Wk 1)"] --> P1["Phase 1: Auth, Operator & Geo Services (Wk 2-3)"]
+    P1 --> P2["Phase 2: Location, Pricing & Map UI (Wk 4)"]
+    P2 --> P3["Phase 3: Trip, Dispatch & Notif Services (Wk 5-6)"]
+    P3 --> P4["Phase 4: Customer, Partner & Safety Flows (Wk 7-8)"]
+    P4 --> P5["Phase 5: Payment & Wallet Service (Wk 9)"]
+    P5 --> P6["Phase 6: Admin Portal Integration (Wk 10)"]
+    P6 --> P7["Phase 7: E2E QA, PWA Hardening & Pilot (Wk 11-12)"]
+    P7 --> P8["Phase 8: Post-MVP Services & Scale (Months 4+)"]
 ```
 
 ---
 
-### Phase 0 — Foundation, Monorepo Setup & PWA Shell (Week 1)
-**Goal:** Establish a clean, scalable Next.js codebase, local Docker infrastructure, bilingual routing, and installable PWA baseline.
+### Phase 0 — Monorepo, Shared Packages, API Gateway & Local Infra (Week 1)
+**Goal:** Establish the Turborepo workspace in `E:\Go.boda`, shared TypeScript contracts, containerized infrastructure, `api-gateway`, and the 3 installable Next.js PWA shells.
 
-* **Key Tasks:**
-  1. Initialize Next.js (App Router, TypeScript, ESLint, Tailwind CSS, shadcn/ui) inside `E:\Go.boda`.
-  2. Configure `next-intl` middleware and base translation dictionaries (`src/lib/i18n/sw.json` and `en.json`).
-  3. Set up Serwist PWA configuration (`public/manifest.webmanifest`, `src/app/sw.ts`, adaptive icons, offline fallback screen, install prompt banner).
-  4. Create local `docker-compose.yml` running **PostgreSQL 16 + PostGIS** and **Redis 7**.
-  5. Configure shared UI tokens (brand palette, high-contrast Sunlight Mode for `/partner`, mobile bottom-sheet primitives).
-* **Exit Criteria:** App boots locally and installs as a PWA on mobile Chrome/Safari; `/sw` and `/en` routes switch cleanly; PostGIS and Redis containers are healthy.
-
----
-
-### Phase 1 — Database Schema, Unguja Geofence & Authentication (Weeks 2–3)
-**Goal:** Lock down the relational/geospatial data layer, Unguja service boundaries, and secure multi-role authentication.
-
-* **Key Tasks:**
-  1. Author `prisma/schema.prisma` covering `User`, `OperatorProfile` (`BODABODA` Rider / `BAJAJI` Driver), `Zone`, `SnapPoint`, `Landmark`, `TariffConfig`, `Trip`, `TripOffer`, `WalletAccount`, `WalletTransaction`, `Rating`, and `SafetyAlert`.
-  2. Create PostGIS migration and spatial indexes (`GIST`) on `Zone.geometry`, `SnapPoint`, and `Landmark`.
-  3. Build `prisma/seed-unguja.ts` seeding:
-     * Official **Unguja Island boundary polygon** (excluding Pemba & Mainland).
-     * **Stone Town pedestrian-restricted polygon** + verified perimeter `SnapPoint` gates (Creek Road, Darajani, Forodhani edge, Malindi, Mnazi Mmoja, Shangani edge).
-     * Initial **150+ Unguja Landmarks & *Vituo*** (markets, airport, ferry terminal, suburbs, beaches, clinics).
-     * Default `TariffConfig` rows for `BODABODA` and `BAJAJI`.
-  4. Implement Auth APIs: WhatsApp/SMS OTP verification, Google Sign-In fallback, secure HTTP-only JWT sessions, and Next.js RBAC middleware isolating Customer (`/`), Rider & Driver (`/partner`), and Admin (`/admin`) APIs.
-  5. Implement presigned Cloudflare R2 / S3 upload endpoints for private KYC media.
-* **Exit Criteria:** Geospatial unit tests prove points inside Unguja pass, points in Pemba/Dar es Salaam fail, and Stone Town alley pins snap accurately; all 3 roles authenticate and respect RBAC guards.
+* **Deliverables & Tasks:**
+  1. Initialize pnpm Workspaces + Turborepo (`package.json`, `turbo.json`, shared ESLint/TypeScript configs).
+  2. Create shared packages:
+     * `packages/shared-types` (Role enums `CUSTOMER | BODABODA_RIDER | BAJAJI_DRIVER | ADMIN`, Trip states, Zod DTOs).
+     * `packages/events` (Typed Event Bus client, Outbox helper, event schema contracts).
+     * `packages/i18n` (Kiswahili `sw.json` and English `en.json` dictionaries).
+     * `packages/ui` (Tailwind + shadcn/ui kit, Sunlight Mode tokens, mobile bottom-sheet components).
+     * `packages/logger` (Pino structured logger with `x-request-id` correlation).
+  3. Set up `infra/docker-compose.yml` running PostgreSQL 16 + PostGIS (with `init-dbs.sql` creating isolated databases per service), Redis 7, and NATS JetStream (or RabbitMQ).
+  4. Scaffold `services/api-gateway` (port `4000`) with `/healthz`, CORS, rate limiting, and proxy config.
+  5. Scaffold `apps/customer-web` (`:3000`), `apps/partner-pwa` (`:3001`), and `apps/admin-web` (`:3002`) with Serwist PWA manifests and `next-intl` (`/sw`, `/en`).
+* **Exit Criteria:** `pnpm dev` / Docker Compose starts infrastructure, `api-gateway`, and all 3 Next.js apps cleanly; `customer-web` and `partner-pwa` pass PWA install checks.
 
 ---
 
-### Phase 2 — Unguja Interactive Map, Nearby Discovery & Fare Engine (Week 4)
-**Goal:** Deliver the signature Customer discovery experience showing live nearby Bodabodas and Bajajis with instant upfront TZS fare quotes.
+### Phase 1 — Core Foundation Services: `auth-service`, `operator-service` & `geo-zone-service` (Weeks 2–3)
+**Goal:** Deliver identity/RBAC, Rider & Driver KYC onboarding, and strict Unguja Island geospatial validation.
 
-* **Key Tasks:**
-  1. Integrate **MapLibre GL JS** locked to Unguja Island map bounds (`maxBounds`) with custom markers for nearby Bodabodas and Bajajis.
-  2. Build `/api/geo/search` combining curated Unguja landmarks/*vituo* with OSM/Nominatim geocoding restricted to Unguja.
-  3. Build `/api/geo/quote` integrating:
-     * Unguja polygon validation (`ST_Contains`).
-     * Stone Town perimeter snap check + walking distance/time notice.
-     * OSRM / Mapbox Directions route distance, duration, and encoded polyline.
-     * Dynamic upfront TZS fare calculation (rounded to nearest 500 TZS) for both `Go.boda` (Bodaboda) and `Go.bajaji` (Bajaji).
-  4. Build `/api/nearby` querying Redis `GEOSEARCH` to return real-time nearby online Bodaboda Riders and Bajaji Drivers with estimated arrival times.
-* **Exit Criteria:** Customer can open `/`, see simulated nearby Bodabodas and Bajajis moving on the Unguja map, pick any two Unguja locations, see Stone Town snap guidance when applicable, and view accurate upfront TZS fares for both options.
-
----
-
-### Phase 3 — Real-Time Dispatch Engine & Trip State Machine (Weeks 5–6)
-**Goal:** Build rock-solid real-time matching, GPS streaming, atomic trip acceptance, and strict server-side trip state transitions.
-
-* **Key Tasks:**
-  1. Build the realtime WebSocket service (`src/realtime/`) backed by Redis Pub/Sub and Redis Geo (`GEOADD` / `GEOSEARCH`) for:
-     * Operator GPS heartbeats (`3–5s` in trip, `15s` idle online).
-     * Live Customer nearby-fleet updates and active trip tracking rooms (`trip:<id>`).
-     * Admin live Unguja operations channel.
-  2. Implement the **Sequential Dispatch Engine** (`src/lib/dispatch/`):
-     * Strictly separates `BODABODA` (**Rider**) and `BAJAJI` (**Driver**) pools.
-     * Expanding radius search (`1.5 km -> 3 km -> 5 km`, up to `6 km` rural).
-     * Candidate ranking (proximity + rating + idle fairness) and **20-second offer TTL**.
-     * Atomic Redis/DB lock on Accept to eliminate double-booking races.
-     * Automatic re-queueing on decline, timeout, or post-accept operator cancel.
-  3. Build Trip Lifecycle REST APIs enforcing the Trip State Machine (`REQUEST`, `ACCEPT`, `DECLINE`, `ARRIVE`, `START_WITH_PIN`, `COMPLETE`, `CANCEL`, `SOS`).
-  4. Integrate **Web Push Notifications (VAPID)** in `src/app/sw.ts` + incoming request audio chime & vibration + Screen Wake Lock hook for `/partner`.
-* **Exit Criteria:** Load/concurrency test confirms two simultaneous Accept clicks grant the trip to exactly one Rider/Driver; full state transitions work end-to-end across two browser sessions in real time.
+* **Deliverables & Tasks:**
+  1. **`services/auth-service` (`:4001`, `auth_db`):**
+     * Phone OTP generation/verification (Redis TTL), Google OAuth / Email fallback, RS256 JWT + JWKS endpoint for `api-gateway`, refresh token rotation, user language preference.
+     * Wire JWT & RBAC guards inside `api-gateway`.
+  2. **`services/operator-service` (`:4002`, `operator_db`):**
+     * Bodaboda **Rider** (`BODABODA`) & Bajaji **Driver** (`BAJAJI`) onboarding models (ID, license, `Z...` plate, insurance, home *Kituo*, helmet verification).
+     * Cloudflare R2 / S3 presigned upload endpoints for private KYC media.
+     * Admin approve/reject/suspend endpoints emitting `operator.approved` and `operator.suspended`.
+  3. **`services/geo-zone-service` (`:4003`, `geo_db` with PostGIS):**
+     * Seed official **Unguja Island boundary polygon** (strictly blocking Pemba & Mainland).
+     * Seed **Stone Town pedestrian-restricted polygon** + verified perimeter `SnapPoint` gates (Creek Road, Darajani, Forodhani edge, Malindi, Mnazi Mmoja, Shangani edge).
+     * Seed **150+ Unguja Landmarks & *Vituo*** + build autocomplete search and OSRM/Mapbox Directions route endpoint.
+* **Exit Criteria:** Automated tests confirm Unguja coordinates pass, Pemba/Dar es Salaam coordinates fail, Stone Town alley pins snap accurately, and a Rider/Driver can upload KYC and be approved via API.
 
 ---
 
-### Phase 4 — Customer & Partner (Rider/Driver) Core UI + Safety Suite (Weeks 7–8)
-**Goal:** Complete polished, mobile-first bilingual interfaces for Customers, Bodaboda Riders, and Bajaji Drivers, including all trust and safety workflows.
+### Phase 2 — Real-Time Nearby Discovery & Upfront Pricing: `location-service`, `pricing-service` & Unguja Map UI (Week 4)
+**Goal:** Enable Customers to open `customer-web`, see live nearby Bodabodas and Bajajis on Unguja, and receive transparent upfront TZS fare quotes.
 
-* **Key Tasks:**
-  1. **Customer UI (`(customer)/`):**
-     * Bottom-sheet booking flow (Pickup/Dropoff, pickup note & quick chips, Bodaboda vs Bajaji cards, payment selector with Cash change helper).
-     * Live matching radar, assigned Rider/Driver card (photo, Z-Plate, rating, 4-digit PIN), bilingual preset quick-chat, and 1-tap Call/WhatsApp trigger.
-     * Public shareable tracking view (`/track/[shareToken]`) via 1-tap WhatsApp share.
-     * In-trip SOS drawer, post-trip receipt, Bodaboda helmet confirmation prompt, 5-star rating & optional tip, trip history (`/history`).
-  2. **Rider & Driver PWA (`/partner/*`):**
-     * Adaptive UI branding (`Bodaboda Rider` vs `Bajaji Driver`).
-     * Multi-step KYC onboarding with mobile camera compression & upload.
-     * High-contrast Sunlight Mode Home screen (Online/Offline switch, earnings summary, float badge).
-     * Fullscreen 20-second Incoming Request Modal (distance, dropoff area, payout TZS, payment type, change alert).
-     * Active trip console (Google Maps / Waze external nav button, 5-minute arrival wait timer, 4-digit PIN entry keypad, trip completion & customer rating).
-* **Exit Criteria:** A Customer and a Bodaboda Rider (and separately a Bajaji Driver) can complete an entire trip from discovery -> PIN start -> live tracking -> WhatsApp share -> completion -> rating on real mobile devices in both Kiswahili and English.
+* **Deliverables & Tasks:**
+  1. **`services/location-service` (`:4004`, Redis Geo + Socket.IO):**
+     * WebSocket server ingesting Rider & Driver GPS heartbeats into `operators:online:BODABODA` and `operators:online:BAJAJI` with 45s staleness expiry.
+     * Public/Customer nearby feed returning anonymized nearby Bodabodas and Bajajis + ETA.
+     * Internal `/internal/nearby-candidates` query for `dispatch-service`.
+  2. **`services/pricing-service` (`:4005`, `pricing_db` + Redis):**
+     * Seed default TZS tariffs for `Go.boda` (Bodaboda) and `Go.bajaji` (Bajaji).
+     * Upfront TZS fare calculator (rounded to nearest `500 TZS`), wait-time and cancellation fee rules, capped night/rain multipliers (`<= 1.25x`).
+  3. **Map Integration in `apps/customer-web`:**
+     * MapLibre GL JS locked to Unguja `maxBounds`, rendering real-time nearby Bodaboda and Bajaji icons, landmark search, Stone Town perimeter snap alert + walking time, and upfront TZS fare comparison cards.
+* **Exit Criteria:** Simulated Bodaboda Riders and Bajaji Drivers appear moving in real time on `customer-web`, and selecting any two Unguja points displays accurate upfront TZS fares for both Bodaboda and Bajaji.
 
 ---
 
-### Phase 5 — Per-Trip Payments, Commission Float & Payout Ledger (Week 9)
-**Goal:** Implement accurate, auditable per-trip financial settlement for Cash, Tanzanian Mobile Money, and Card payments.
+### Phase 3 — Core Orchestration: `trip-service`, `dispatch-service` & `notification-service` (Weeks 5–6)
+**Goal:** Implement the distributed request-to-assignment saga with atomic locking, strict trip state transitions, and reliable PWA push/chime alerts.
 
-* **Key Tasks:**
-  1. Build double-entry `WalletAccount` and `WalletTransaction` service (`EARNINGS` and `COMMISSION_FLOAT` accounts per Rider/Driver) with strict idempotency keys.
-  2. Implement **Cash (TZS) Settlement:** Rider/Driver confirms cash received -> `12%` commission atomically debited from `COMMISSION_FLOAT` -> automatic warning/dispatch pause if below `-5,000 TZS`.
-  3. Build Payment Gateway Adapter Layer (`src/lib/payments/`):
-     * **Tanzanian Mobile Money Adapter** (AzamPay / Selcom / ClickPesa): STK Push collection for Customers, Float top-up for Riders/Drivers, and Earnings payout disbursement to Mobile Money.
-     * **Card Adapter** (Stripe / Flutterwave) for card checkout.
-  4. Build HMAC-verified payment webhooks with timeout recovery (retry or mutual fallback to Cash).
-  5. Build `/partner/wallet` and `/partner/earnings` screens showing clear cash vs digital trip breakdowns and 1-tap Mobile Money cash-out.
-* **Exit Criteria:** Sandbox end-to-end tests verify accurate cent/shilling-level ledger balances across Cash trips, Mobile Money STK Push trips, automatic negative-float offsetting, and Rider/Driver withdrawals.
-
----
-
-### Phase 6 — Admin Operations & Dispatch Dashboard (Week 10)
-**Goal:** Empower Go.boda's Zanzibar operations team to verify Riders & Drivers, manage Unguja tariffs/zones, resolve SOS alerts, and audit finances.
-
-* **Key Tasks:**
-  1. Build **KYC Verification Queue (`/admin/operators`)** with document lightbox viewer, approve/reject reasons (notifies Rider/Driver via SMS/WhatsApp), document expiry tracking, and suspend/reactivate controls.
-  2. Build **Live Unguja Operations Map (`/admin/live-map`)** displaying all online Bodaboda Riders, online Bajaji Drivers, and active trips with search/filter.
-  3. Build **SOS Incident Console (`/admin/sos`)** with audible dashboard alarm, live trip coordinates, one-click phone/details view, and resolution log.
-  4. Build **Zones, Landmarks & Tariffs Manager (`/admin/zones`)** to edit Bodaboda/Bajaji TZS pricing, night/rain multipliers, Stone Town snap gates, and landmarks without code redeployment.
-  5. Build **Finance & Support Console (`/admin/finance`, `/admin/trips`)** with GMV/commission summaries, Rider/Driver wallet inspection, payout audit logs, and Bodaboda helmet non-compliance flags.
-* **Exit Criteria:** Admin can onboard and approve a new Rider/Driver, update a Bodaboda base fare (reflected immediately in Customer quotes), monitor a live trip on the map, and acknowledge a test SOS alert.
+* **Deliverables & Tasks:**
+  1. **`services/trip-service` (`:4007`, `trip_db`):**
+     * Trip creation (calls `geo-zone-service` + `pricing-service`), strict server-side Trip State Machine, Transactional Outbox emitting `trip.requested`, `trip.arrived`, `trip.started`, `trip.completed`, `trip.cancelled_*`, `trip.rated`.
+     * 4-digit Start PIN generation & validation, 5-minute arrival wait timer, digital receipts, Bodaboda helmet check, and two-way ratings.
+  2. **`services/dispatch-service` (`:4006`, Redis Locks + `dispatch_db`):**
+     * Consumes `trip.requested`, queries strictly matching transport pool (`BODABODA` Riders or `BAJAJI` Drivers) with expanding radius (`1.5km -> 3km -> 5km`, up to `6km` rural).
+     * Ranks candidates (proximity + rating + idle fairness), runs 20-second sequential offers, enforces atomic Accept lock (`SET NX`), and auto-requeues on decline, timeout, or post-accept operator cancel.
+  3. **`services/notification-service` (`:4009`, `notif_db` + BullMQ):**
+     * Web Push (VAPID) subscriptions & background PWA alerts, WhatsApp Cloud API + Africa's Talking SMS fallback (OTP & trip status), and lightweight bilingual preset quick-chat WebSocket room.
+* **Exit Criteria:** Concurrency tests prove simultaneous Accept calls assign exactly one Rider/Driver; end-to-end event saga transitions a trip from `SEARCHING` through PIN verification to `COMPLETED_UNPAID` with live push/socket alerts.
 
 ---
 
-### Phase 7 — QA Testing, PWA Hardening & Unguja Pilot Launch (Weeks 11–12)
-**Goal:** Validate reliability under real Unguja 3G/4G conditions, pass security/performance audits, and launch a controlled pilot in Stone Town & Urban West.
+### Phase 4 — Complete Customer, Partner (Rider/Driver) & `safety-service` Flows (Weeks 7–8)
+**Goal:** Finish production-grade mobile-first UX across `customer-web` and `partner-pwa`, backed by a dedicated safety & live-sharing microservice.
 
-* **Key Tasks:**
-  1. Automated testing suite:
-     * **Unit/Integration (Vitest):** Fare math, PostGIS Unguja polygon & Stone Town snap, Redis atomic dispatch locking, wallet ledger idempotency.
-     * **E2E (Playwright):** Full Customer + Rider/Driver trip lifecycle across Cash and Digital flows.
-  2. **PWA & Low-Network Hardening:**
-     * IndexedDB persistence for active trips during brief 3G dropouts.
-     * Lighthouse PWA & Performance audit (target Performance >= 85, PWA installability = Pass).
-     * Battery & Wake Lock testing on popular budget Android devices (Tecno, Infinix, Samsung A-series).
+* **Deliverables & Tasks:**
+  1. **`services/safety-service` (`:4010`, `safety_db`):**
+     * Shareable time-limited public tracking tokens (`/track/[shareToken]`).
+     * In-trip SOS trigger endpoint capturing live GPS from `location-service`, emitting priority `safety.sos_triggered`, and logging resolution timelines.
+     * Bodaboda helmet non-compliance counter consuming `trip.rated` and flagging repeat offenders.
+  2. **Complete `apps/customer-web`:**
+     * Full booking bottom-sheet (pickup notes, quick chips, Cash change helper, Mobile Money/Card selector).
+     * Matching radar, assigned Rider/Driver card (photo, Z-Plate, 4-digit PIN), bilingual quick-chat, Call/WhatsApp trigger, 1-tap WhatsApp live trip share, SOS drawer, receipt, helmet check, ratings & history.
+  3. **Complete `apps/partner-pwa`:**
+     * Adaptive **Bodaboda Rider** vs **Bajaji Driver** UI labels & checklists.
+     * Multi-step KYC mobile camera flow, Sunlight Mode Online/Offline dashboard, Screen Wake Lock, incoming 20s offer modal with audio chime & vibration, Google Maps/Waze nav launcher, PIN keypad, trip completion & Customer rating.
+* **Exit Criteria:** Full mobile field walkthrough succeeds in both Kiswahili and English for both a Bodaboda trip and a Bajaji trip, including public WhatsApp live tracking and SOS alert triggering.
+
+---
+
+### Phase 5 — Per-Trip Payments, Wallets & Payouts: `payment-wallet-service` (Week 9)
+**Goal:** Deliver an auditable, idempotent per-trip settlement system for Cash (TZS), Tanzanian Mobile Money, and Card payments.
+
+* **Deliverables & Tasks:**
+  1. **`services/payment-wallet-service` (`:4008`, `finance_db`):**
+     * Immutable double-entry ledger (`WalletAccount` + `WalletTransaction`) provisioning `EARNINGS` and `COMMISSION_FLOAT` accounts when `operator.approved` arrives.
+     * **Cash Settlement:** Rider/Driver confirms cash collected -> debits `12%` commission from `COMMISSION_FLOAT`; emits `wallet.float_blocked` if below `-5,000 TZS` (consumed by `operator-service`).
+     * **Mobile Money Adapter (AzamPay / Selcom / ClickPesa):** Customer STK Push collection, Rider/Driver float top-up (`wallet.float_restored`), and 1-tap instant `EARNINGS` withdrawal.
+     * **Card Adapter (Stripe / Flutterwave):** Card checkout + HMAC-verified idempotent webhooks + automatic negative-float offsetting before crediting withdrawable `EARNINGS`.
+     * **Timeout Recovery:** Mutual fallback to Cash if digital STK Push times out.
+  2. **Wallet & Earnings UI in `apps/partner-pwa`:**
+     * Daily/weekly earnings breakdown (Cash vs Digital), Commission Float status bar, 1-tap Mobile Money top-up and withdrawal screens.
+* **Exit Criteria:** Sandbox integration tests verify zero ledger drift across Cash trips, Mobile Money STK Push trips, duplicate webhook replays, float-block enforcement, and instant Rider/Driver payouts.
+
+---
+
+### Phase 6 — Operations Command Center (`apps/admin-web`) (Week 10)
+**Goal:** Empower Go.boda's Zanzibar operations team to run daily platform operations across all 10 microservices from one portal.
+
+* **Deliverables & Tasks:**
+  1. **Executive Dashboard:** Live KPIs aggregated from `trip-service`, `location-service`, `payment-wallet-service`, and `safety-service`.
+  2. **Rider & Driver KYC Queue:** Document viewer connected to `operator-service` (approve, reject with reason, expiry alerts, suspend/reactivate).
+  3. **Live Unguja Operations Map:** Real-time online Bodaboda Riders, Bajaji Drivers, and active trips (`location-service`).
+  4. **SOS Incident Room:** Real-time audible alert banner, live GPS coordinates, trip/Z-plate details, and resolution audit log (`safety-service`).
+  5. **Zones, Landmarks & Tariffs Manager:** CRUD UI connected to `geo-zone-service` and `pricing-service` (live TZS tariff changes without redeployment).
+  6. **Finance & Compliance Console:** GMV/commission dashboard, wallet audits, Mobile Money payout logs (`payment-wallet-service`), and Bodaboda helmet non-compliance queue (`safety-service`).
+* **Exit Criteria:** Admin can approve a new Rider/Driver, edit a Bodaboda or Bajaji tariff (immediately reflected in `customer-web`), view live Unguja trips, and resolve a test SOS alert.
+
+---
+
+### Phase 7 — Cross-Service QA, PWA Hardening & Unguja Pilot Launch (Weeks 11–12)
+**Goal:** Verify end-to-end distributed reliability, harden 3G/PWA performance, deploy containerized production infrastructure, and run a controlled Unguja pilot.
+
+* **Deliverables & Tasks:**
+  1. **Automated Testing Suite:**
+     * Service unit & contract tests (Vitest) for PostGIS Unguja polygons, fare math, atomic dispatch locks, outbox publishing, and double-entry ledger idempotency.
+     * Cross-service E2E tests (Playwright) running Customer + Rider/Driver + Admin flows against Docker Compose.
+  2. **PWA & 3G Resilience:**
+     * IndexedDB active-trip caching & seamless socket reconnect testing under simulated 3G drops.
+     * Lighthouse PWA & Performance audits + field Wake Lock/chime testing on budget Android phones (Tecno, Infinix, Samsung A-series).
   3. **Production Deployment & Observability:**
-     * Deploy Next.js + Realtime server + managed PostgreSQL/PostGIS + Redis + Cloudflare R2 with SSL, automated DB backups, Sentry error tracking, and uptime alerts.
-  4. **Controlled Field Pilot (Stone Town, Ng'ambo, Airport & Ferry Corridor):**
-     * Onboard initial cohort of 20–30 verified Bodaboda Riders and 15–20 Bajaji Drivers (e.g., 0% launch promo commission for first 30 days).
-     * Monitor match latency, GPS accuracy in Stone Town perimeters, and payment webhook success rates; fix field friction rapidly.
-* **Exit Criteria:** Pilot trips complete smoothly on real Unguja roads with > 85% fulfillment rate, < 60s average urban match time, and zero financial ledger discrepancies.
+     * Individual production Dockerfiles for all 3 apps and 11 backend containers (`api-gateway` + 10 services).
+     * Managed PostgreSQL/PostGIS with automated daily backups, managed Redis, Event Bus, Cloudflare R2, SSL, OpenTelemetry + Sentry alerting.
+  4. **Unguja Field Pilot (Stone Town, Ng'ambo, Airport & Ferry Corridor):**
+     * Onboard 20–30 Bodaboda Riders and 15–20 Bajaji Drivers (0% introductory commission promo), monitor real-road GPS/Stone Town snap accuracy, and iterate quickly.
+* **Exit Criteria:** Pilot achieves > 85% completion rate, < 60s average urban match time, 99.5%+ core uptime, and zero financial reconciliation errors.
 
 ---
 
-### Phase 8 — Post-MVP Growth & Scale Roadmap (Months 4+)
-1. **Island-Wide Unguja Rollout:** Dedicated Rider & Driver onboarding drives across North (Nungwi/Kendwa), East (Kiwengwa/Paje/Jambiani), and South (Fumba/Makunduchi/Kizimkazi).
-2. **`Go.parcel` Delivery Mode:** On-demand parcel, food, pharmacy, and document delivery using the same Bodaboda Rider & Bajaji Driver fleet.
-3. **Capacitor Android Wrapper (for `/partner`):** Package the Next.js Rider & Driver PWA in a lightweight native Android shell for rock-solid background GPS tracking and overlay ride alerts.
-4. **Fleet Owner Portal:** Dedicated portal for vehicle owners managing *mkataba* / *hesabu* Riders & Drivers.
-5. **Scheduled Rides & Frequent-Customer Passes:** Pre-booked early-morning ferry/airport rides and commuter bundles.
+### Phase 8 — Post-MVP Microservices & Growth Roadmap (Months 4+)
+1. **Island-Wide Unguja Scaling:** Expand Rider & Driver onboarding to North (Nungwi/Kendwa), East (Kiwengwa/Paje/Jambiani), and South (Fumba/Makunduchi/Kizimkazi).
+2. **`parcel-service` (`Go.parcel`):** New microservice reusing `location-service`, `dispatch-service`, and `payment-wallet-service` for instant parcel/shop/pharmacy delivery across Unguja.
+3. **`fleet-owner-service`:** Portal for multi-vehicle owners tracking *mkataba* / *hesabu* Riders & Drivers.
+4. **Capacitor Android Wrapper for `partner-pwa`:** Thin native shell around the existing Next.js `partner-pwa` for rock-solid background GPS and screen-overlay job alerts.
+5. **Scheduled Rides & Commuter Passes:** Pre-booked airport/ferry transfers and frequent-Customer bundles.
 
 ---
 
-## 4. Definition of Done (Release 1 Launch Checklist)
+## 4. Release 1 Launch Readiness Checklist
 
-- [ ] **Geofence Verified:** Requests outside Unguja Island (Pemba / Mainland) are strictly blocked; Stone Town interior pins snap reliably to drivable perimeter gates.
-- [ ] **Role & Language Precision:** Consistent terminology everywhere (`Customer`, `Bodaboda Rider`, `Bajaji Driver`) with complete Kiswahili and English translations.
-- [ ] **Atomic Dispatch Verified:** Zero duplicate trip assignments under concurrent Rider/Driver accepts.
-- [ ] **Safety Features Active:** Mandatory 4-digit PIN start, Bodaboda helmet check, WhatsApp live trip share, and live Admin SOS alert verified end-to-end.
-- [ ] **Financial Accuracy:** Cash commission float deductions, Mobile Money STK Push webhooks, negative-float auto-offsetting, and instant Rider/Driver payouts reconcile with zero drift.
-- [ ] **PWA & Mobile Ready:** Installable on Android & iOS, Wake Lock & Web Push working on `/partner`, graceful 3G reconnect tested on field devices.
-- [ ] **Security & Compliance:** RBAC audited across all `/api/*` routes, KYC files private behind signed URLs, webhook HMAC verification active, automated daily DB backups enabled.
+- [ ] **Microservice Isolation:** Every service runs with its own PostgreSQL database/store, `/healthz` endpoint, and Dockerfile.
+- [ ] **Unguja Geofence Verified:** Pemba and Mainland Tanzania requests strictly rejected by `geo-zone-service`; Stone Town interior pins snap accurately to perimeter gates.
+- [ ] **Canonical Roles & Bilingual UX:** Strict `Customer`, `Bodaboda Rider`, `Bajaji Driver`, `Admin` naming across Kiswahili and English.
+- [ ] **Concurrency & Event Reliability:** Atomic Redis locks prevent double-booking; Transactional Outbox prevents lost trip/payment events.
+- [ ] **Financial Accuracy:** Cash float deductions, Mobile Money STK Push webhooks, negative-float auto-offsetting, and instant withdrawals pass full ledger audit.
+- [ ] **Safety Verified:** 4-digit PIN start, Bodaboda helmet check, `/track/[shareToken]` WhatsApp sharing, and `admin-web` SOS alarm verified live.
+- [ ] **Security Audited:** Centralized JWT/RBAC at `api-gateway`, HMAC webhook verification, private signed R2 URLs for KYC documents.
 
 ---
 
-## 5. Recommended Execution Team Structure
+## 5. Recommended Team Structure
 
-| Role | Responsibility |
+| Role | Ownership |
 | :--- | :--- |
-| **Full-Stack Next.js Engineer (Lead)** | App Router frontend/backend, Prisma + PostGIS schema, Dispatch & Payment APIs, PWA configuration |
-| **Frontend / UI Engineer (Optional if 2+ devs)** | MapLibre GL UX, Customer booking flow, Sunlight Mode `/partner` UI, Admin dashboard, Swahili/English i18n |
-| **Local Unguja Operations Lead** | Curating landmarks & Stone Town snap gates, onboarding *vituo* Bodaboda Riders & Bajaji Drivers, field testing & pilot support |
+| **Backend / Systems Engineer (Lead)** | `api-gateway`, Event Bus, `auth`, `operator`, `geo-zone`, `location`, `pricing`, `dispatch`, `trip`, `payment-wallet`, `notification`, `safety` services & Docker/CI |
+| **Frontend Next.js / PWA Engineer** | `customer-web`, `partner-pwa`, `admin-web`, MapLibre GL UX, Serwist PWA, Sunlight Mode & `next-intl` (SW/EN) |
+| **Unguja Operations Lead** | Curating Unguja landmarks & Stone Town snap gates, onboarding *vituo* Bodaboda Riders & Bajaji Drivers, pilot coordination & support |
 
-*(A strong solo full-stack engineer can execute Phases 0–7 in ~12 weeks; a 2-developer team can compress delivery to ~7–8 weeks.)*
+*(A 2-engineer team can complete Release 1 across Phases 0–7 in ~10–12 weeks; a 3–4 engineer team can parallelize services & apps to complete in ~6–8 weeks.)*
