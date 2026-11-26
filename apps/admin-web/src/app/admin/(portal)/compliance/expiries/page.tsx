@@ -95,13 +95,10 @@ export default function AdminComplianceExpiriesPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
             <CalendarClock className="h-5 w-5 text-amber-600" />
-            License &amp; Insurance Renewal Radar
+            License &amp; Insurance Expiries
           </h2>
-          <p className="text-xs text-slate-500">
-            30 / 14 / 7-day expiry tracking for Unguja Bodaboda Riders &amp; Bajaji Drivers with 1-click WhatsApp reminders and auto-pause.
-          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" onClick={load}>

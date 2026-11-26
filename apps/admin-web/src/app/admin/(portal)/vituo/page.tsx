@@ -88,12 +88,12 @@ export default function AdminVituoDirectoryPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
             <MapPin className="h-5 w-5 text-teal-700" />
-            Unguja Vituo (Stages) Directory
+            Unguja Vituo
           </h2>
           <p className="text-xs text-slate-500">
-            PostGIS 2.5 km live Bodaboda Rider &amp; Bajaji Driver supply vs. target capacity across official Unguja stages.
+            Active vehicles within 2.5 km vs. target supply per stage.
           </p>
         </div>
         <div className="flex items-center gap-2">

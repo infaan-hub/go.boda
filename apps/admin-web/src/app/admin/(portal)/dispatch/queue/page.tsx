@@ -88,17 +88,14 @@ export default function AdminDispatchQueuePage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
             <Radar className="h-5 w-5 text-teal-700" />
-            Live Dispatch Radar &amp; Manual Override
+            Dispatch Queue
           </h2>
-          <p className="text-xs text-slate-500">
-            Expanding-radius waves (1.5 → 3.5 → 6.0 km), 20s offer TTLs, unmatched hotspots, and 1-click atomic Ops assignment.
-          </p>
         </div>
         <Button size="sm" variant="outline" onClick={load}>
           <RefreshCw className="h-3.5 w-3.5" />
-          Poll Queue
+          Refresh
         </Button>
       </div>
 
@@ -128,7 +125,7 @@ export default function AdminDispatchQueuePage() {
         </h3>
         {(data?.pendingTrips.length ?? 0) === 0 ? (
           <p className="mt-3 text-xs text-slate-500">
-            Zero unmatched Customer requests right now. New bookings waiting for Rider/Driver acceptance appear here for live Ops override.
+            No pending requests.
           </p>
         ) : (
           <div className="mt-3 space-y-3">

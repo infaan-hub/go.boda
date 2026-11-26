@@ -85,17 +85,14 @@ export default function AdminSupportInboxPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
             <Inbox className="h-5 w-5 text-teal-700" />
-            Support &amp; Quick-Chat Triage Desk
+            Support Inbox
           </h2>
-          <p className="text-xs text-slate-500">
-            Triage Customer lost-item reports, payment fallback disputes, and flagged in-trip quick-chat threads with SW/EN canned replies.
-          </p>
         </div>
         <Button size="sm" variant="outline" onClick={load}>
           <RefreshCw className="h-3.5 w-3.5" />
-          Refresh Inbox
+          Refresh
         </Button>
       </div>
 
@@ -120,9 +117,7 @@ export default function AdminSupportInboxPage() {
           Customer &amp; Operator Tickets ({data?.tickets.length ?? 0})
         </h3>
         {(data?.tickets.length ?? 0) === 0 ? (
-          <p className="mt-3 text-xs text-slate-500">
-            Inbox zero! Lost-item reports submitted from Customer <code>/trips</code> appear here immediately.
-          </p>
+          <p className="mt-3 text-xs text-slate-500">No open tickets.</p>
         ) : (
           <div className="mt-3 space-y-3">
             {data!.tickets.map((tk) => (

@@ -9,8 +9,8 @@ const AdminUngujaMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[420px] items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-500">
-        Loading Unguja Live Operations Map...
+      <div className="flex h-[420px] items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 text-xs font-medium text-slate-500">
+        Loading map...
       </div>
     ),
   }
@@ -56,11 +56,6 @@ export default function AdminLiveMapPage() {
                   <tr key={v.operatorId}>
                     <td className="px-4 py-2.5 font-semibold text-slate-900">
                       {isBoda ? "Bodaboda Rider" : "Bajaji Driver"}
-                      {v.isDemo ? (
-                        <span className="ml-1.5 text-[10px] font-normal text-slate-400">
-                          (demo)
-                        </span>
-                      ) : null}
                     </td>
                     <td className="px-4 py-2.5 font-mono font-bold text-slate-800">
                       {v.plateNumber}

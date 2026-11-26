@@ -146,7 +146,6 @@ export function PartnerHomeView({
   );
   const [isOnline, setIsOnline] = React.useState(false);
   const [sunlightMode, setSunlightMode] = React.useState(false);
-  const [wakeLockActive, setWakeLockActive] = React.useState(false);
 
   // Shift & Wallet ACID Preview Counters
   const [todayNetTzs, setTodayNetTzs] = React.useState(24500);
@@ -208,10 +207,9 @@ export function PartnerHomeView({
   const [kycDocs, setKycDocs] = React.useState<Record<string, string>>({});
   const [kycSubmitted, setKycSubmitted] = React.useState(false);
 
-  // Engage Screen Wake Lock while online so outdoor Rider/Driver screens stay awake
+  // Keep screen awake while online
   React.useEffect(() => {
     let sentinel: WakeLockSentinel | null = null;
-    let cancelled = false;
 
     async function syncWakeLock() {
       if (
@@ -219,20 +217,17 @@ export function PartnerHomeView({
         typeof navigator === "undefined" ||
         !("wakeLock" in navigator)
       ) {
-        setWakeLockActive(false);
         return;
       }
       try {
         sentinel = await navigator.wakeLock.request("screen");
-        if (!cancelled) setWakeLockActive(true);
       } catch {
-        if (!cancelled) setWakeLockActive(false);
+        // Ignore wake lock errors on unsupported devices
       }
     }
 
     void syncWakeLock();
     return () => {
-      cancelled = true;
       sentinel?.release().catch(() => {});
     };
   }, [isOnline]);
@@ -657,7 +652,7 @@ export function PartnerHomeView({
                 </h1>
               </div>
               <Badge tone={kycSubmitted ? "amber" : "teal"}>
-                {kycSubmitted ? "PENDING_VERIFICATION" : "STEP 1–2"}
+                {kycSubmitted ? "Submitted" : "KYC"}
               </Badge>
             </div>
 
@@ -738,12 +733,12 @@ export function PartnerHomeView({
                   ))}
                 </div>
 
-                {/* Mobile Camera Document Uploads */}
+                {/* Document Photos */}
                 <div className="space-y-2">
                   <p className="text-xs font-bold uppercase tracking-wide opacity-80">
                     {locale === "sw"
-                      ? "Picha za Kamera (R2 Presigned Upload)"
-                      : "Mobile Camera Document Checklist"}
+                      ? "Picha za Nyaraka"
+                      : "Required Document Photos"}
                   </p>
                   <div className="grid gap-2">
                     {requiredKycDocs.map((doc) => {
@@ -822,9 +817,9 @@ export function PartnerHomeView({
               </div>
             )}
 
-            {/* INCOMING 20-SECOND DISPATCH OFFER CARD */}
+            {/* Incoming Dispatch Offer */}
             {incomingOffer && (
-              <div className="rounded-3xl border-2 border-amber-400 bg-gradient-to-br from-slate-900 via-slate-900 to-teal-950 p-5 text-white shadow-xl">
+              <div className="rounded-2xl border-2 border-amber-400 bg-slate-900 p-5 text-white shadow-xl">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-amber-400">
                     <BellRing className="h-5 w-5 animate-bounce" />
@@ -1257,11 +1252,6 @@ export function PartnerHomeView({
                     {isOnline
                       ? t("partner.onlineLabel")
                       : t("partner.offlineLabel")}
-                  </Badge>
-                  <Badge tone={wakeLockActive ? "amber" : "slate"}>
-                    {wakeLockActive
-                      ? t("partner.wakeLockActive")
-                      : t("partner.wakeLockInactive")}
                   </Badge>
                 </div>
 

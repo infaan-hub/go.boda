@@ -277,8 +277,8 @@ export function PublicTrackView({ shareToken }: { shareToken: string }) {
                 <span className="inline-flex items-center gap-1 text-teal-700">
                   <ShieldCheck className="h-3.5 w-3.5" />
                   {locale === "sw"
-                    ? "Haina taarifa binafsi (PII-Safe)"
-                    : "Privacy-safe public link"}
+                    ? "Kiungo salama"
+                    : "Private tracking link"}
                 </span>
               </div>
             </Card>

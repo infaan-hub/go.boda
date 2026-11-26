@@ -122,13 +122,9 @@ export function OperatorsKycPanel({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-extrabold text-slate-900">
-            Bodaboda Riders &amp; Bajaji Drivers KYC Queue
+          <h2 className="text-lg font-bold text-slate-900">
+            Riders &amp; Drivers KYC
           </h2>
-          <p className="text-xs text-slate-500">
-            Approving an operator automatically provisions their TZS Earnings &amp;
-            Commission Float wallets. Suspending takes them offline immediately.
-          </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
 
@@ -287,7 +283,7 @@ export function OperatorsKycPanel({
                       href={`/admin/operators/${op.id}`}
                       className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-teal-800 hover:bg-teal-50"
                     >
-                      Inspect 360°
+                      Details
                     </Link>
                     {op.kycStatus !== "APPROVED" ? (
                       <Button
@@ -363,22 +359,13 @@ export function TripsMonitorPanel({ trips }: { trips: AdminTripRow[] }) {
   return (
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-5 py-4">
-        <div>
-          <h2 className="text-base font-extrabold text-slate-900">
-            Unguja Trips Monitor
-          </h2>
-          <p className="text-xs text-slate-500">
-            Real-time snapshot of Go.boda (Bodaboda Rider) &amp; Go.bajaji
-            (Bajaji Driver) trips across Unguja Island.
-          </p>
-        </div>
-        <Badge tone="teal">{trips.length} recent trips</Badge>
+        <h2 className="text-base font-bold text-slate-900">Trips</h2>
+        <Badge tone="teal">{trips.length}</Badge>
       </div>
 
       {trips.length === 0 ? (
-        <div className="p-8 text-center text-sm text-slate-500">
-          No recorded trips yet. Book a trip in the Customer Web PWA to inspect
-          live dispatch and settlement states here.
+        <div className="p-8 text-center text-xs text-slate-500">
+          No trips recorded yet.
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -751,7 +738,7 @@ export function ZonesTariffsPanel({
       }
       onNotify(
         "emerald",
-        `Unguja ${lmForm.isKituo ? "Kituo" : "Landmark"} "${lmForm.nameEn}" added to PostGIS.`
+        `${lmForm.isKituo ? "Kituo" : "Landmark"} "${lmForm.nameEn}" added.`
       );
       setLmForm((prev) => ({ ...prev, nameSw: "", nameEn: "" }));
       await onMutated();
@@ -764,13 +751,7 @@ export function ZonesTariffsPanel({
     <div className="space-y-6">
       {/* Live TZS Tariffs */}
       <div>
-        <h2 className="text-base font-extrabold text-slate-900">
-          Live Unguja TZS Tariffs
-        </h2>
-        <p className="text-xs text-slate-500">
-          Updates write directly to <code>pricing.tariffs</code> and apply
-          immediately to Customer upfront fare quotes.
-        </p>
+        <h2 className="text-base font-bold text-slate-900">Tariffs (TZS)</h2>
         <div className="mt-3 grid gap-4 lg:grid-cols-2">
           {tariffs.map((tr) => (
             <TariffEditorCard
@@ -897,30 +878,11 @@ export function ZonesTariffsPanel({
 
         {/* Unguja Landmarks & Vituo */}
         <Card className="p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-amber-600" />
-              <h3 className="text-sm font-extrabold text-slate-900">
-                Unguja Landmarks &amp; Vituo (PostGIS)
-              </h3>
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                setLmForm({
-                  nameSw: "Chake Chake (Pemba Test)",
-                  nameEn: "Chake Chake (Pemba Test)",
-                  area: "Pemba",
-                  category: "KITUO",
-                  isKituo: true,
-                  lat: -5.2458,
-                  lng: 39.7666,
-                })
-              }
-              className="text-[11px] font-semibold text-rose-700 underline hover:text-rose-900"
-            >
-              Test Pemba Coords (Should Block 422)
-            </button>
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-amber-600" />
+            <h3 className="text-sm font-bold text-slate-900">
+              Unguja Landmarks &amp; Vituo
+            </h3>
           </div>
 
           <form

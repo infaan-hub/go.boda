@@ -54,13 +54,10 @@ export default function AdminDispatchPerformancePage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
             <BarChart3 className="h-5 w-5 text-teal-700" />
-            Dispatch Acceptance &amp; Fairness Analytics
+            Dispatch Metrics
           </h2>
-          <p className="text-xs text-slate-500">
-            Rider &amp; Driver acceptance vs. 20s timeout rates, match scoring weights, and auto-cooldown recommendations.
-          </p>
         </div>
         <Button size="sm" variant="outline" onClick={load}>
           <RefreshCw className="h-3.5 w-3.5" />
@@ -68,20 +65,20 @@ export default function AdminDispatchPerformancePage() {
         </Button>
       </div>
 
-      {/* Match Scoring Model Card */}
-      <Card className="border-teal-200 bg-teal-50/50 p-4">
+      {/* Scoring Weights */}
+      <Card className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
           <div>
-            <p className="font-extrabold text-teal-950">Canonical Unguja Dispatch Fairness Weights</p>
-            <p className="mt-0.5 text-teal-800">
-              Expanding radii: {data?.matchWeights.expandingRadiiKm.join(" km → ") ?? "1.5 → 3.5 → 6.0"} km •
-              Offer TTL: {data?.matchWeights.offerTtlSeconds ?? 20}s • First-accept atomic lock
+            <p className="font-bold text-slate-900">Dispatch Scoring</p>
+            <p className="mt-0.5 text-slate-500">
+              Radii: {data?.matchWeights.expandingRadiiKm.join(" → ") ?? "1.5 → 3.5 → 6.0"} km •
+              Offer timeout: {data?.matchWeights.offerTtlSeconds ?? 20}s
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Badge tone="teal">Proximity: {data?.matchWeights.proximityPct ?? 60}%</Badge>
-            <Badge tone="amber">Rating: {data?.matchWeights.ratingPct ?? 25}%</Badge>
-            <Badge tone="emerald">Idle Fairness: {data?.matchWeights.idleFairnessPct ?? 15}%</Badge>
+            <Badge tone="teal">Proximity {data?.matchWeights.proximityPct ?? 60}%</Badge>
+            <Badge tone="amber">Rating {data?.matchWeights.ratingPct ?? 25}%</Badge>
+            <Badge tone="emerald">Idle {data?.matchWeights.idleFairnessPct ?? 15}%</Badge>
           </div>
         </div>
       </Card>

@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import {
-  AlertTriangle,
   CheckCircle2,
   HardHat,
   Scale,
@@ -48,38 +47,35 @@ export function FinanceCompliancePanel({
 }) {
   return (
     <div className="space-y-6">
-      {/* Zero-Drift Audit Banner */}
+      {/* Ledger Status */}
       <Card
-        className={`border-2 p-5 ${
+        className={`p-4 ${
           finance.ledgerBalanced
-            ? "border-emerald-300 bg-emerald-50/70"
-            : "border-rose-400 bg-rose-50"
+            ? "border-emerald-200 bg-emerald-50/50"
+            : "border-rose-300 bg-rose-50"
         }`}
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Scale
-              className={`h-7 w-7 ${
+              className={`h-5 w-5 ${
                 finance.ledgerBalanced ? "text-emerald-700" : "text-rose-700"
               }`}
             />
             <div>
-              <h2 className="text-base font-extrabold text-slate-900">
-                Double-Entry TZS Ledger Audit:{" "}
-                {finance.ledgerBalanced ? "ZERO DRIFT VERIFIED" : "DRIFT DETECTED"}
+              <h2 className="text-sm font-bold text-slate-900">
+                Ledger Status: {finance.ledgerBalanced ? "Balanced" : "Mismatch"}
               </h2>
               <p className="text-xs text-slate-600">
-                Sum of all immutable <code>finance.ledger_entries</code> deltas
-                equals{" "}
+                {finance.totalConfirmedPayments} settled payments • Variance:{" "}
                 <strong className="font-mono">
                   {formatTzs(finance.totalLedgerDriftTzs)}
-                </strong>{" "}
-                across {finance.totalConfirmedPayments} confirmed settlements.
+                </strong>
               </p>
             </div>
           </div>
           <Badge tone={finance.ledgerBalanced ? "emerald" : "rose"}>
-            Drift: {formatTzs(finance.totalLedgerDriftTzs)}
+            {finance.ledgerBalanced ? "Balanced" : "Check Required"}
           </Badge>
         </div>
       </Card>
@@ -298,39 +294,6 @@ export function SosIncidentRoomPanel({
 }) {
   const [notes, setNotes] = React.useState<Record<string, string>>({});
   const [busyId, setBusyId] = React.useState<string | null>(null);
-  const [drillBusy, setDrillBusy] = React.useState(false);
-
-  async function triggerDrill(transportType: "BODABODA" | "BAJAJI") {
-    setDrillBusy(true);
-    try {
-      const res = await fetch("/api/ops/sos", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          transportType,
-          reason: `OPS DRILL: Controlled ${
-            transportType === "BODABODA" ? "Bodaboda Rider" : "Bajaji Driver"
-          } SOS verification near Michenzani Roundabout`,
-        }),
-      });
-      const json = (await res.json()) as {
-        alert?: { alertCode: string };
-        error?: string;
-      };
-      if (!res.ok) {
-        onNotify("rose", json.error || "Failed to start SOS drill");
-        return;
-      }
-      onPlayChime();
-      onNotify(
-        "rose",
-        `SOS Drill ${json.alert?.alertCode ?? ""} triggered live on Unguja map!`
-      );
-      await onMutated();
-    } finally {
-      setDrillBusy(false);
-    }
-  }
 
   async function updateAlert(
     alert: AdminSosRow,
@@ -364,48 +327,32 @@ export function SosIncidentRoomPanel({
 
   return (
     <div className="space-y-5">
-      <Card className="border-rose-200 bg-rose-50/50 p-5">
+      <Card className="border-rose-200 bg-rose-50/40 p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Siren className="h-6 w-6 text-rose-600" />
+            <Siren className="h-5 w-5 text-rose-600" />
             <div>
-              <h2 className="text-base font-extrabold text-slate-900">
-                Unguja SOS Incident Room
+              <h2 className="text-base font-bold text-slate-900">
+                SOS Alerts
               </h2>
               <p className="text-xs text-slate-600">
-                Live emergency alerts from Customers, Bodaboda Riders &amp;
-                Bajaji Drivers. Zanzibar Emergency Hotline: <strong>112</strong>{" "}
-                • Go.boda Ops Desk: <strong>+255 770 000 112</strong>.
+                Emergency: <strong>112</strong> • Support:{" "}
+                <strong>+255 770 000 112</strong>
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" onClick={onPlayChime}>
-              <Volume2 className="h-3.5 w-3.5" />
-              Test Chime
-            </Button>
-            <Button
-              size="sm"
-              variant="danger"
-              disabled={drillBusy}
-              onClick={() => triggerDrill("BODABODA")}
-            >
-              <AlertTriangle className="h-3.5 w-3.5" />
-              {drillBusy ? "Triggering..." : "Run Test SOS Drill"}
-            </Button>
-          </div>
+          <Button size="sm" variant="outline" onClick={onPlayChime}>
+            <Volume2 className="h-3.5 w-3.5" />
+            Alert Sound
+          </Button>
         </div>
       </Card>
 
       {sosAlerts.length === 0 ? (
         <Card className="p-8 text-center">
-          <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-600" />
-          <p className="mt-2 text-sm font-bold text-slate-800">
-            All Clear Across Unguja Island
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
-            No open or historical SOS incidents recorded. Use &ldquo;Run Test
-            SOS Drill&rdquo; to verify end-to-end alert triage and resolution.
+          <CheckCircle2 className="mx-auto h-7 w-7 text-emerald-600" />
+          <p className="mt-2 text-sm font-semibold text-slate-800">
+            No active SOS alerts
           </p>
         </Card>
       ) : (

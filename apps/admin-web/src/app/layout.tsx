@@ -9,9 +9,9 @@ import {
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Go.boda Admin — Unguja Operations Command Center",
+  title: "Go.boda Admin",
   description:
-    "Manage Bodaboda Riders, Bajaji Drivers, Unguja zones, tariffs, live trips, SOS alerts, and payouts.",
+    "Manage Bodaboda Riders, Bajaji Drivers, Unguja zones, tariffs, trips, and safety alerts.",
   manifest: "/manifest.webmanifest",
 };
 

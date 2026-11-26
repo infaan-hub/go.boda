@@ -7,8 +7,6 @@ import {
   Bike,
   CarFront,
   CheckCircle2,
-  HardHat,
-  KeyRound,
   Loader2,
   MessageCircle,
   PhoneCall,
@@ -145,9 +143,7 @@ export function PartnerSafetyView({
           tone: "err",
           text:
             (sw ? json.messageSw : json.messageEn) ||
-            (sw
-              ? "Imeshindwa kuhifadhi mtu wa kuaminika."
-              : "Could not save Trusted Contact."),
+            (sw ? "Imeshindwa kuhifadhi." : "Could not save contact."),
         });
         return;
       }
@@ -158,9 +154,7 @@ export function PartnerSafetyView({
       setContactPhone("");
       setFeedback({
         tone: "ok",
-        text: sw
-          ? "Mtu wa kuaminika wa dharura amehifadhiwa kwenye mfumo wa Go.boda!"
-          : "Emergency Trusted Contact saved to your Go.boda safety profile!",
+        text: sw ? "Mtu wa kuaminika amehifadhiwa." : "Trusted contact saved.",
       });
     } finally {
       setSaving(false);
@@ -190,8 +184,8 @@ export function PartnerSafetyView({
     const roleLabel =
       role === "BODABODA_RIDER" ? "Bodaboda Rider" : "Bajaji Driver";
     const message = sw
-      ? `Habari ${contact.contactName}, niko kazini kwenye Go.boda Unguja kama ${roleLabel}${plate}. Kama kutatokea dharura wasiliana na Ops Desk: ${OPS_DESK_DISPLAY} au 112.`
-      : `Hi ${contact.contactName}, I am on shift with Go.boda Unguja as a ${roleLabel}${plate}. In any emergency contact Ops Desk: ${OPS_DESK_DISPLAY} or 112.`;
+      ? `Habari ${contact.contactName}, niko kazini Go.boda (${roleLabel}${plate}). Kwa dharura piga ${OPS_DESK_DISPLAY} au 112.`
+      : `Hi ${contact.contactName}, I am on shift with Go.boda (${roleLabel}${plate}). In an emergency call ${OPS_DESK_DISPLAY} or 112.`;
     return `https://wa.me/${cleanDigits}?text=${encodeURIComponent(message)}`;
   };
 
@@ -216,14 +210,14 @@ export function PartnerSafetyView({
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <BrandLogo
             dark={!sunlightMode}
-            subtitle={sw ? "Usalama wa Mwendeshaji" : "Operator Safety Profile"}
+            subtitle={sw ? "Usalama" : "Safety"}
           />
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setSunlightMode((v) => !v)}
               className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold",
+                "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold",
                 sunlightMode
                   ? "border-slate-900 bg-amber-400 text-slate-950"
                   : "border-slate-700 bg-slate-900 text-amber-400"
@@ -242,110 +236,107 @@ export function PartnerSafetyView({
       </header>
 
       <main className="mx-auto max-w-2xl space-y-5 px-4 pt-4">
-        {/* Emergency Direct Dials */}
-        <section className="rounded-3xl border border-rose-500/40 bg-gradient-to-br from-rose-600 to-rose-800 p-5 text-white shadow-xl">
+        {/* Emergency Contacts */}
+        <section
+          className={cn(
+            "rounded-2xl border p-5",
+            sunlightMode
+              ? "border-rose-300 bg-white text-slate-950"
+              : "border-rose-500/40 bg-slate-900 text-white"
+          )}
+        >
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5">
-              <ShieldAlert className="h-6 w-6" />
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-rose-100">
-                  {sw
-                    ? "Msaada wa Haraka — Kisiwa cha Unguja"
-                    : "Rapid Emergency Support — Unguja Island"}
-                </p>
-                <h1 className="text-lg font-extrabold">
-                  {sw
-                    ? "Simu za Dharura za Rider & Dereva"
-                    : "Rider & Driver Emergency Dials"}
-                </h1>
-              </div>
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-rose-500" />
+              <h1 className="text-base font-bold">
+                {sw ? "Namba za Dharura" : "Emergency Contacts"}
+              </h1>
             </div>
-            {partnerName && (
-              <Badge tone="amber">
+            {partnerName ? (
+              <span className="text-xs opacity-75">
                 {partnerName}
                 {partnerPlateNumber ? ` • ${partnerPlateNumber}` : ""}
-              </Badge>
-            )}
+              </span>
+            ) : null}
           </div>
 
           <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
             <a
               href="tel:112"
-              className="flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-rose-700 shadow hover:bg-rose-50"
+              className="flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-rose-700"
             >
               <PhoneCall className="h-4 w-4" />
-              {sw ? "Piga 112 (Dharura)" : "Call 112 Emergency"}
+              {sw ? "Piga 112" : "Call 112"}
             </a>
             <a
               href={`tel:${OPS_DESK_PHONE}`}
-              className="flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-xs font-extrabold text-white shadow hover:bg-slate-900"
+              className="flex items-center justify-center gap-2 rounded-xl bg-slate-800 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-700"
             >
               <PhoneCall className="h-4 w-4 text-amber-400" />
-              <span>Ops: {OPS_DESK_DISPLAY}</span>
+              <span>{OPS_DESK_DISPLAY}</span>
             </a>
             <a
               href={`https://wa.me/255770000112?text=${encodeURIComponent(
                 sw
-                  ? `SOS Mwendeshaji (${partnerName ?? "Partner"} ${partnerPlateNumber ?? ""}): Nahitaji msaada wa dharura hapa Unguja.`
-                  : `Operator SOS (${partnerName ?? "Partner"} ${partnerPlateNumber ?? ""}): Requesting urgent assistance on Unguja.`
+                  ? `Msaada wa dharura (${partnerName ?? ""} ${partnerPlateNumber ?? ""})`
+                  : `Emergency assistance needed (${partnerName ?? ""} ${partnerPlateNumber ?? ""})`
               )}`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-xs font-extrabold text-white shadow hover:bg-emerald-600"
+              className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
             >
               <MessageCircle className="h-4 w-4" />
-              {sw ? "WhatsApp Ops Desk" : "WhatsApp Ops Desk"}
+              WhatsApp
             </a>
           </div>
         </section>
 
-        {/* Operator Role Selector (when not locked by session) */}
-        <div
-          className={cn(
-            "grid grid-cols-2 gap-2 rounded-2xl border p-1.5",
-            sunlightMode
-              ? "border-slate-300 bg-slate-100"
-              : "border-slate-800 bg-slate-900"
-          )}
-        >
-          <button
-            type="button"
-            disabled={Boolean(partnerRole)}
-            onClick={() => setRole("BODABODA_RIDER")}
+        {!partnerRole && (
+          <div
             className={cn(
-              "flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition",
-              isBodaboda
-                ? "bg-teal-600 text-white shadow"
-                : sunlightMode
-                  ? "text-slate-700"
-                  : "text-slate-400"
+              "grid grid-cols-2 gap-2 rounded-xl border p-1",
+              sunlightMode
+                ? "border-slate-300 bg-slate-100"
+                : "border-slate-800 bg-slate-900"
             )}
           >
-            <Bike className="h-4 w-4" />
-            {sw ? "Rider wa Bodaboda" : "Bodaboda Rider"}
-          </button>
-          <button
-            type="button"
-            disabled={Boolean(partnerRole)}
-            onClick={() => setRole("BAJAJI_DRIVER")}
-            className={cn(
-              "flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition",
-              !isBodaboda
-                ? "bg-amber-500 text-slate-950 shadow"
-                : sunlightMode
-                  ? "text-slate-700"
-                  : "text-slate-400"
-            )}
-          >
-            <CarFront className="h-4 w-4" />
-            {sw ? "Dereva wa Bajaji" : "Bajaji Driver"}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setRole("BODABODA_RIDER")}
+              className={cn(
+                "flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition",
+                isBodaboda
+                  ? "bg-teal-600 text-white"
+                  : sunlightMode
+                    ? "text-slate-700"
+                    : "text-slate-400"
+              )}
+            >
+              <Bike className="h-4 w-4" />
+              {sw ? "Rider wa Bodaboda" : "Bodaboda Rider"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("BAJAJI_DRIVER")}
+              className={cn(
+                "flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition",
+                !isBodaboda
+                  ? "bg-amber-500 text-slate-950"
+                  : sunlightMode
+                    ? "text-slate-700"
+                    : "text-slate-400"
+              )}
+            >
+              <CarFront className="h-4 w-4" />
+              {sw ? "Dereva wa Bajaji" : "Bajaji Driver"}
+            </button>
+          </div>
+        )}
 
         {/* Trusted Contacts (Up to 3) */}
         <section
           className={cn(
-            "space-y-4 rounded-3xl border p-5",
+            "space-y-4 rounded-2xl border p-5",
             sunlightMode
               ? "border-slate-300 bg-white text-slate-950"
               : "border-slate-800 bg-slate-900 text-white"
@@ -353,16 +344,14 @@ export function PartnerSafetyView({
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-amber-400">
-                {sw
-                  ? "Familia / Kiongozi wa Kituo (Hadi 3)"
-                  : "Family / Kituo Stage Leaders (Up to 3)"}
-              </p>
-              <h2 className="text-lg font-extrabold">
-                {sw
-                  ? "Watu Wako wa Kuaminika wa Dharura"
-                  : "Your Trusted Emergency Contacts"}
+              <h2 className="text-base font-bold">
+                {sw ? "Watu wa Kuaminika" : "Trusted Contacts"}
               </h2>
+              <p className="mt-0.5 text-xs opacity-70">
+                {sw
+                  ? "Hifadhi hadi namba 3 za dharura (familia au kiongozi wa kituo)."
+                  : "Save up to 3 emergency contacts (family or stage leader)."}
+              </p>
             </div>
             <Badge tone={atLimit ? "amber" : "teal"}>
               {contacts.length} / 3
@@ -372,7 +361,7 @@ export function PartnerSafetyView({
           {feedback && (
             <div
               className={cn(
-                "flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs font-semibold",
+                "flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs font-medium",
                 feedback.tone === "ok"
                   ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
                   : "border-rose-500/40 bg-rose-500/15 text-rose-400"
@@ -390,39 +379,37 @@ export function PartnerSafetyView({
           {loading ? (
             <div className="flex items-center gap-2 py-4 text-xs opacity-75">
               <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
-              {sw ? "Inapakia..." : "Loading contacts..."}
+              {sw ? "Inapakia..." : "Loading..."}
             </div>
           ) : contacts.length === 0 ? (
-            <div
+            <p
               className={cn(
-                "rounded-2xl border border-dashed p-4 text-center text-xs opacity-75",
+                "rounded-xl border border-dashed p-4 text-center text-xs opacity-75",
                 sunlightMode ? "border-slate-300" : "border-slate-700"
               )}
             >
-              {sw
-                ? "Hifadhi hadi namba 3 za WhatsApp za familia au kiongozi wa kituo chako."
-                : "Save up to 3 WhatsApp contacts (family or your home Kituo leader) for shift safety."}
-            </div>
+              {sw ? "Hakuna watu waliohifadhiwa." : "No contacts saved yet."}
+            </p>
           ) : (
             <div className="space-y-2.5">
               {contacts.map((c) => (
                 <div
                   key={c.id}
                   className={cn(
-                    "flex flex-wrap items-center justify-between gap-2 rounded-2xl border p-3.5",
+                    "flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3",
                     sunlightMode
                       ? "border-slate-200 bg-slate-50"
                       : "border-slate-800 bg-slate-950"
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
-                      <UserCheck className="h-5 w-5" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
+                      <UserCheck className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-extrabold">
+                      <p className="text-sm font-bold">
                         {c.contactName}{" "}
-                        <span className="text-xs font-semibold opacity-70">
+                        <span className="text-xs font-normal opacity-70">
                           ({c.relationship})
                         </span>
                       </p>
@@ -436,16 +423,16 @@ export function PartnerSafetyView({
                       href={buildWhatsAppShareUrl(c)}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+                      className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
                     >
                       <Share2 className="h-3.5 w-3.5" />
-                      WhatsApp
+                      Share
                     </a>
                     <button
                       type="button"
                       disabled={deletingId === c.id}
                       onClick={() => void handleDelete(c.id)}
-                      className="rounded-xl border border-rose-500/40 p-1.5 text-rose-400 hover:bg-rose-500/10 disabled:opacity-50"
+                      className="rounded-lg border border-rose-500/40 p-1.5 text-rose-400 hover:bg-rose-500/10 disabled:opacity-50"
                       aria-label="Delete contact"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -456,9 +443,8 @@ export function PartnerSafetyView({
             </div>
           )}
 
-          {/* Add Form */}
           <form onSubmit={handleAddContact} className="space-y-3 pt-1">
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-2.5 sm:grid-cols-3">
               <input
                 type="text"
                 required
@@ -467,7 +453,7 @@ export function PartnerSafetyView({
                 onChange={(e) => setContactName(e.target.value)}
                 placeholder={sw ? "Jina kamili" : "Full name"}
                 className={cn(
-                  "rounded-xl border px-3 py-2 text-xs font-medium",
+                  "rounded-lg border px-3 py-2 text-xs",
                   sunlightMode
                     ? "border-slate-300 bg-slate-50 text-slate-950"
                     : "border-slate-700 bg-slate-950 text-white"
@@ -481,7 +467,7 @@ export function PartnerSafetyView({
                 onChange={(e) => setContactPhone(e.target.value)}
                 placeholder="+255 777 000 000"
                 className={cn(
-                  "rounded-xl border px-3 py-2 text-xs font-medium",
+                  "rounded-lg border px-3 py-2 text-xs",
                   sunlightMode
                     ? "border-slate-300 bg-slate-50 text-slate-950"
                     : "border-slate-700 bg-slate-950 text-white"
@@ -492,7 +478,7 @@ export function PartnerSafetyView({
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
                 className={cn(
-                  "rounded-xl border px-3 py-2 text-xs font-semibold",
+                  "rounded-lg border px-3 py-2 text-xs font-medium",
                   sunlightMode
                     ? "border-slate-300 bg-slate-50 text-slate-950"
                     : "border-slate-700 bg-slate-950 text-white"
@@ -500,7 +486,7 @@ export function PartnerSafetyView({
               >
                 <option value="Family">{sw ? "Familia" : "Family"}</option>
                 <option value="Kituo Leader">
-                  {sw ? "Kiongozi wa Kituo" : "Kituo Stage Leader"}
+                  {sw ? "Kiongozi wa Kituo" : "Kituo Leader"}
                 </option>
                 <option value="Vehicle Owner">
                   {sw ? "Mmiliki wa Chombo" : "Vehicle Owner"}
@@ -517,9 +503,7 @@ export function PartnerSafetyView({
                   onChange={(e) => setAutoShareTrips(e.target.checked)}
                   className="h-4 w-4 rounded"
                 />
-                {sw
-                  ? "Washa tahadhari ya SOS kwao"
-                  : "Include in SOS alert escalation"}
+                {sw ? "Washa tahadhari ya SOS" : "Notify on SOS"}
               </label>
               <Button
                 type="submit"
@@ -534,88 +518,18 @@ export function PartnerSafetyView({
                 )}
                 {atLimit
                   ? sw
-                    ? "Wote 3 Wamehifadhiwa"
-                    : "Max 3 Saved"
+                    ? "Kikomo (3)"
+                    : "Limit reached"
                   : sw
-                    ? "Hifadhi Mtu"
-                    : "Save Contact"}
+                    ? "Hifadhi"
+                    : "Add Contact"}
               </Button>
             </div>
           </form>
         </section>
-
-        {/* Role-Specific Shift Safety Checklist */}
-        <section
-          className={cn(
-            "space-y-3 rounded-3xl border p-5",
-            sunlightMode
-              ? "border-slate-300 bg-white text-slate-950"
-              : "border-slate-800 bg-slate-900 text-white"
-          )}
-        >
-          <h2 className="text-base font-extrabold">
-            {isBodaboda
-              ? sw
-                ? "Orodha ya Usalama wa Bodaboda Rider"
-                : "Bodaboda Rider Pre-Shift Safety Checklist"
-              : sw
-                ? "Orodha ya Usalama wa Dereva wa Bajaji"
-                : "Bajaji Driver Pre-Shift Safety Checklist"}
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div
-              className={cn(
-                "rounded-2xl border p-3.5 text-xs",
-                sunlightMode
-                  ? "border-teal-200 bg-teal-50"
-                  : "border-teal-500/30 bg-teal-950/40"
-              )}
-            >
-              <HardHat className="h-5 w-5 text-amber-400" />
-              <p className="mt-2 font-extrabold">
-                {isBodaboda
-                  ? sw
-                    ? "Helmeti 2 Safi (Lazima)"
-                    : "2x Clean Helmets (Mandatory)"
-                  : sw
-                    ? "Upeo wa Abiria 3 Tu"
-                    : "Max 3 Passengers Enforced"}
-              </p>
-              <p className="mt-1 opacity-80">
-                {isBodaboda
-                  ? sw
-                    ? "Mpe kila mteja helmeti safi ili kulinda alama yako na kupata beji ya Verified Safe Rider."
-                    : "Provide a clean passenger helmet on every trip to earn your Verified Safe Rider badge."
-                  : sw
-                    ? "Usipakie zaidi ya abiria 3; hakikisha taa na breki zinafanya kazi vizuri."
-                    : "Never exceed 3 passengers; verify headlights, indicators, and brakes before going online."}
-              </p>
-            </div>
-            <div
-              className={cn(
-                "rounded-2xl border p-3.5 text-xs",
-                sunlightMode
-                  ? "border-amber-200 bg-amber-50"
-                  : "border-amber-500/30 bg-amber-950/30"
-              )}
-            >
-              <KeyRound className="h-5 w-5 text-amber-400" />
-              <p className="mt-2 font-extrabold">
-                {sw
-                  ? "Thibitisha PIN ya Namba 4 Kabla ya Kuondoka"
-                  : "Verify 4-Digit Start PIN Before Departing"}
-              </p>
-              <p className="mt-1 opacity-80">
-                {sw
-                  ? "Daima pokea PIN kutoka kwa mteja na fuata mipaka ya Stone Town Smart Snap."
-                  : "Always confirm the Customer's 4-digit Start PIN and meet at Stone Town Smart Snap gates."}
-              </p>
-            </div>
-          </div>
-        </section>
       </main>
 
-      {/* Bottom Partner Navigation */}
+      {/* Bottom Navigation */}
       <nav
         className={cn(
           "fixed bottom-0 left-0 right-0 z-30 border-t",
@@ -624,7 +538,7 @@ export function PartnerSafetyView({
             : "border-slate-800 bg-slate-950"
         )}
       >
-        <div className="mx-auto grid max-w-2xl grid-cols-2 py-2.5 text-center text-xs font-bold">
+        <div className="mx-auto grid max-w-2xl grid-cols-2 py-2.5 text-center text-xs font-semibold">
           <Link
             href={partnerId ? "/partner/dashboard" : "/partner/login"}
             className="flex items-center justify-center gap-2 text-slate-400 hover:text-amber-400"
@@ -632,18 +546,18 @@ export function PartnerSafetyView({
             <Power className="h-4 w-4" />
             {partnerId
               ? sw
-                ? "Rudi Kwenye Zamu"
-                : "Back to Shift Dashboard"
+                ? "Zamu"
+                : "Shift"
               : sw
-                ? "Ingia Partner"
-                : "Partner Sign In"}
+                ? "Ingia"
+                : "Sign In"}
           </Link>
           <Link
             href="/safety"
             className="flex items-center justify-center gap-2 text-amber-400"
           >
             <ShieldCheck className="h-4 w-4" />
-            {sw ? "Usalama & Dharura" : "Safety & Emergency"}
+            {sw ? "Usalama" : "Safety"}
           </Link>
         </div>
       </nav>

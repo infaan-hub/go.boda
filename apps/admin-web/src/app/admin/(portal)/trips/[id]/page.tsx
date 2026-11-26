@@ -137,7 +137,7 @@ export default function AdminTripForensicPage() {
   if (!data) {
     return (
       <Card className="p-8 text-center text-sm text-slate-500">
-        Loading Trip Forensic Timeline from Neon PostgreSQL...
+        Loading trip...
       </Card>
     );
   }
@@ -194,9 +194,9 @@ export default function AdminTripForensicPage() {
       {/* State Transition Timeline + Dispute Adjustment */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-5">
-          <h3 className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
             <Clock className="h-4 w-4 text-teal-700" />
-            Immutable State Transition Timeline ({transitions.length})
+            Timeline ({transitions.length})
           </h3>
           {transitions.length === 0 ? (
             <p className="mt-3 text-xs text-slate-500">Created at {new Date(trip.createdAt).toLocaleString("en-GB")}.</p>
@@ -220,13 +220,10 @@ export default function AdminTripForensicPage() {
         </Card>
 
         <Card className="p-5">
-          <h3 className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
             <Scale className="h-4 w-4 text-amber-600" />
-            Ops Fare Dispute Resolver
+            Fare Adjustment
           </h3>
-          <p className="mt-1 text-xs text-slate-500">
-            Record an audited TZS fare adjustment and resolve payment disputes with an immutable transition log.
-          </p>
           <form onSubmit={applyAdjustment} className="mt-4 space-y-3 text-xs">
             <label className="block">
               <span className="font-semibold text-slate-600">Adjusted Final Fare (TZS)</span>
@@ -240,7 +237,7 @@ export default function AdminTripForensicPage() {
               />
             </label>
             <label className="block">
-              <span className="font-semibold text-slate-600">Dispute Resolution Note</span>
+              <span className="font-semibold text-slate-600">Reason</span>
               <input
                 type="text"
                 required
@@ -251,7 +248,7 @@ export default function AdminTripForensicPage() {
               />
             </label>
             <Button type="submit" size="sm" variant="amber" disabled={busy}>
-              Apply Audited Fare Adjustment
+              Save Adjustment
             </Button>
           </form>
 

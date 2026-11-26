@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
-  Activity,
   BarChart3,
   Calculator,
   CalendarClock,
@@ -22,7 +21,6 @@ import {
   Radio,
   RefreshCw,
   Route,
-  Scale,
   ShieldAlert,
   Siren,
   SlidersHorizontal,
@@ -32,7 +30,6 @@ import {
   Wallet,
 } from "lucide-react";
 import {
-  Badge,
   BrandLogo,
   Button,
   Card,
@@ -160,12 +157,12 @@ export function AdminPortalShell({
         message?: string;
       };
       if (!ovRes.ok) {
-        throw new Error(json.message || json.error || "Failed to load ops data");
+        throw new Error(json.message || json.error || "Failed to load data");
       }
       setData(json);
     } catch (err) {
       setLoadError(
-        err instanceof Error ? err.message : "Unable to load live operations data"
+        err instanceof Error ? err.message : "Unable to load operations data"
       );
     } finally {
       setLoading(false);
@@ -207,7 +204,7 @@ export function AdminPortalShell({
       ],
     },
     {
-      heading: "Fleet & Unguja Geo",
+      heading: "Fleet & Locations",
       items: [
         {
           href: "/admin/operators",
@@ -216,10 +213,10 @@ export function AdminPortalShell({
           badge: kpis?.pendingKycCount || undefined,
           badgeTone: "amber",
         },
-        { href: "/admin/compliance/expiries", icon: CalendarClock, label: "Expiry Radar" },
-        { href: "/admin/vituo", icon: MapPin, label: "Unguja Vituo" },
-        { href: "/admin/heatmap", icon: Flame, label: "Supply Heatmap" },
-        { href: "/admin/fleet/telemetry", icon: Radio, label: "GPS Telemetry" },
+        { href: "/admin/compliance/expiries", icon: CalendarClock, label: "Expiries" },
+        { href: "/admin/vituo", icon: MapPin, label: "Vituo" },
+        { href: "/admin/heatmap", icon: Flame, label: "Heatmap" },
+        { href: "/admin/fleet/telemetry", icon: Radio, label: "GPS Health" },
       ],
     },
     {
@@ -227,18 +224,18 @@ export function AdminPortalShell({
       items: [
         { href: "/admin/zones", icon: SlidersHorizontal, label: t("admin.navZones") },
         { href: "/admin/pricing/simulator", icon: Calculator, label: "Fare Simulator" },
-        { href: "/admin/promos/analytics", icon: Tag, label: "Promo Analytics" },
+        { href: "/admin/promos/analytics", icon: Tag, label: "Promos" },
         { href: "/admin/dispatch/queue", icon: Radar, label: "Dispatch Queue" },
-        { href: "/admin/dispatch/performance", icon: BarChart3, label: "Dispatch Fairness" },
+        { href: "/admin/dispatch/performance", icon: BarChart3, label: "Dispatch Metrics" },
       ],
     },
     {
-      heading: "Finance, Comms & Safety",
+      heading: "Finance & Safety",
       items: [
         { href: "/admin/finance", icon: Wallet, label: t("admin.navFinance") },
-        { href: "/admin/broadcasts", icon: Megaphone, label: "Ops Broadcasts" },
+        { href: "/admin/broadcasts", icon: Megaphone, label: "Broadcasts" },
         { href: "/admin/support/inbox", icon: Inbox, label: "Support Inbox" },
-        { href: "/admin/safety/helmets", icon: HardHat, label: "Helmet Safety" },
+        { href: "/admin/safety/helmets", icon: HardHat, label: "Helmets" },
         {
           href: "/admin/sos",
           icon: ShieldAlert,
@@ -278,18 +275,15 @@ export function AdminPortalShell({
     <AdminPortalContext.Provider value={ctxValue}>
       <div className="flex min-h-screen bg-slate-100">
         {/* Desktop Sidebar */}
-        <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-slate-950 p-4 text-white lg:flex lg:flex-col">
+        <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-slate-950 p-4 text-white lg:flex lg:flex-col">
           <Link href="/admin/dashboard" className="px-1">
-            <BrandLogo dark subtitle={t("roles.admin")} />
+            <BrandLogo dark subtitle="Unguja Admin" />
           </Link>
-          <div className="mt-3 px-1">
-            <Badge tone="amber">{t("common.ungujaOnly")}</Badge>
-          </div>
 
-          <nav className="mt-5 flex-1 space-y-4 overflow-y-auto pr-1">
+          <nav className="mt-6 flex-1 space-y-5 overflow-y-auto pr-1">
             {navGroups.map((group) => (
               <div key={group.heading}>
-                <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                   {group.heading}
                 </p>
                 <div className="mt-1 space-y-0.5">
@@ -301,7 +295,7 @@ export function AdminPortalShell({
                         href={item.href}
                         className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium transition ${
                           active
-                            ? "bg-teal-700 text-white shadow-sm"
+                            ? "bg-teal-700 text-white"
                             : "text-slate-300 hover:bg-slate-900 hover:text-white"
                         }`}
                       >
@@ -311,7 +305,7 @@ export function AdminPortalShell({
                         </span>
                         {item.badge !== undefined && item.badge > 0 ? (
                           <span
-                            className={`rounded-full px-1.5 py-0.5 text-[10px] font-extrabold ${
+                            className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
                               item.badgeTone === "rose"
                                 ? "bg-rose-600 text-white"
                                 : item.badgeTone === "amber"
@@ -329,74 +323,52 @@ export function AdminPortalShell({
               </div>
             ))}
           </nav>
-
-          <div className="mt-4 space-y-1.5 rounded-xl border border-slate-800 bg-slate-900 p-3 text-[11px] text-slate-400">
-            <p className="font-semibold text-slate-200">
-              {t("common.phaseBadge")}
-            </p>
-            <p>10-Microservice Topology • Neon PostGIS</p>
-          </div>
         </aside>
 
         {/* Main Column */}
         <div className="flex min-w-0 flex-1 flex-col">
-          {/* Global Pulsing SOS Alert Banner */}
+          {/* Active SOS Banner */}
           {openSosCount > 0 ? (
             <div className="flex flex-wrap items-center justify-between gap-3 bg-rose-600 px-6 py-2.5 text-white">
-              <div className="flex items-center gap-2.5 text-xs font-extrabold">
-                <Siren className="h-4 w-4 animate-pulse" />
+              <div className="flex items-center gap-2 text-xs font-bold">
+                <Siren className="h-4 w-4" />
                 <span>
-                  ACTIVE UNGUJA SOS ALERT: {openSosCount} incident
-                  {openSosCount > 1 ? "s" : ""} awaiting Ops Desk response!
+                  {openSosCount} open SOS alert{openSosCount > 1 ? "s" : ""}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={playSosChime}
-                  className="inline-flex items-center gap-1 rounded-lg bg-rose-800 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-rose-900"
+                  className="inline-flex items-center gap-1 rounded-lg bg-rose-800 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-rose-900"
                 >
                   <Volume2 className="h-3.5 w-3.5" />
-                  Chime
+                  Sound
                 </button>
                 <Link
                   href="/admin/sos"
-                  className="rounded-lg bg-white px-3 py-1 text-[11px] font-extrabold text-rose-700 hover:bg-rose-50"
+                  className="rounded-lg bg-white px-3 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-50"
                 >
-                  Open SOS Room →
+                  Open SOS
                 </Link>
               </div>
             </div>
           ) : null}
 
           {/* Sticky Top Header */}
-          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white px-5 py-3.5">
+          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white px-5 py-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h1 className="text-lg font-extrabold text-slate-900 sm:text-xl">
+                <h1 className="text-base font-bold text-slate-900 sm:text-lg">
                   {t("admin.title")}
                 </h1>
-                <p className="text-xs text-slate-500">
-                  {t("admin.subtitle")}
-                  {adminUser ? ` • ${adminUser.name} (${adminUser.phone})` : ""}
-                </p>
+                {adminUser ? (
+                  <p className="text-xs text-slate-500">
+                    {adminUser.name} • {adminUser.phone}
+                  </p>
+                ) : null}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge tone={data?.dbHealth.connected ? "emerald" : "amber"}>
-                  <Activity className="h-3.5 w-3.5" />
-                  Neon DB:{" "}
-                  {loading && !data
-                    ? "Connecting..."
-                    : data?.dbHealth.connected
-                      ? `Live (${data.dbHealth.schemasReady?.length ?? 10}/10 schemas • PostGIS)`
-                      : "Offline"}
-                </Badge>
-                {kpis ? (
-                  <Badge tone={kpis.ledgerBalanced ? "emerald" : "rose"}>
-                    <Scale className="h-3.5 w-3.5" />
-                    {kpis.ledgerBalanced ? "Zero-Drift Ledger" : "Ledger Drift!"}
-                  </Badge>
-                ) : null}
                 <Button
                   size="sm"
                   variant="outline"
@@ -428,7 +400,7 @@ export function AdminPortalShell({
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium ${
                       active
                         ? "border-teal-700 bg-teal-700 text-white"
                         : "border-slate-200 bg-slate-50 text-slate-700"
@@ -447,7 +419,7 @@ export function AdminPortalShell({
           <main className="mx-auto w-full max-w-7xl space-y-6 p-5 sm:p-6">
             {toast ? (
               <div
-                className={`flex items-center justify-between rounded-xl border px-4 py-3 text-xs font-semibold shadow-sm ${
+                className={`flex items-center justify-between rounded-xl border px-4 py-3 text-xs font-medium ${
                   toast.tone === "emerald"
                     ? "border-emerald-200 bg-emerald-50 text-emerald-900"
                     : "border-rose-200 bg-rose-50 text-rose-900"
@@ -468,15 +440,14 @@ export function AdminPortalShell({
             ) : null}
 
             {loadError ? (
-              <Card className="border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">
-                <strong>Operations feed error:</strong> {loadError}
+              <Card className="border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                {loadError}
               </Card>
             ) : null}
 
             {!data && loading ? (
-              <Card className="p-10 text-center text-sm text-slate-500">
-                Loading live Unguja fleet, KYC queue, tariffs, safety alerts
-                &amp; ledger from Neon PostgreSQL...
+              <Card className="p-8 text-center text-sm text-slate-500">
+                Loading...
               </Card>
             ) : (
               children

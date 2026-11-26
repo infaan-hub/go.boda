@@ -96,12 +96,12 @@ export default function AdminBroadcastsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
           <Megaphone className="h-5 w-5 text-teal-700" />
-          Bilingual Unguja Ops Broadcast Studio
+          Broadcasts
         </h2>
         <p className="text-xs text-slate-500">
-          Send targeted Kiswahili &amp; English Web Push, WhatsApp, or SMS advisories to Bodaboda Riders, Bajaji Drivers, or Customers.
+          Send Kiswahili and English updates to Riders, Drivers, or Customers.
         </p>
       </div>
 

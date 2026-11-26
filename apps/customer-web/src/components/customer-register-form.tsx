@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { KeyRound, ShieldCheck, Smartphone, UserRound } from "lucide-react";
-import { Badge, BrandLogo, Button, Card } from "@goboda/ui";
+import { BrandLogo, Button, Card } from "@goboda/ui";
 
 export function CustomerRegisterForm() {
   const router = useRouter();
@@ -84,24 +84,14 @@ export function CustomerRegisterForm() {
       </div>
 
       <Card className="w-full max-w-md p-6">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
-              <Smartphone className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-base font-extrabold text-slate-900">
-                {isSw ? "Sajili Akaunti ya Mteja" : "Create Customer Account"}
-              </h1>
-              <p className="text-xs text-slate-500">
-                {isSw
-                  ? "Book Bodaboda na Bajaji kwa haraka Unguja"
-                  : "Book Bodaboda and Bajaji across Unguja"}
-              </p>
-            </div>
-          </div>
-          <Badge tone="amber">NEW</Badge>
-        </div>
+        <h1 className="text-lg font-bold text-slate-900">
+          {isSw ? "Fungua Akaunti" : "Create Account"}
+        </h1>
+        <p className="mt-1 text-xs text-slate-500">
+          {isSw
+            ? "Agiza Bodaboda na Bajaji popote Unguja"
+            : "Book Bodaboda and Bajaji across Unguja"}
+        </p>
 
         {error ? (
           <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-medium text-rose-700">

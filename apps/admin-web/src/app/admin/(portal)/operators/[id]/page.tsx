@@ -142,7 +142,7 @@ export default function AdminOperatorDetailPage() {
   if (loading) {
     return (
       <Card className="p-8 text-center text-sm text-slate-500">
-        Loading Operator 360° KYC dossier from Neon &amp; R2 registry...
+        Loading operator...
       </Card>
     );
   }
@@ -277,19 +277,14 @@ export default function AdminOperatorDetailPage() {
         </div>
       </Card>
 
-      {/* Private Cloudflare R2 KYC Document Inspector */}
+      {/* KYC Documents */}
       <Card className="p-5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <FileCheck2 className="h-5 w-5 text-teal-700" />
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900">
-                Private Cloudflare R2 KYC Document Inspector ({checklist.filter((c) => c.uploaded).length}/{checklist.length})
-              </h3>
-              <p className="text-xs text-slate-500">
-                Click any document tile to inspect full-screen metadata, R2 storage key, and helmet proof.
-              </p>
-            </div>
+            <FileCheck2 className="h-4 w-4 text-teal-700" />
+            <h3 className="text-sm font-bold text-slate-900">
+              KYC Documents ({checklist.filter((c) => c.uploaded).length}/{checklist.length})
+            </h3>
           </div>
         </div>
 
@@ -299,54 +294,48 @@ export default function AdminOperatorDetailPage() {
               key={doc.docType}
               type="button"
               onClick={() => setZoomDoc(doc)}
-              className={`group rounded-xl border p-3.5 text-left transition hover:shadow-md ${
+              className={`group rounded-xl border p-3.5 text-left transition hover:border-slate-300 ${
                 doc.uploaded
                   ? "border-emerald-200 bg-emerald-50/40"
                   : "border-dashed border-slate-300 bg-slate-50"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-slate-900">
+                <span className="text-xs font-bold text-slate-900">
                   {doc.docType.replace(/_/g, " ")}
                 </span>
                 <Maximize2 className="h-3.5 w-3.5 text-slate-400 group-hover:text-teal-700" />
               </div>
-              <div className="mt-2 flex h-24 flex-col items-center justify-center rounded-lg bg-slate-900/90 p-2 text-center text-[11px] text-slate-200">
+              <div className="mt-2 flex h-20 flex-col items-center justify-center rounded-lg bg-slate-900 p-2 text-center text-[11px] text-slate-200">
                 <ShieldCheck
-                  className={`h-6 w-6 ${doc.uploaded ? "text-emerald-400" : "text-slate-500"}`}
+                  className={`h-5 w-5 ${doc.uploaded ? "text-emerald-400" : "text-slate-500"}`}
                 />
-                <span className="mt-1 font-mono text-[10px] text-slate-300">
-                  {doc.uploaded ? "R2 Private Object Ready" : "Awaiting Partner Upload"}
+                <span className="mt-1 text-[11px] text-slate-300">
+                  {doc.uploaded ? "Uploaded" : "Pending upload"}
                 </span>
               </div>
-              <div className="mt-2 flex items-center justify-between">
+              <div className="mt-2">
                 <Badge tone={doc.uploaded ? "emerald" : "amber"}>{doc.status}</Badge>
-                <span className="font-mono text-[10px] text-slate-400">{doc.bucket}</span>
               </div>
             </button>
           ))}
         </div>
       </Card>
 
-      {/* Audit Trail & Helmet Checks */}
+      {/* Activity Log & Helmet Checks */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-5">
-          <h3 className="text-sm font-extrabold text-slate-900">KYC Approval Audit Trail</h3>
+          <h3 className="text-sm font-bold text-slate-900">Activity Log</h3>
           {auditEvents.length === 0 ? (
-            <p className="mt-3 text-xs text-slate-500">No outbox audit events recorded yet.</p>
+            <p className="mt-3 text-xs text-slate-500">No activity recorded yet.</p>
           ) : (
             <div className="mt-3 divide-y divide-slate-100">
               {auditEvents.map((ev) => (
-                <div key={ev.id} className="py-2.5 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-teal-800">{ev.subject}</span>
-                    <span className="text-[11px] text-slate-400">
-                      {new Date(ev.createdAt).toLocaleString("en-GB")}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 font-mono text-[11px] text-slate-500">
-                    {JSON.stringify(ev.payload)}
-                  </p>
+                <div key={ev.id} className="flex items-center justify-between py-2.5 text-xs">
+                  <span className="font-medium text-slate-800">{ev.subject}</span>
+                  <span className="text-[11px] text-slate-400">
+                    {new Date(ev.createdAt).toLocaleString("en-GB")}
+                  </span>
                 </div>
               ))}
             </div>
@@ -354,22 +343,18 @@ export default function AdminOperatorDetailPage() {
         </Card>
 
         <Card className="p-5">
-          <h3 className="text-sm font-extrabold text-slate-900">
-            Bodaboda Passenger Helmet Compliance Log
-          </h3>
+          <h3 className="text-sm font-bold text-slate-900">Helmet Checks</h3>
           {helmetLogs.length === 0 ? (
-            <p className="mt-3 text-xs text-slate-500">
-              No helmet compliance checks logged for this operator yet.
-            </p>
+            <p className="mt-3 text-xs text-slate-500">No helmet checks yet.</p>
           ) : (
             <div className="mt-3 divide-y divide-slate-100">
               {helmetLogs.map((h) => (
                 <div key={h.id} className="flex items-center justify-between py-2.5 text-xs">
                   <div>
-                    <p className="font-semibold text-slate-800">
-                      {h.helmetProvided ? "Clean Helmet Provided" : "Missing Passenger Helmet"}
+                    <p className="font-medium text-slate-800">
+                      {h.helmetProvided ? "Helmet provided" : "Missing helmet"}
                     </p>
-                    <p className="text-[11px] text-slate-500">{h.note || "Customer trip rating"}</p>
+                    <p className="text-[11px] text-slate-500">{h.note || "Trip rating"}</p>
                   </div>
                   <Badge tone={h.helmetProvided ? "emerald" : "rose"}>
                     {h.helmetProvided ? "PASS" : "FLAG"}
@@ -381,7 +366,7 @@ export default function AdminOperatorDetailPage() {
         </Card>
       </div>
 
-      {/* Full-Screen Zoomable Document Lightbox */}
+      {/* Document Lightbox */}
       {zoomDoc ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4"
@@ -392,14 +377,9 @@ export default function AdminOperatorDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-base font-extrabold">
-                  {zoomDoc.docType.replace(/_/g, " ")} — {profile.fullName}
-                </h4>
-                <p className="text-xs text-slate-400">
-                  Private R2 Bucket: <code>{zoomDoc.bucket}</code>
-                </p>
-              </div>
+              <h4 className="text-base font-bold">
+                {zoomDoc.docType.replace(/_/g, " ")} — {profile.fullName}
+              </h4>
               <button
                 type="button"
                 onClick={() => setZoomDoc(null)}
@@ -408,14 +388,16 @@ export default function AdminOperatorDetailPage() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="mt-4 flex h-64 flex-col items-center justify-center rounded-xl border border-slate-700 bg-slate-950 p-6 text-center">
-              <ShieldCheck className="h-12 w-12 text-teal-400" />
-              <p className="mt-3 text-sm font-bold">
-                {zoomDoc.uploaded ? "Encrypted Private R2 Asset Verified" : "Pending Partner Photo Upload"}
+            <div className="mt-4 flex h-56 flex-col items-center justify-center rounded-xl border border-slate-700 bg-slate-950 p-6 text-center">
+              <ShieldCheck className="h-10 w-10 text-teal-400" />
+              <p className="mt-3 text-sm font-semibold">
+                {zoomDoc.uploaded ? "Document on file" : "Not uploaded yet"}
               </p>
-              <p className="mt-1 break-all font-mono text-xs text-slate-400">
-                {zoomDoc.storageKey || "No object key uploaded yet"}
-              </p>
+              {zoomDoc.storageKey ? (
+                <p className="mt-1 break-all font-mono text-xs text-slate-400">
+                  {zoomDoc.storageKey}
+                </p>
+              ) : null}
               {zoomDoc.uploadedAt ? (
                 <p className="mt-2 text-[11px] text-emerald-400">
                   Uploaded {new Date(zoomDoc.uploadedAt).toLocaleString("en-GB")}

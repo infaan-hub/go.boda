@@ -72,12 +72,12 @@ export default function AdminHeatmapPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
             <Flame className="h-5 w-5 text-amber-600" />
-            Unguja Supply vs. Demand Heatmap
+            Supply &amp; Demand Heatmap
           </h2>
           <p className="text-xs text-slate-500">
-            Real-time PostGIS overlay comparing unmet Customer requests against idle Bodaboda Riders &amp; Bajaji Drivers across Unguja corridors.
+            Idle vehicles compared with recent requests across Unguja.
           </p>
         </div>
         <Button size="sm" variant="outline" onClick={load}>

@@ -4,8 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { KeyRound, ShieldCheck, Smartphone, UserRound } from "lucide-react";
-import { Badge, BrandLogo, Button, Card } from "@goboda/ui";
+import { KeyRound, ShieldCheck, UserRound } from "lucide-react";
+import { BrandLogo, Button, Card } from "@goboda/ui";
 
 export function CustomerLoginForm() {
   const router = useRouter();
@@ -65,24 +65,14 @@ export function CustomerLoginForm() {
       </div>
 
       <Card className="w-full max-w-md p-6">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
-              <Smartphone className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-base font-extrabold text-slate-900">
-                {isSw ? "Ingia — Mteja" : "Customer Sign-In"}
-              </h1>
-              <p className="text-xs text-slate-500">
-                {isSw
-                  ? "Ingia kwa namba ya simu na nenosiri"
-                  : "Sign in with your phone number and password"}
-              </p>
-            </div>
-          </div>
-          <Badge tone="teal">CUSTOMER</Badge>
-        </div>
+        <h1 className="text-lg font-bold text-slate-900">
+          {isSw ? "Ingia" : "Sign In"}
+        </h1>
+        <p className="mt-1 text-xs text-slate-500">
+          {isSw
+            ? "Ingia kwa namba ya simu na nenosiri"
+            : "Sign in with your phone number and password"}
+        </p>
 
         {error ? (
           <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-medium text-rose-700">

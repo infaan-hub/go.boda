@@ -76,13 +76,10 @@ export default function AdminPromosAnalyticsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
             <Tag className="h-5 w-5 text-teal-700" />
-            Promo Campaigns &amp; Subsidy Burn Console
+            Promo Usage &amp; Budgets
           </h2>
-          <p className="text-xs text-slate-500">
-            Control usage limits &amp; TZS subsidy ceilings while guaranteeing Riders &amp; Drivers always earn full gross-fare net.
-          </p>
         </div>
         <Button size="sm" variant="outline" onClick={load}>
           <RefreshCw className="h-3.5 w-3.5" />

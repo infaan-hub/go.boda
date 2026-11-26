@@ -757,7 +757,7 @@ export function CustomerTripsView({
 
       {/* Bottom Mobile Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-2xl grid-cols-4 py-2 text-center text-[11px] font-semibold">
+        <div className="mx-auto grid max-w-2xl grid-cols-3 py-2 text-center text-[11px] font-semibold">
           <Link
             href="/dashboard"
             className="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-700"
@@ -779,13 +779,6 @@ export function CustomerTripsView({
             <ShieldCheck className="h-5 w-5" />
             {sw ? "Usalama" : "Safety"}
           </Link>
-          <a
-            href="/track/demo-unguja"
-            className="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-700"
-          >
-            <MapPin className="h-5 w-5" />
-            {sw ? "Fuatilia" : "Live Track"}
-          </a>
         </div>
       </nav>
     </div>

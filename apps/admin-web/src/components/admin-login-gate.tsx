@@ -3,8 +3,8 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { KeyRound, Lock, ShieldCheck, UserRound } from "lucide-react";
-import { Badge, BrandLogo, Button, Card, LanguageSwitchLink } from "@goboda/ui";
+import { KeyRound, UserRound } from "lucide-react";
+import { BrandLogo, Button, Card, LanguageSwitchLink } from "@goboda/ui";
 
 export interface AuthenticatedAdmin {
   id: string;
@@ -18,7 +18,7 @@ export function AdminLoginGate() {
   const locale = useLocale() === "sw" ? "sw" : "en";
   const isSw = locale === "sw";
 
-  const [username, setUsername] = React.useState("admin504");
+  const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -60,10 +60,10 @@ export function AdminLoginGate() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 py-10 text-white">
-      <div className="mb-6 flex w-full max-w-md items-center justify-between">
+      <div className="mb-6 flex w-full max-w-sm items-center justify-between">
         <BrandLogo
           dark
-          subtitle={isSw ? "Msimamizi wa Operesheni" : "Operations Admin"}
+          subtitle={isSw ? "Msimamizi" : "Admin"}
         />
         <LanguageSwitchLink
           currentLocale={locale}
@@ -72,59 +72,47 @@ export function AdminLoginGate() {
         />
       </div>
 
-      <Card className="w-full max-w-md border-slate-800 bg-slate-900 p-6 text-white shadow-2xl">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-700/20 text-teal-400">
-              <Lock className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-base font-extrabold text-white">
-                {isSw
-                  ? "Ingia — Kituo cha Operesheni"
-                  : "Operations Command Sign-In"}
-              </h1>
-              <p className="text-xs text-slate-400">
-                {isSw
-                  ? "Ingia kwa jina la mtumiaji na nenosiri"
-                  : "Sign in with your admin username and password"}
-              </p>
-            </div>
-          </div>
-          <Badge tone="amber">ADMIN</Badge>
-        </div>
+      <Card className="w-full max-w-sm border-slate-800 bg-slate-900 p-6 text-white">
+        <h1 className="text-lg font-bold text-white">
+          {isSw ? "Ingia Msimamizi" : "Admin Sign In"}
+        </h1>
+        <p className="mt-1 text-xs text-slate-400">
+          {isSw
+            ? "Weka jina la mtumiaji na nenosiri."
+            : "Enter your username and password."}
+        </p>
 
         {error ? (
-          <div className="mt-4 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-2.5 text-xs font-medium text-rose-200">
+          <div className="mt-4 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
             {error}
           </div>
         ) : null}
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <label className="block">
-            <span className="text-xs font-semibold text-slate-300">
-              {isSw ? "Jina la Mtumiaji" : "Admin Username"}
+            <span className="text-xs font-medium text-slate-300">
+              {isSw ? "Jina la Mtumiaji" : "Username"}
             </span>
-            <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 focus-within:border-teal-500">
-              <UserRound className="h-4 w-4 text-teal-400" />
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 focus-within:border-teal-500">
+              <UserRound className="h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 autoComplete="username"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin504"
-                className="w-full bg-transparent font-mono text-sm text-white placeholder:text-slate-500 focus:outline-none"
+                placeholder={isSw ? "Jina la mtumiaji" : "Username"}
+                className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none"
               />
             </div>
           </label>
 
           <label className="block">
-            <span className="text-xs font-semibold text-slate-300">
+            <span className="text-xs font-medium text-slate-300">
               {isSw ? "Nenosiri" : "Password"}
             </span>
-            <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 focus-within:border-amber-400">
-              <KeyRound className="h-4 w-4 text-amber-400" />
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 focus-within:border-teal-500">
+              <KeyRound className="h-4 w-4 text-slate-400" />
               <input
                 type="password"
                 autoComplete="current-password"
@@ -144,29 +132,14 @@ export function AdminLoginGate() {
             className="w-full"
             disabled={busy}
           >
-            <ShieldCheck className="h-4 w-4" />
             {busy
               ? isSw
-                ? "Inathibitisha..."
+                ? "Inaingia..."
                 : "Signing in..."
               : isSw
-                ? "Ingia kwenye Dashboard"
-                : "Sign In to Dashboard"}
+                ? "Ingia"
+                : "Sign In"}
           </Button>
-
-          <div className="rounded-xl border border-slate-800 bg-slate-950/70 px-3.5 py-2.5 text-[11px] text-slate-400">
-            <p className="font-semibold text-slate-300">
-              {isSw ? "Vitambulisho vya Pilot" : "Pilot credentials"}
-            </p>
-            <p className="mt-0.5 font-mono text-teal-300">
-              admin504 / Admin009@504
-            </p>
-            <p className="mt-1">
-              {isSw
-                ? "Baada ya kuthibitishwa utaelekezwa /admin/dashboard."
-                : "A signed HttpOnly JWT session redirects you to /admin/dashboard."}
-            </p>
-          </div>
         </form>
       </Card>
     </div>

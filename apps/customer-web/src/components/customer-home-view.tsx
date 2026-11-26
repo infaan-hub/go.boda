@@ -221,15 +221,6 @@ const PRESET_SPOTS: PresetSpot[] = [
     lat: -5.7265,
     lng: 39.2987,
   },
-  {
-    id: "outside-dar",
-    target: "dropoff",
-    labelEn: "Test Outside Unguja (Dar)",
-    labelSw: "Jaribu Nje ya Unguja (Dar)",
-    lat: -6.7924,
-    lng: 39.2803,
-    accent: "red",
-  },
 ];
 
 const PICKUP_NOTE_CHIPS = [
@@ -716,10 +707,6 @@ export function CustomerHomeView({
                 {locale === "sw" ? "Habari" : "Hi"}, {customerName}
               </span>
             ) : null}
-            <Badge tone="teal" className="hidden md:inline-flex">
-              <Compass className="h-3.5 w-3.5" />
-              {t("common.phaseBadge")}
-            </Badge>
             <LanguageSwitchLink
               currentLocale={locale}
               hrefSw="/dashboard?lang=sw"
@@ -1781,7 +1768,7 @@ export function CustomerHomeView({
 
       {/* Bottom Mobile Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-2xl grid-cols-4 py-2 text-center text-[11px] font-semibold">
+        <div className="mx-auto grid max-w-2xl grid-cols-3 py-2 text-center text-[11px] font-semibold">
           <button
             type="button"
             onClick={() => setActiveTab("book")}
@@ -1797,7 +1784,7 @@ export function CustomerHomeView({
             className="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-700"
           >
             <History className="h-5 w-5" />
-            {locale === "sw" ? "Safari & Risiti" : "Trips"}
+            {locale === "sw" ? "Safari" : "Trips"}
           </Link>
           <Link
             href="/safety"
@@ -1806,13 +1793,6 @@ export function CustomerHomeView({
             <ShieldCheck className="h-5 w-5" />
             {locale === "sw" ? "Usalama" : "Safety"}
           </Link>
-          <a
-            href="/track/demo-unguja"
-            className="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-700"
-          >
-            <User className="h-5 w-5" />
-            {locale === "sw" ? "Fuatilia" : "Live Track"}
-          </a>
         </div>
       </nav>
     </div>

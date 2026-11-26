@@ -70,12 +70,12 @@ export default function AdminSafetyHelmetsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
             <HardHat className="h-5 w-5 text-amber-600" />
-            Bodaboda Helmet Compliance &amp; Safety Center
+            Helmet Compliance
           </h2>
           <p className="text-xs text-slate-500">
-            30-day passenger helmet scores per Bodaboda Rider. 3+ missing-helmet reports trigger mandatory inspection or suspension; 100% compliant Riders earn the &ldquo;Verified Safe Rider&rdquo; badge.
+            30-day passenger helmet ratings for Bodaboda Riders (3+ misses trigger review).
           </p>
         </div>
         <Button size="sm" variant="outline" onClick={load}>

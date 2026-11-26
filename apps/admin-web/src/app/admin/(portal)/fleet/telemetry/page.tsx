@@ -54,17 +54,17 @@ export default function AdminFleetTelemetryPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
             <Radio className="h-5 w-5 text-teal-700" />
-            GPS Health &amp; Heartbeat Monitor
+            GPS Health
           </h2>
           <p className="text-xs text-slate-500">
-            Live operator telemetry freshness (&lt; 45s SLA), PostGIS Unguja geofence spoofing detection, and recent trip breadcrumb trails.
+            Heartbeat freshness (&lt; 45s) and Unguja boundary status.
           </p>
         </div>
         <Button size="sm" variant="outline" onClick={load}>
           <RefreshCw className="h-3.5 w-3.5" />
-          Poll Telemetry
+          Refresh
         </Button>
       </div>
 
@@ -122,7 +122,7 @@ export default function AdminFleetTelemetryPage() {
                     </Badge>
                   </td>
                   <td className="px-4 py-2.5 font-mono text-slate-600">
-                    {d.isDemo ? "Demo pin" : `${d.pingAgeSeconds}s ago`}
+                    {d.isDemo ? "Active" : `${d.pingAgeSeconds}s ago`}
                   </td>
                   <td className="px-4 py-2.5">
                     <Badge
