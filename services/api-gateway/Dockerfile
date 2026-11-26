@@ -6,13 +6,16 @@ WORKDIR /app
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml* tsconfig.base.json ./
 COPY packages/shared-types/package.json packages/shared-types/
 COPY packages/logger/package.json packages/logger/
+COPY packages/db/package.json packages/db/
 COPY services/api-gateway/package.json services/api-gateway/
 RUN pnpm install --frozen-lockfile || pnpm install
 COPY packages/shared-types packages/shared-types
 COPY packages/logger packages/logger
+COPY packages/db packages/db
 COPY services/api-gateway services/api-gateway
 RUN pnpm --filter @goboda/shared-types build \
   && pnpm --filter @goboda/logger build \
+  && pnpm --filter @goboda/db build \
   && pnpm --filter @goboda/api-gateway build
 
 FROM base AS runner

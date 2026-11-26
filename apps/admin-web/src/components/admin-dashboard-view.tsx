@@ -33,9 +33,24 @@ interface LiveServiceStatus extends MicroserviceDescriptor {
   latencyMs?: number;
 }
 
+interface LiveDbStatus {
+  connected: boolean;
+  provider?: string;
+  database?: string | null;
+  postgisVersion?: string | null;
+  schemasReady?: string[];
+  latencyMs?: number;
+  ungujaBootstrap?: {
+    zonesCount: number;
+    snapPointsCount: number;
+    landmarksCount: number;
+  } | null;
+}
+
 export function AdminDashboardView({ locale }: { locale: "sw" | "en" }) {
   const t = useTranslations();
   const [gatewayOnline, setGatewayOnline] = React.useState<boolean | null>(null);
+  const [dbStatus, setDbStatus] = React.useState<LiveDbStatus | null>(null);
   const [services, setServices] = React.useState<LiveServiceStatus[]>(() =>
     MICROSERVICES_REGISTRY.map((s) => ({ ...s, status: "pending" }))
   );
@@ -47,17 +62,28 @@ export function AdminDashboardView({ locale }: { locale: "sw" | "en" }) {
   const refreshHealth = React.useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${gatewayUrl}/api/v1/services`, {
-        cache: "no-store",
-      });
-      if (!res.ok) throw new Error("Gateway unreachable");
-      const data = (await res.json()) as {
+      const [svcRes, dbRes] = await Promise.all([
+        fetch(`${gatewayUrl}/api/v1/services`, { cache: "no-store" }),
+        fetch(`${gatewayUrl}/api/v1/db/status`, { cache: "no-store" }).catch(
+          () => null
+        ),
+      ]);
+      if (!svcRes.ok) throw new Error("Gateway unreachable");
+      const data = (await svcRes.json()) as {
         services: LiveServiceStatus[];
       };
       setGatewayOnline(true);
       setServices(data.services);
+
+      if (dbRes && dbRes.ok) {
+        const dbData = (await dbRes.json()) as LiveDbStatus;
+        setDbStatus(dbData);
+      } else {
+        setDbStatus({ connected: false });
+      }
     } catch {
       setGatewayOnline(false);
+      setDbStatus({ connected: false });
       setServices(
         MICROSERVICES_REGISTRY.map((s) => ({ ...s, status: "offline" }))
       );
@@ -123,6 +149,14 @@ export function AdminDashboardView({ locale }: { locale: "sw" | "en" }) {
               <p className="text-xs text-slate-500">{t("admin.subtitle")}</p>
             </div>
             <div className="flex items-center gap-3">
+              <Badge tone={dbStatus?.connected ? "emerald" : "amber"}>
+                Neon DB:{" "}
+                {dbStatus === null
+                  ? "Checking..."
+                  : dbStatus.connected
+                    ? `Connected (${dbStatus.schemasReady?.length ?? 0}/10 schemas • PostGIS)`
+                    : "Pending Env"}
+              </Badge>
               <Badge tone={gatewayOnline ? "emerald" : "rose"}>
                 <Activity className="h-3.5 w-3.5" />
                 API Gateway:{" "}

@@ -5,6 +5,10 @@ import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import httpProxy from "@fastify/http-proxy";
 import { createLogger, REQUEST_ID_HEADER } from "@goboda/logger";
+import {
+  checkDatabaseHealth,
+  getUngujaBootstrapSummary,
+} from "@goboda/db";
 import { MICROSERVICES_REGISTRY, UNGUJA_GEO } from "@goboda/shared-types";
 import { loadGatewayConfig } from "./config.js";
 
@@ -94,29 +98,61 @@ app.get("/", async () => ({
   endpoints: {
     health: "/healthz",
     ready: "/readyz",
+    database: "/api/v1/db/status",
     services: "/api/v1/services",
   },
   registeredServices: MICROSERVICES_REGISTRY.length,
   timestamp: new Date().toISOString(),
 }));
 
-app.get("/healthz", async () => ({
-  service: SERVICE_NAME,
-  status: "ok",
-  port: config.port,
-  serviceArea: "Unguja Island, Zanzibar",
-  ungujaCenter: UNGUJA_GEO.CENTER,
-  uptimeSeconds: Math.round(process.uptime()),
-  timestamp: new Date().toISOString(),
-  version: SERVICE_VERSION,
-}));
+app.get("/healthz", async () => {
+  const database = await checkDatabaseHealth();
+  return {
+    service: SERVICE_NAME,
+    status: database.connected ? "ok" : "degraded",
+    port: config.port,
+    serviceArea: "Unguja Island, Zanzibar",
+    ungujaCenter: UNGUJA_GEO.CENTER,
+    database: {
+      connected: database.connected,
+      provider: database.provider,
+      database: database.database,
+      postgisVersion: database.postgisVersion,
+      schemasReadyCount: database.schemasReady.length,
+      latencyMs: database.latencyMs,
+      ...(database.error ? { error: database.error } : {}),
+    },
+    uptimeSeconds: Math.round(process.uptime()),
+    timestamp: new Date().toISOString(),
+    version: SERVICE_VERSION,
+  };
+});
 
-app.get("/readyz", async () => ({
-  service: SERVICE_NAME,
-  ready: true,
-  registeredServices: MICROSERVICES_REGISTRY.length,
-  timestamp: new Date().toISOString(),
-}));
+app.get("/readyz", async (_req, reply) => {
+  const database = await checkDatabaseHealth();
+  const ready = database.connected && database.schemasMissing.length === 0;
+  reply.code(ready ? 200 : 503);
+  return {
+    service: SERVICE_NAME,
+    ready,
+    databaseConnected: database.connected,
+    schemasReady: database.schemasReady.length,
+    registeredServices: MICROSERVICES_REGISTRY.length,
+    timestamp: new Date().toISOString(),
+  };
+});
+
+app.get("/api/v1/db/status", async () => {
+  const [health, ungujaData] = await Promise.all([
+    checkDatabaseHealth(),
+    getUngujaBootstrapSummary(),
+  ]);
+  return {
+    ...health,
+    ungujaBootstrap: ungujaData,
+    timestamp: new Date().toISOString(),
+  };
+});
 
 app.get("/api/v1/services", async () => {
   const checks = await Promise.all(

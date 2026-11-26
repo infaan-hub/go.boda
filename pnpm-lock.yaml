@@ -162,6 +162,25 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
+  packages/db:
+    dependencies:
+      '@goboda/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+      '@neondatabase/serverless':
+        specifier: ^1.0.2
+        version: 1.2.1
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.4
+        version: 22.20.7
+      tsx:
+        specifier: ^4.19.3
+        version: 4.23.15
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+
   packages/events:
     dependencies:
       '@goboda/shared-types':
@@ -246,6 +265,9 @@ importers:
       '@fastify/rate-limit':
         specifier: ^10.2.2
         version: 10.3.0
+      '@goboda/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@goboda/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -663,6 +685,10 @@ packages:
   '@lukeed/ms@2.0.2':
     resolution: {integrity: sha512-9I2Zn6+NJLfaGoz9jN3lpwDgAYvfGeNYdbAIjJOqzs4Tpc+VU3Jqq4IofSUBKajiDS8k9fZIg18/z13mpk1bsA==}
     engines: {node: '>=8'}
+
+  '@neondatabase/serverless@1.2.1':
+    resolution: {integrity: sha512-PI2JjuyEFE7oZDTkV/s6WP4KEceCwnjQHClfunhysuIATtvcVTBLdA4UgHTnJo7C0mkK+OZ6U7SV1NDnYa0HgA==}
+    engines: {node: '>=19.0.0'}
 
   '@next/env@15.5.29':
     resolution: {integrity: sha512-9SrTiTsgORa+KfhlXXAGC1eSs847E+d2MQTPUX+n7R5XA8g/B6ZitfL6GoYHNMLwG3Hzs1wjDH0/ME5WrGMqBQ==}
@@ -1690,6 +1716,8 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.6.0
 
   '@lukeed/ms@2.0.2': {}
+
+  '@neondatabase/serverless@1.2.1': {}
 
   '@next/env@15.5.29': {}
 
