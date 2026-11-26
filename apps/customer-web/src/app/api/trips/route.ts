@@ -54,25 +54,38 @@ export async function GET(request: Request) {
           SELECT
             id, trip_code AS "tripCode", transport_type AS "transportType",
             operator_title AS "operatorTitle", status,
+            pickup_lat AS "pickupLat", pickup_lng AS "pickupLng",
             pickup_label AS "pickupLabel", pickup_snapped AS "pickupSnapped",
-            dropoff_label AS "dropoffLabel", payment_method AS "paymentMethod",
+            pickup_snap_gate_name AS "pickupSnapGateName",
+            dropoff_lat AS "dropoffLat", dropoff_lng AS "dropoffLng",
+            dropoff_label AS "dropoffLabel",
+            distance_meters AS "distanceMeters", duration_seconds AS "durationSeconds",
+            payment_method AS "paymentMethod", promo_code AS "promoCode",
+            gross_fare_tzs AS "grossFareTzs", discount_tzs AS "discountTzs",
             estimated_fare_tzs AS "estimatedFareTzs", final_fare_tzs AS "finalFareTzs",
             operator_name AS "operatorName", operator_plate AS "operatorPlate",
-            start_pin AS "startPin", created_at AS "createdAt"
+            start_pin AS "startPin", completed_at AS "completedAt",
+            created_at AS "createdAt"
           FROM trip.trips
           WHERE customer_id = ${customerId}::uuid
           ORDER BY created_at DESC
-          LIMIT 20
+          LIMIT 30
         `
       : await sql`
           SELECT
             id, trip_code AS "tripCode", transport_type AS "transportType",
             operator_title AS "operatorTitle", status,
+            pickup_lat AS "pickupLat", pickup_lng AS "pickupLng",
             pickup_label AS "pickupLabel", pickup_snapped AS "pickupSnapped",
-            dropoff_label AS "dropoffLabel", payment_method AS "paymentMethod",
+            pickup_snap_gate_name AS "pickupSnapGateName",
+            dropoff_lat AS "dropoffLat", dropoff_lng AS "dropoffLng",
+            dropoff_label AS "dropoffLabel",
+            distance_meters AS "distanceMeters", duration_seconds AS "durationSeconds",
+            payment_method AS "paymentMethod", promo_code AS "promoCode",
+            gross_fare_tzs AS "grossFareTzs", discount_tzs AS "discountTzs",
             estimated_fare_tzs AS "estimatedFareTzs", final_fare_tzs AS "finalFareTzs",
             operator_name AS "operatorName", operator_plate AS "operatorPlate",
-            created_at AS "createdAt"
+            completed_at AS "completedAt", created_at AS "createdAt"
           FROM trip.trips
           ORDER BY created_at DESC
           LIMIT 15

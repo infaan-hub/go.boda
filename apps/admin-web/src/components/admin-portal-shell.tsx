@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   Activity,
   BarChart3,
+  Calculator,
   CalendarClock,
   CheckCircle2,
   Flame,
@@ -225,6 +226,7 @@ export function AdminPortalShell({
       heading: "Pricing & Dispatch",
       items: [
         { href: "/admin/zones", icon: SlidersHorizontal, label: t("admin.navZones") },
+        { href: "/admin/pricing/simulator", icon: Calculator, label: "Fare Simulator" },
         { href: "/admin/promos/analytics", icon: Tag, label: "Promo Analytics" },
         { href: "/admin/dispatch/queue", icon: Radar, label: "Dispatch Queue" },
         { href: "/admin/dispatch/performance", icon: BarChart3, label: "Dispatch Fairness" },

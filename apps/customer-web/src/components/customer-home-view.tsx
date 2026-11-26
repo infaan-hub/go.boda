@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -371,6 +372,43 @@ export function CustomerHomeView({
   React.useEffect(() => {
     void loadNearby(pickup.lat, pickup.lng);
   }, [pickup.lat, pickup.lng, loadNearby]);
+
+  // Support 1-tap "Book Return Trip" query parameters from /trips
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const pLat = Number(params.get("pickupLat"));
+    const pLng = Number(params.get("pickupLng"));
+    const pLabel = params.get("pickupLabel");
+    const dLat = Number(params.get("dropoffLat"));
+    const dLng = Number(params.get("dropoffLng"));
+    const dLabel = params.get("dropoffLabel");
+    const tType = params.get("transportType");
+
+    if (
+      Number.isFinite(pLat) &&
+      Number.isFinite(pLng) &&
+      pLat !== 0 &&
+      pLng !== 0 &&
+      pLabel
+    ) {
+      setPickup({ lat: pLat, lng: pLng, label: pLabel });
+      setPickupQuery(pLabel);
+    }
+    if (
+      Number.isFinite(dLat) &&
+      Number.isFinite(dLng) &&
+      dLat !== 0 &&
+      dLng !== 0 &&
+      dLabel
+    ) {
+      setDropoff({ lat: dLat, lng: dLng, label: dLabel });
+      setDropoffQuery(dLabel);
+    }
+    if (tType === TransportType.BODABODA || tType === TransportType.BAJAJI) {
+      setSelectedType(tType);
+    }
+  }, []);
 
   // Fetch upfront TZS quote & Stone Town Smart Snap whenever points or promo change
   React.useEffect(() => {
@@ -1754,30 +1792,26 @@ export function CustomerHomeView({
             <Compass className="h-5 w-5" />
             {t("customer.navHome")}
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("book")}
-            className="flex flex-col items-center gap-1 text-slate-500"
-          >
-            <Clock className="h-5 w-5" />
-            {t("customer.navBook")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("history")}
-            className={`flex flex-col items-center gap-1 ${
-              activeTab === "history" ? "text-teal-700" : "text-slate-500"
-            }`}
+          <Link
+            href="/trips"
+            className="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-700"
           >
             <History className="h-5 w-5" />
-            {t("customer.navHistory")}
-          </button>
+            {locale === "sw" ? "Safari & Risiti" : "Trips"}
+          </Link>
+          <Link
+            href="/safety"
+            className="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-700"
+          >
+            <ShieldCheck className="h-5 w-5" />
+            {locale === "sw" ? "Usalama" : "Safety"}
+          </Link>
           <a
             href="/track/demo-unguja"
             className="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-700"
           >
             <User className="h-5 w-5" />
-            {locale === "sw" ? "Ufuatiliaji" : "Live Track"}
+            {locale === "sw" ? "Fuatilia" : "Live Track"}
           </a>
         </div>
       </nav>

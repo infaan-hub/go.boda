@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -20,6 +21,7 @@ import {
   PhoneCall,
   Power,
   ShieldAlert,
+  ShieldCheck,
   Star,
   Sun,
   TrendingUp,
@@ -1422,14 +1424,13 @@ export function PartnerHomeView({
             <FileCheck2 className="h-5 w-5" />
             {t("partner.navOnboarding")}
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("kyc")}
-            className="flex flex-col items-center gap-1 text-slate-400"
+          <Link
+            href="/safety"
+            className="flex flex-col items-center gap-1 text-slate-400 hover:text-amber-500"
           >
-            <User className="h-5 w-5" />
-            {t("partner.navProfile")}
-          </button>
+            <ShieldCheck className="h-5 w-5" />
+            {locale === "sw" ? "Usalama" : "Safety"}
+          </Link>
         </div>
       </nav>
     </div>

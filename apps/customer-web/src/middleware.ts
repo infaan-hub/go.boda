@@ -49,13 +49,22 @@ export async function middleware(request: NextRequest) {
     return applyLocale(NextResponse.next(), lang);
   }
 
-  if (pathname === "/dashboard" || pathname === "/dashboard/") {
+  if (
+    pathname === "/dashboard" ||
+    pathname === "/dashboard/" ||
+    pathname === "/trips" ||
+    pathname === "/trips/"
+  ) {
     if (!(await hasCustomerSession(request))) {
       return applyLocale(
         NextResponse.redirect(new URL("/login", request.url)),
         lang
       );
     }
+    return applyLocale(NextResponse.next(), lang);
+  }
+
+  if (pathname === "/safety" || pathname === "/safety/") {
     return applyLocale(NextResponse.next(), lang);
   }
 
