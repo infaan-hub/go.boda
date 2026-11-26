@@ -146,6 +146,20 @@ app.addHook("onRequest", async (request, reply) => {
           "Only Bodaboda Riders, Bajaji Drivers, or Admins can access operator routes.",
       });
     }
+  } else if (path === "/api/v1/location/ping") {
+    if (!verifiedRole) {
+      return reply.code(401).send({ error: "UNAUTHORIZED" });
+    }
+    if (
+      verifiedRole !== UserRole.BODABODA_RIDER &&
+      verifiedRole !== UserRole.BAJAJI_DRIVER &&
+      verifiedRole !== UserRole.ADMIN
+    ) {
+      return reply.code(403).send({
+        error: "OPERATOR_ROLE_REQUIRED",
+        message: "Only Bodaboda Riders and Bajaji Drivers can stream GPS pings.",
+      });
+    }
   } else if (path === "/api/v1/auth/me") {
     if (!verifiedRole) {
       return reply.code(401).send({ error: "UNAUTHORIZED" });
@@ -265,6 +279,7 @@ const proxyRoutes: Array<{ prefix: string; serviceId: string }> = [
   { prefix: "/api/v1/operators", serviceId: "operator-service" },
   { prefix: "/api/v1/geo", serviceId: "geo-zone-service" },
   { prefix: "/api/v1/nearby", serviceId: "location-service" },
+  { prefix: "/api/v1/location", serviceId: "location-service" },
   { prefix: "/api/v1/pricing", serviceId: "pricing-service" },
   { prefix: "/api/v1/dispatch", serviceId: "dispatch-service" },
   { prefix: "/api/v1/trips", serviceId: "trip-service" },

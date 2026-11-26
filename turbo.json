@@ -30,7 +30,9 @@
     "TRIP_SERVICE_URL",
     "PAYMENT_WALLET_SERVICE_URL",
     "NOTIFICATION_SERVICE_URL",
-    "SAFETY_SERVICE_URL"
+    "SAFETY_SERVICE_URL",
+    "OSRM_BASE_URL",
+    "INCLUDE_DEMO_FLEET"
   ],
   "tasks": {
     "build": {

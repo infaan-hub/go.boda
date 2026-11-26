@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "db:bootstrap": "tsx src/bootstrap.ts",
     "db:migrate:phase1": "tsx src/migrate-phase1.ts",
+    "db:migrate:phase2": "tsx src/migrate-phase2.ts",
     "clean": "node -e \"import('node:fs').then(fs => fs.rmSync('dist', { recursive: true, force: true }))\""
   },
   "dependencies": {
