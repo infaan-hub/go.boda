@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Bike,
   CarFront,
   CheckCircle2,
+  ExternalLink,
   MapPin,
   Plus,
   Save,
@@ -13,6 +15,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Badge, Button, Card } from "@goboda/ui";
+import { AdminRegisterRiderForm } from "./admin-register-rider-form";
 import type {
   AdminLandmarkRow,
   AdminOperatorRow,
@@ -56,6 +59,7 @@ export function OperatorsKycPanel({
   >("ALL");
   const [reasons, setReasons] = React.useState<Record<string, string>>({});
   const [busyId, setBusyId] = React.useState<string | null>(null);
+  const [showRegister, setShowRegister] = React.useState(false);
 
   const filtered = React.useMemo(() => {
     if (filter === "ALL") return operators;
@@ -128,6 +132,15 @@ export function OperatorsKycPanel({
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
 
+          <button
+            type="button"
+            onClick={() => setShowRegister(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900 transition hover:bg-amber-100"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Register Rider-Driver
+          </button>
+
           {(
             [
               ["ALL", "All"],
@@ -192,9 +205,13 @@ export function OperatorsKycPanel({
                       )}
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-900">
+                      <Link
+                        href={`/admin/operators/${op.id}`}
+                        className="inline-flex items-center gap-1 text-sm font-bold text-slate-900 hover:text-teal-700 hover:underline"
+                      >
                         {op.fullName}
-                      </p>
+                        <ExternalLink className="h-3 w-3 text-teal-700" />
+                      </Link>
                       <p className="text-xs text-slate-500">
                         {isBoda ? "Bodaboda Rider" : "Bajaji Driver"} •{" "}
                         <span className="font-mono font-semibold text-slate-700">
@@ -266,6 +283,12 @@ export function OperatorsKycPanel({
                     className="h-9 flex-1 rounded-lg border border-slate-200 px-3 text-xs text-slate-800 focus:border-teal-600 focus:outline-none"
                   />
                   <div className="flex flex-wrap gap-1.5">
+                    <Link
+                      href={`/admin/operators/${op.id}`}
+                      className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-teal-800 hover:bg-teal-50"
+                    >
+                      Inspect 360°
+                    </Link>
                     {op.kycStatus !== "APPROVED" ? (
                       <Button
                         size="sm"
@@ -305,6 +328,14 @@ export function OperatorsKycPanel({
           })}
         </div>
       )}
+      {showRegister ? (
+        <AdminRegisterRiderForm
+          onRegistered={async () => {
+            await onMutated();
+          }}
+          onClose={() => setShowRegister(false)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -368,7 +399,13 @@ export function TripsMonitorPanel({ trips }: { trips: AdminTripRow[] }) {
                 return (
                   <tr key={tr.id} className="hover:bg-slate-50/70">
                     <td className="px-4 py-3 font-mono font-bold text-slate-900">
-                      {tr.tripCode}
+                      <Link
+                        href={`/admin/trips/${tr.id}`}
+                        className="inline-flex items-center gap-1 text-teal-800 hover:underline"
+                      >
+                        {tr.tripCode}
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
                     </td>
                     <td className="px-4 py-3">
                       <span

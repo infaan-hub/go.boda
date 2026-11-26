@@ -6,16 +6,26 @@ import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
   Activity,
+  BarChart3,
+  CalendarClock,
   CheckCircle2,
+  Flame,
+  HardHat,
+  Inbox,
   LayoutDashboard,
   LogOut,
   Map,
+  MapPin,
+  Megaphone,
+  Radar,
+  Radio,
   RefreshCw,
   Route,
   Scale,
   ShieldAlert,
   Siren,
   SlidersHorizontal,
+  Tag,
   Users,
   Volume2,
   Wallet,
@@ -51,6 +61,19 @@ export function useAdminPortal(): AdminPortalContextValue {
     throw new Error("useAdminPortal must be used inside AdminPortalShell");
   }
   return ctx;
+}
+
+interface NavItem {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  badge?: number;
+  badgeTone?: "rose" | "amber" | "teal";
+}
+
+interface NavGroup {
+  heading: string;
+  items: NavItem[];
 }
 
 export function AdminPortalShell({
@@ -161,59 +184,79 @@ export function AdminPortalShell({
   const kpis = data?.kpis;
   const openSosCount = kpis?.openSosCount ?? 0;
 
-  const navItems: Array<{
-    href: string;
-    icon: React.ComponentType<{ className?: string }>;
-    label: string;
-    badge?: number;
-    badgeTone?: "rose" | "amber" | "teal";
-  }> = [
+  const navGroups: NavGroup[] = [
     {
-      href: "/admin/dashboard",
-      icon: LayoutDashboard,
-      label: t("admin.navOverview"),
+      heading: "Operations",
+      items: [
+        { href: "/admin/dashboard", icon: LayoutDashboard, label: t("admin.navOverview") },
+        {
+          href: "/admin/live-map",
+          icon: Map,
+          label: t("admin.navLiveMap"),
+          badge: (kpis?.onlineRiders ?? 0) + (kpis?.onlineDrivers ?? 0),
+          badgeTone: "teal",
+        },
+        {
+          href: "/admin/trips",
+          icon: Route,
+          label: t("admin.navTrips"),
+          badge: kpis?.activeTrips || undefined,
+          badgeTone: "teal",
+        },
+      ],
     },
     {
-      href: "/admin/live-map",
-      icon: Map,
-      label: t("admin.navLiveMap"),
-      badge: (kpis?.onlineRiders ?? 0) + (kpis?.onlineDrivers ?? 0),
-      badgeTone: "teal",
+      heading: "Fleet & Unguja Geo",
+      items: [
+        {
+          href: "/admin/operators",
+          icon: Users,
+          label: t("admin.navOperators"),
+          badge: kpis?.pendingKycCount || undefined,
+          badgeTone: "amber",
+        },
+        { href: "/admin/compliance/expiries", icon: CalendarClock, label: "Expiry Radar" },
+        { href: "/admin/vituo", icon: MapPin, label: "Unguja Vituo" },
+        { href: "/admin/heatmap", icon: Flame, label: "Supply Heatmap" },
+        { href: "/admin/fleet/telemetry", icon: Radio, label: "GPS Telemetry" },
+      ],
     },
     {
-      href: "/admin/operators",
-      icon: Users,
-      label: t("admin.navOperators"),
-      badge: kpis?.pendingKycCount || undefined,
-      badgeTone: "amber",
+      heading: "Pricing & Dispatch",
+      items: [
+        { href: "/admin/zones", icon: SlidersHorizontal, label: t("admin.navZones") },
+        { href: "/admin/promos/analytics", icon: Tag, label: "Promo Analytics" },
+        { href: "/admin/dispatch/queue", icon: Radar, label: "Dispatch Queue" },
+        { href: "/admin/dispatch/performance", icon: BarChart3, label: "Dispatch Fairness" },
+      ],
     },
     {
-      href: "/admin/trips",
-      icon: Route,
-      label: t("admin.navTrips"),
-      badge: kpis?.activeTrips || undefined,
-      badgeTone: "teal",
-    },
-    {
-      href: "/admin/zones",
-      icon: SlidersHorizontal,
-      label: t("admin.navZones"),
-    },
-    {
-      href: "/admin/finance",
-      icon: Wallet,
-      label: t("admin.navFinance"),
-    },
-    {
-      href: "/admin/sos",
-      icon: ShieldAlert,
-      label: t("admin.navSos"),
-      badge: openSosCount || undefined,
-      badgeTone: "rose",
+      heading: "Finance, Comms & Safety",
+      items: [
+        { href: "/admin/finance", icon: Wallet, label: t("admin.navFinance") },
+        { href: "/admin/broadcasts", icon: Megaphone, label: "Ops Broadcasts" },
+        { href: "/admin/support/inbox", icon: Inbox, label: "Support Inbox" },
+        { href: "/admin/safety/helmets", icon: HardHat, label: "Helmet Safety" },
+        {
+          href: "/admin/sos",
+          icon: ShieldAlert,
+          label: t("admin.navSos"),
+          badge: openSosCount || undefined,
+          badgeTone: "rose",
+        },
+      ],
     },
   ];
 
+  const allNavItems = navGroups.flatMap((g) => g.items);
   const cleanPath = pathname.replace(/\/$/, "") || "/admin/dashboard";
+
+  function isActiveHref(href: string) {
+    if (cleanPath === href) return true;
+    if (href === "/admin/operators" && cleanPath.startsWith("/admin/operators/")) return true;
+    if (href === "/admin/trips" && cleanPath.startsWith("/admin/trips/")) return true;
+    return false;
+  }
 
   const ctxValue = React.useMemo<AdminPortalContextValue>(
     () => ({
@@ -233,60 +276,63 @@ export function AdminPortalShell({
     <AdminPortalContext.Provider value={ctxValue}>
       <div className="flex min-h-screen bg-slate-100">
         {/* Desktop Sidebar */}
-        <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-slate-950 p-5 text-white lg:flex lg:flex-col">
-          <Link href="/admin/dashboard">
+        <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-slate-950 p-4 text-white lg:flex lg:flex-col">
+          <Link href="/admin/dashboard" className="px-1">
             <BrandLogo dark subtitle={t("roles.admin")} />
           </Link>
-          <div className="mt-4">
+          <div className="mt-3 px-1">
             <Badge tone="amber">{t("common.ungujaOnly")}</Badge>
           </div>
 
-          <nav className="mt-7 space-y-1.5">
-            {navItems.map((item) => {
-              const active = cleanPath === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex w-full items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-left text-sm font-medium transition ${
-                    active
-                      ? "bg-teal-700 text-white shadow-sm"
-                      : "text-slate-300 hover:bg-slate-900 hover:text-white"
-                  }`}
-                >
-                  <span className="flex items-center gap-3">
-                    <item.icon className="h-4 w-4 shrink-0" />
-                    <span>{item.label}</span>
-                  </span>
-                  {item.badge !== undefined && item.badge > 0 ? (
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
-                        item.badgeTone === "rose"
-                          ? "bg-rose-600 text-white"
-                          : item.badgeTone === "amber"
-                            ? "bg-amber-400 text-slate-950"
-                            : "bg-teal-900 text-teal-100"
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </Link>
-              );
-            })}
+          <nav className="mt-5 flex-1 space-y-4 overflow-y-auto pr-1">
+            {navGroups.map((group) => (
+              <div key={group.heading}>
+                <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  {group.heading}
+                </p>
+                <div className="mt-1 space-y-0.5">
+                  {group.items.map((item) => {
+                    const active = isActiveHref(item.href);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium transition ${
+                          active
+                            ? "bg-teal-700 text-white shadow-sm"
+                            : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2.5 truncate">
+                          <item.icon className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{item.label}</span>
+                        </span>
+                        {item.badge !== undefined && item.badge > 0 ? (
+                          <span
+                            className={`rounded-full px-1.5 py-0.5 text-[10px] font-extrabold ${
+                              item.badgeTone === "rose"
+                                ? "bg-rose-600 text-white"
+                                : item.badgeTone === "amber"
+                                  ? "bg-amber-400 text-slate-950"
+                                  : "bg-teal-900 text-teal-100"
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        ) : null}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
-          <div className="mt-auto space-y-2 rounded-xl border border-slate-800 bg-slate-900 p-3 text-xs text-slate-400">
+          <div className="mt-4 space-y-1.5 rounded-xl border border-slate-800 bg-slate-900 p-3 text-[11px] text-slate-400">
             <p className="font-semibold text-slate-200">
               {t("common.phaseBadge")}
             </p>
             <p>10-Microservice Topology • Neon PostGIS</p>
-            {data?.ungujaBootstrap ? (
-              <p className="font-mono text-[11px] text-teal-300">
-                {data.ungujaBootstrap.landmarksCount} landmarks •{" "}
-                {data.ungujaBootstrap.snapPointsCount} Stone Town gates
-              </p>
-            ) : null}
           </div>
         </aside>
 
@@ -374,8 +420,8 @@ export function AdminPortalShell({
 
             {/* Mobile Horizontal Link Bar */}
             <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 lg:hidden">
-              {navItems.map((item) => {
-                const active = cleanPath === item.href;
+              {allNavItems.map((item) => {
+                const active = isActiveHref(item.href);
                 return (
                   <Link
                     key={item.href}
