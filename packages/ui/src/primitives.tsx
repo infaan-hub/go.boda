@@ -9,21 +9,21 @@ export interface ButtonProps
 
 const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary:
-    "bg-teal-700 text-white hover:bg-teal-800 active:bg-teal-900 shadow-sm",
+    "bg-[#17645F] text-[#F3EEE8] hover:bg-[#114E4A] active:bg-[#0D3D3A] shadow-sm",
   amber:
-    "bg-amber-500 text-slate-950 hover:bg-amber-400 active:bg-amber-600 font-semibold shadow-sm",
+    "bg-[#B86B2B] text-[#FAF7F2] hover:bg-[#9E5921] active:bg-[#844818] font-semibold shadow-sm",
   secondary:
-    "bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950",
+    "bg-[#0F3F3C] text-[#F3EEE8] hover:bg-[#17645F] active:bg-[#0B2E2C]",
   outline:
-    "border border-slate-300 bg-white text-slate-900 hover:bg-slate-50",
-  ghost: "text-slate-700 hover:bg-slate-100",
-  danger: "bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800",
+    "border border-[#17645F]/45 bg-[#FAF7F2]/80 text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]",
+  ghost: "text-[#17645F] hover:bg-[#17645F]/10",
+  danger: "bg-[#A93232] text-[#FAF7F2] hover:bg-[#8E2626] active:bg-[#761E1E]",
 };
 
 const sizeClasses: Record<NonNullable<ButtonProps["size"]>, string> = {
-  sm: "h-9 px-3 text-xs rounded-lg",
-  md: "h-11 px-4 text-sm rounded-xl",
-  lg: "h-14 px-6 text-base rounded-2xl",
+  sm: "h-9 px-3.5 text-xs rounded-full",
+  md: "h-11 px-5 text-sm rounded-full",
+  lg: "h-13 px-6 py-3 text-sm rounded-full tracking-wide",
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -31,7 +31,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     <button
       ref={ref}
       className={cn(
-        "inline-flex items-center justify-center gap-2 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#17645F] disabled:pointer-events-none disabled:opacity-50",
         variantClasses[variant],
         sizeClasses[size],
         className
@@ -47,11 +47,11 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const toneClasses: Record<NonNullable<BadgeProps["tone"]>, string> = {
-  teal: "bg-teal-50 text-teal-800 border-teal-200",
-  amber: "bg-amber-50 text-amber-900 border-amber-200",
-  slate: "bg-slate-100 text-slate-700 border-slate-200",
-  emerald: "bg-emerald-50 text-emerald-800 border-emerald-200",
-  rose: "bg-rose-50 text-rose-800 border-rose-200",
+  teal: "bg-[#E4EFEA] text-[#17645F] border-[#17645F]/25",
+  amber: "bg-[#F4E7D7] text-[#8E4F1D] border-[#B86B2B]/30",
+  slate: "bg-[#EAE3D9] text-[#3F4F4D] border-[#17645F]/15",
+  emerald: "bg-[#DFEFEA] text-[#14584C] border-[#17645F]/25",
+  rose: "bg-[#F7E4E4] text-[#9A2929] border-[#A93232]/25",
 };
 
 export function Badge({
@@ -62,7 +62,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide",
         toneClasses[tone],
         className
       )}
@@ -78,7 +78,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-slate-200 bg-white shadow-sm",
+        "rounded-2xl border border-[#17645F]/15 bg-[#FAF7F2] shadow-[0_2px_12px_rgba(23,100,95,0.05)]",
         className
       )}
       {...props}
@@ -95,23 +95,30 @@ export function BrandLogo({
 }) {
   return (
     <div className="inline-flex items-center gap-2.5">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-700 to-emerald-600 text-white font-black tracking-tight shadow-sm">
-        G.
+      <div
+        className={cn(
+          "flex h-9 w-9 items-center justify-center rounded-full border font-display text-base tracking-wider",
+          dark
+            ? "border-[#F3EEE8]/30 bg-[#F3EEE8] text-[#17645F]"
+            : "border-[#17645F] bg-[#17645F] text-[#F3EEE8]"
+        )}
+      >
+        GB
       </div>
-      <div className="leading-tight">
+      <div className="leading-none">
         <div
           className={cn(
-            "text-lg font-extrabold tracking-tight",
-            dark ? "text-white" : "text-slate-900"
+            "font-display text-xl tracking-[0.06em] uppercase",
+            dark ? "text-[#F3EEE8]" : "text-[#17645F]"
           )}
         >
-          Go<span className="text-amber-500">.boda</span>
+          GO.BODA
         </div>
         {subtitle ? (
           <div
             className={cn(
-              "text-[11px] font-medium",
-              dark ? "text-slate-300" : "text-slate-500"
+              "mt-0.5 text-[10px] font-semibold uppercase tracking-[0.2em]",
+              dark ? "text-[#F3EEE8]/75" : "text-[#17645F]/70"
             )}
           >
             {subtitle}

@@ -6,7 +6,17 @@ const config: Config = {
     "../../packages/ui/src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        sand: "#F3EEE8",
+        paper: "#FAF7F2",
+        zanzibar: "#17645F",
+      },
+      fontFamily: {
+        display: ["var(--font-display)", "Impact", "sans-serif"],
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+      },
+    },
   },
   plugins: [],
 };

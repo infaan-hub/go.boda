@@ -288,12 +288,23 @@ export function CustomerTripsView({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+    <div className="min-h-screen bg-[#F3EEE8] pb-24 text-[#122927]">
+      <header className="sticky top-0 z-30 border-b border-[#17645F]/15 bg-[#F3EEE8]/95 backdrop-blur">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3.5 sm:px-6">
           <BrandLogo
             subtitle={sw ? "Historia & Risiti za TZS" : "Trips & TZS Receipts"}
           />
+          <nav className="hidden items-center gap-6 text-[11px] font-bold uppercase tracking-[0.2em] text-[#17645F]/75 md:flex">
+            <Link href="/dashboard" className="hover:text-[#17645F]">
+              {sw ? "Agiza" : "Book"}
+            </Link>
+            <Link href="/trips" className="text-[#17645F] underline underline-offset-4">
+              {sw ? "Safari" : "Trips"}
+            </Link>
+            <Link href="/safety" className="hover:text-[#17645F]">
+              {sw ? "Usalama" : "Safety"}
+            </Link>
+          </nav>
           <div className="flex items-center gap-2">
             <LanguageSwitchLink
               currentLocale={locale}
@@ -302,7 +313,7 @@ export function CustomerTripsView({
             />
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1 rounded-full bg-teal-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-800"
+              className="inline-flex items-center gap-1 rounded-full bg-[#17645F] px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#F3EEE8] transition hover:bg-[#114E4A]"
             >
               {sw ? "Agiza Safari" : "Book Trip"}
             </Link>
@@ -310,17 +321,15 @@ export function CustomerTripsView({
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl space-y-5 px-4 pt-4">
+      <main className="mx-auto max-w-3xl space-y-5 px-4 pt-6 sm:px-6">
         {/* Page Heading + General Lost Item CTA */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#17645F]/15 pb-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-teal-700">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#17645F]/75">
               {customerName} • {customerPhone}
             </p>
-            <h1 className="text-xl font-extrabold text-slate-900">
-              {sw
-                ? "Safari Zangu za Unguja & Risiti"
-                : "My Unguja Trips & Digital Receipts"}
+            <h1 className="mt-1 font-display text-4xl uppercase leading-none text-[#17645F]">
+              {sw ? "SAFARI & RISITI" : "MY TRIPS & RECEIPTS"}
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -352,8 +361,8 @@ export function CustomerTripsView({
           <div
             className={`flex items-start gap-2 rounded-2xl border p-3.5 text-xs font-semibold ${
               ticketFeedback.tone === "ok"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                : "border-rose-200 bg-rose-50 text-rose-800"
+                ? "border-[#17645F]/30 bg-[#17645F]/10 text-[#17645F]"
+                : "border-[#A93232]/30 bg-[#A93232]/10 text-[#A93232]"
             }`}
           >
             {ticketFeedback.tone === "ok" ? (
@@ -378,10 +387,10 @@ export function CustomerTripsView({
               key={f.id}
               type="button"
               onClick={() => setFilter(f.id)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+              className={`rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] transition ${
                 filter === f.id
-                  ? "bg-teal-700 text-white shadow-sm"
-                  : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                  ? "bg-[#17645F] text-[#F3EEE8] shadow-sm"
+                  : "border border-[#17645F]/20 bg-[#FAF7F2] text-[#17645F]/80 hover:bg-[#17645F]/10"
               }`}
             >
               {sw ? f.labelSw : f.labelEn}
@@ -391,25 +400,25 @@ export function CustomerTripsView({
 
         {/* Trip Cards */}
         {loading ? (
-          <Card className="flex items-center justify-center gap-2 p-8 text-sm font-semibold text-slate-500">
-            <Loader2 className="h-4 w-4 animate-spin text-teal-700" />
+          <Card className="flex items-center justify-center gap-2 p-8 text-sm font-semibold text-[#17645F]/75">
+            <Loader2 className="h-4 w-4 animate-spin text-[#17645F]" />
             {sw ? "Inapakia safari zako..." : "Loading your Unguja trips..."}
           </Card>
         ) : filteredTrips.length === 0 ? (
           <Card className="space-y-3 p-6 text-center">
-            <p className="text-sm font-bold text-slate-800">
+            <p className="text-sm font-bold text-[#122927]">
               {sw
                 ? "Bado huna safari zilizorekodiwa kwenye akaunti hii."
                 : "No recorded trips on this account yet."}
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#17645F]/75">
               {sw
                 ? "Agiza Bodaboda au Bajaji popote Unguja na risiti zako za TZS zitaonekana hapa moja kwa moja."
                 : "Book a Bodaboda Rider or Bajaji Driver anywhere on Unguja and your digital TZS receipts will appear here automatically."}
             </p>
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-teal-700 px-4 py-2 text-xs font-bold text-white hover:bg-teal-800"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#17645F] px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[#F3EEE8] hover:bg-[#114E4A]"
             >
               <Compass className="h-4 w-4" />
               {sw ? "Agiza Safari Yako ya Kwanza" : "Book Your First Trip"}
@@ -435,7 +444,7 @@ export function CustomerTripsView({
                         )}
                         {isBoda ? "Go.boda (Rider)" : "Go.bajaji (Driver)"}
                       </Badge>
-                      <span className="font-mono text-xs font-bold text-slate-600">
+                      <span className="font-mono text-xs font-bold text-[#17645F]/75">
                         {trip.tripCode}
                       </span>
                       <Badge
@@ -450,32 +459,30 @@ export function CustomerTripsView({
                         {trip.status}
                       </Badge>
                     </div>
-                    <span className="text-base font-extrabold text-teal-800">
+                    <span className="text-base font-extrabold text-[#17645F]">
                       {formatTzs(totalTzs)}
                     </span>
                   </div>
 
-                  <div className="space-y-1 text-xs text-slate-700">
+                  <div className="space-y-1 text-xs text-[#122927]">
                     <p className="flex items-start gap-1.5 font-semibold">
-                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-teal-600" />
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#17645F]" />
                       <span>
                         {trip.pickupLabel} → {trip.dropoffLabel}
                       </span>
                     </p>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-[#17645F]/70">
                       {dateLabel} • {trip.paymentMethod}
                       {trip.operatorName ? ` • ${trip.operatorName}` : ""}
                       {trip.operatorPlate ? ` (${trip.operatorPlate})` : ""}
                       {trip.pickupSnapped
-                        ? sw
-                          ? " • Stone Town Smart Snap ✓"
-                          : " • Stone Town Smart Snap ✓"
+                        ? " • Stone Town Smart Snap ✓"
                         : ""}
                     </p>
                   </div>
 
                   {/* 1-Tap Receipt, Return Trip & Lost Item Actions */}
-                  <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2.5">
+                  <div className="flex flex-wrap items-center gap-2 border-t border-[#17645F]/10 pt-3">
                     <Button
                       type="button"
                       size="sm"
@@ -487,7 +494,7 @@ export function CustomerTripsView({
                     </Button>
                     <Link
                       href={buildReturnTripHref(trip)}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-800 transition hover:bg-teal-100"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#17645F]/10 px-3.5 py-1.5 text-xs font-bold text-[#17645F] transition hover:bg-[#17645F]/20"
                     >
                       <ArrowLeftRight className="h-3.5 w-3.5" />
                       {sw ? "Agiza Safari ya Kurudi" : "Book Return Trip"}
@@ -495,7 +502,7 @@ export function CustomerTripsView({
                     <button
                       type="button"
                       onClick={() => openLostItemModal(trip)}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800 transition hover:bg-amber-100"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#B86B2B]/15 px-3.5 py-1.5 text-xs font-bold text-[#8E4F1B] transition hover:bg-[#B86B2B]/25"
                     >
                       <PackageSearch className="h-3.5 w-3.5" />
                       {sw ? "Kitu Kilichopotea" : "Lost Item"}
@@ -510,16 +517,16 @@ export function CustomerTripsView({
         {/* Customer's Lost-Item & Support Tickets (Synced with /admin/support/inbox) */}
         <section className="space-y-3 pt-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-extrabold text-slate-900">
+            <h2 className="font-display text-2xl uppercase tracking-wide text-[#17645F]">
               {sw
-                ? "Ripoti Zangu za Vitu Vilivyopotea & Msaada"
-                : "My Lost-Item & Support Tickets"}
+                ? "Ripoti za Vitu Vilivyopotea"
+                : "Lost-Item & Support Tickets"}
             </h2>
-            <Badge tone="slate">{tickets.length}</Badge>
+            <Badge tone="teal">{tickets.length}</Badge>
           </div>
 
           {tickets.length === 0 ? (
-            <Card className="p-4 text-xs text-slate-500">
+            <Card className="p-4 text-xs text-[#17645F]/75">
               {sw
                 ? "Huna ripoti ya kitu kilichopotea kwa sasa. Ukisahau chochote kwenye Bodaboda au Bajaji, tumia kitufe cha 'Ripoti Kitu Kilichopotea' hapo juu."
                 : "No open lost-item or support tickets. If you left an item on a Bodaboda or Bajaji, use 'Report Lost Item' above."}
@@ -541,22 +548,22 @@ export function CustomerTripsView({
                       >
                         {tk.status}
                       </Badge>
-                      <span className="text-xs font-bold text-slate-700">
+                      <span className="text-xs font-bold text-[#17645F]">
                         {tk.category}
                         {tk.tripCode ? ` • ${tk.tripCode}` : ""}
                       </span>
                     </div>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-[#17645F]/60">
                       {new Date(tk.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-sm font-bold text-slate-900">
+                  <p className="text-sm font-bold text-[#122927]">
                     {tk.subject}
                   </p>
-                  <p className="text-xs text-slate-600">{tk.description}</p>
+                  <p className="text-xs text-[#122927]/80">{tk.description}</p>
                   {(tk.opsReplySw || tk.opsReplyEn) && (
-                    <div className="rounded-xl border border-teal-200 bg-teal-50 p-3 text-xs text-teal-900">
-                      <p className="font-bold">
+                    <div className="rounded-2xl border border-[#17645F]/20 bg-[#17645F]/10 p-3 text-xs text-[#122927]">
+                      <p className="font-bold text-[#17645F]">
                         {sw ? "Jibu la Go.boda Ops Desk:" : "Go.boda Ops Desk Reply:"}
                       </p>
                       <p className="mt-1">
@@ -575,27 +582,27 @@ export function CustomerTripsView({
 
       {/* Bilingual SW/EN Digital TZS Receipt Modal */}
       {receiptTrip && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#122927]/65 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-[#17645F]/20 bg-[#FAF7F2] p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#17645F]/15 pb-3">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-teal-700">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#17645F]">
                   Go.boda Unguja • Digital TZS Receipt / Risiti
                 </p>
-                <h2 className="text-base font-extrabold text-slate-900">
+                <h2 className="font-display text-2xl text-[#17645F]">
                   {receiptTrip.tripCode}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setReceiptTrip(null)}
-                className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                className="rounded-full p-1.5 text-[#17645F]/60 hover:bg-[#17645F]/10 hover:text-[#17645F]"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <pre className="mt-3 max-h-80 overflow-auto rounded-2xl bg-slate-950 p-3.5 font-mono text-[11px] leading-relaxed text-teal-100">
+            <pre className="mt-3 max-h-80 overflow-auto rounded-2xl bg-[#122927] p-3.5 font-mono text-[11px] leading-relaxed text-[#F3EEE8]">
               {buildReceiptText(receiptTrip)}
             </pre>
 
@@ -625,17 +632,17 @@ export function CustomerTripsView({
 
       {/* Lost-Item / Support Ticket Modal */}
       {(lostItemModalTrip || showGeneralTicketModal) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#122927]/65 p-4 backdrop-blur-sm">
           <form
             onSubmit={handleSubmitTicket}
-            className="w-full max-w-md space-y-3.5 rounded-3xl bg-white p-5 shadow-2xl"
+            className="w-full max-w-md space-y-3.5 rounded-3xl border border-[#17645F]/20 bg-[#FAF7F2] p-5 shadow-2xl"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-[#17645F]/15 pb-3">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-amber-600">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#B86B2B]">
                   {sw ? "Go.boda Msaada — Unguja" : "Go.boda Unguja Support"}
                 </p>
-                <h2 className="text-base font-extrabold text-slate-900">
+                <h2 className="text-base font-extrabold text-[#17645F]">
                   {lostItemModalTrip
                     ? `${sw ? "Ripoti kwa Safari" : "Report for Trip"} ${lostItemModalTrip.tripCode}`
                     : sw
@@ -649,14 +656,14 @@ export function CustomerTripsView({
                   setLostItemModalTrip(null);
                   setShowGeneralTicketModal(false);
                 }}
-                className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                className="rounded-full p-1.5 text-[#17645F]/60 hover:bg-[#17645F]/10 hover:text-[#17645F]"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">
+              <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#17645F]/80">
                 {sw ? "Aina ya Ripoti" : "Category"}
               </label>
               <select
@@ -670,7 +677,7 @@ export function CustomerTripsView({
                       | "GENERAL"
                   )
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800"
+                className="w-full rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3 py-2 text-sm font-semibold text-[#122927]"
               >
                 <option value="LOST_ITEM">
                   {sw ? "Kitu Kilichosahaulika (Lost Item)" : "Lost Item"}
@@ -688,7 +695,7 @@ export function CustomerTripsView({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">
+              <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#17645F]/80">
                 {sw ? "Kichwa cha Habari" : "Subject"}
               </label>
               <input
@@ -702,12 +709,12 @@ export function CustomerTripsView({
                     ? "Mfano: Nimesahau simu / begi kwenye Bajaji"
                     : "e.g., Left sunglasses / backpack in Bajaji"
                 }
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900"
+                className="w-full rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3 py-2 text-sm text-[#122927]"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">
+              <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#17645F]/80">
                 {sw
                   ? "Maelezo ya Kitu na Mahali"
                   : "Item Details & Pickup/Dropoff Notes"}
@@ -723,7 +730,7 @@ export function CustomerTripsView({
                     ? "Eleza rangi ya kitu, muda wa safari, na kituo ulichoshukia..."
                     : "Describe item color, approximate time, and dropoff location..."
                 }
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900"
+                className="w-full rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3 py-2 text-sm text-[#122927]"
               />
             </div>
 
@@ -756,25 +763,25 @@ export function CustomerTripsView({
       )}
 
       {/* Bottom Mobile Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-2xl grid-cols-3 py-2 text-center text-[11px] font-semibold">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#17645F]/15 bg-[#FAF7F2]/95 backdrop-blur">
+        <div className="mx-auto grid max-w-2xl grid-cols-3 py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.16em]">
           <Link
             href="/dashboard"
-            className="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-700"
+            className="flex flex-col items-center gap-1 text-[#17645F]/60 hover:text-[#17645F]"
           >
             <Compass className="h-5 w-5" />
             {sw ? "Agiza" : "Book"}
           </Link>
           <Link
             href="/trips"
-            className="flex flex-col items-center gap-1 text-teal-700"
+            className="flex flex-col items-center gap-1 text-[#17645F]"
           >
             <History className="h-5 w-5" />
             {sw ? "Safari" : "Trips"}
           </Link>
           <Link
             href="/safety"
-            className="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-700"
+            className="flex flex-col items-center gap-1 text-[#17645F]/60 hover:text-[#17645F]"
           >
             <ShieldCheck className="h-5 w-5" />
             {sw ? "Usalama" : "Safety"}

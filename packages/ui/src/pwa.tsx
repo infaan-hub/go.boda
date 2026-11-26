@@ -56,22 +56,22 @@ export function PwaInstallBanner({
   };
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-md rounded-2xl border border-teal-200 bg-teal-950 p-4 text-white shadow-xl">
+    <div className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-md rounded-2xl border border-[#F3EEE8]/20 bg-[#17645F] p-4 text-[#F3EEE8] shadow-xl">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-slate-950">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F3EEE8] text-[#17645F]">
             <Download className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm font-semibold">{title}</p>
-            <p className="mt-0.5 text-xs text-teal-100/80">{description}</p>
+            <p className="text-sm font-bold">{title}</p>
+            <p className="mt-0.5 text-xs text-[#F3EEE8]/80">{description}</p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => setDismissed(true)}
           aria-label={dismissLabel}
-          className="rounded-lg p-1 text-teal-200 hover:bg-teal-900"
+          className="rounded-full p-1 text-[#F3EEE8]/75 hover:bg-white/10"
         >
           <X className="h-4 w-4" />
         </button>
@@ -80,12 +80,16 @@ export function PwaInstallBanner({
         <Button
           size="sm"
           variant="ghost"
-          className="text-teal-100 hover:bg-teal-900 hover:text-white"
+          className="text-[#F3EEE8] hover:bg-white/10"
           onClick={() => setDismissed(true)}
         >
           {dismissLabel}
         </Button>
-        <Button size="sm" variant="amber" onClick={handleInstall}>
+        <Button
+          size="sm"
+          className="bg-[#F3EEE8] text-[#17645F] hover:bg-white"
+          onClick={handleInstall}
+        >
           {installLabel}
         </Button>
       </div>
@@ -107,18 +111,18 @@ export function LanguageSwitchLink({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white p-1 text-xs font-semibold shadow-sm",
+        "inline-flex items-center gap-1 rounded-full border border-[#17645F]/25 bg-[#FAF7F2] p-1 text-[11px] font-bold tracking-wider",
         className
       )}
     >
-      <Globe className="ml-1.5 h-3.5 w-3.5 text-slate-500" />
+      <Globe className="ml-1.5 h-3.5 w-3.5 text-[#17645F]/70" />
       <a
         href={hrefSw}
         className={cn(
           "rounded-full px-2.5 py-1 transition-colors",
           currentLocale === "sw"
-            ? "bg-teal-700 text-white"
-            : "text-slate-600 hover:text-slate-900"
+            ? "bg-[#17645F] text-[#F3EEE8]"
+            : "text-[#17645F]/75 hover:text-[#17645F]"
         )}
       >
         SW
@@ -128,8 +132,8 @@ export function LanguageSwitchLink({
         className={cn(
           "rounded-full px-2.5 py-1 transition-colors",
           currentLocale === "en"
-            ? "bg-teal-700 text-white"
-            : "text-slate-600 hover:text-slate-900"
+            ? "bg-[#17645F] text-[#F3EEE8]"
+            : "text-[#17645F]/75 hover:text-[#17645F]"
         )}
       >
         EN

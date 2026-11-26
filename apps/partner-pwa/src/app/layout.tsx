@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Anton, Plus_Jakarta_Sans } from "next/font/google";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import {
@@ -9,6 +10,20 @@ import {
 import { PwaInstallBanner, PwaRegistrar } from "@goboda/ui";
 import "./globals.css";
 
+const anton = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-display",
+  display: "swap",
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Go.boda Rider-Driver — Bodaboda Riders & Bajaji Drivers",
   description:
@@ -17,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f59e0b",
+  themeColor: "#17645F",
   width: "device-width",
   initialScale: 1,
 };
@@ -34,8 +49,8 @@ export default async function PartnerRootLayout({
   const messages = getMessages(locale);
 
   return (
-    <html lang={locale}>
-      <body>
+    <html lang={locale} className={`${anton.variable} ${jakarta.variable}`}>
+      <body className="bg-[#F3EEE8] font-sans text-[#122927] antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <PwaRegistrar />
           {children}

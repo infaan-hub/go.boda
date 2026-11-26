@@ -41,7 +41,9 @@ import {
   BrandLogo,
   Button,
   Card,
+  EditorialScrollHero,
   LanguageSwitchLink,
+  ScrollReveal,
 } from "@goboda/ui";
 import {
   DEFAULT_TARIFFS_TZS,
@@ -57,7 +59,7 @@ const UngujaMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full min-h-[260px] w-full items-center justify-center rounded-2xl bg-slate-900/90 text-xs font-semibold text-teal-200">
+      <div className="flex h-full min-h-[260px] w-full items-center justify-center rounded-3xl bg-[#17645F] text-xs font-bold uppercase tracking-[0.16em] text-[#F3EEE8]">
         Loading Unguja Map...
       </div>
     ),

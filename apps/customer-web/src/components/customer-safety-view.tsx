@@ -184,10 +184,21 @@ export function CustomerSafetyView({
   const atLimit = contacts.length >= 3;
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+    <div className="min-h-screen bg-[#F3EEE8] pb-24 text-[#122927]">
+      <header className="sticky top-0 z-30 border-b border-[#17645F]/15 bg-[#F3EEE8]/95 backdrop-blur">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3.5 sm:px-6">
           <BrandLogo subtitle={sw ? "Usalama" : "Safety"} />
+          <nav className="hidden items-center gap-6 text-[11px] font-bold uppercase tracking-[0.2em] text-[#17645F]/75 md:flex">
+            <Link href="/dashboard" className="hover:text-[#17645F]">
+              {sw ? "Agiza" : "Book"}
+            </Link>
+            <Link href="/trips" className="hover:text-[#17645F]">
+              {sw ? "Safari" : "Trips"}
+            </Link>
+            <Link href="/safety" className="text-[#17645F] underline underline-offset-4">
+              {sw ? "Usalama" : "Safety"}
+            </Link>
+          </nav>
           <div className="flex items-center gap-2">
             <LanguageSwitchLink
               currentLocale={locale}
@@ -196,7 +207,7 @@ export function CustomerSafetyView({
             />
             <Link
               href={customerId ? "/dashboard" : "/login"}
-              className="rounded-full bg-teal-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-800"
+              className="rounded-full bg-[#17645F] px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#F3EEE8] transition hover:bg-[#114E4A]"
             >
               {customerId
                 ? sw
@@ -210,18 +221,27 @@ export function CustomerSafetyView({
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl space-y-5 px-4 pt-4">
+      <main className="mx-auto max-w-3xl space-y-5 px-4 pt-6 sm:px-6">
+        <div className="border-b border-[#17645F]/15 pb-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#17645F]/75">
+            UNGUJA 24/7 EMERGENCY & LIVE SHARE
+          </p>
+          <h1 className="mt-1 font-display text-4xl uppercase leading-none text-[#17645F]">
+            {sw ? "USALAMA WA SAFARI" : "SAFETY CENTER"}
+          </h1>
+        </div>
+
         {/* Emergency Contacts */}
-        <Card className="border-rose-200 bg-white p-5">
+        <Card className="border-[#A93232]/25 bg-[#FAF7F2] p-5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5 text-rose-600" />
-              <h1 className="text-base font-bold text-slate-900">
+              <ShieldAlert className="h-5 w-5 text-[#A93232]" />
+              <h2 className="text-sm font-extrabold uppercase tracking-[0.14em] text-[#122927]">
                 {sw ? "Namba za Dharura" : "Emergency Contacts"}
-              </h1>
+              </h2>
             </div>
             {customerName ? (
-              <span className="text-xs font-medium text-slate-500">
+              <span className="text-xs font-semibold text-[#17645F]/75">
                 {customerName}
               </span>
             ) : null}
@@ -230,16 +250,16 @@ export function CustomerSafetyView({
           <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
             <a
               href="tel:112"
-              className="flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-rose-700"
+              className="flex items-center justify-center gap-2 rounded-full bg-[#A93232] px-4 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#8A2626]"
             >
               <PhoneCall className="h-4 w-4" />
               {sw ? "Piga 112" : "Call 112"}
             </a>
             <a
               href={`tel:${OPS_DESK_PHONE}`}
-              className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-800"
+              className="flex items-center justify-center gap-2 rounded-full bg-[#17645F] px-4 py-2.5 text-xs font-bold tracking-wide text-[#F3EEE8] transition hover:bg-[#114E4A]"
             >
-              <PhoneCall className="h-4 w-4 text-amber-400" />
+              <PhoneCall className="h-4 w-4 text-[#E6C99E]" />
               <span>{OPS_DESK_DISPLAY}</span>
             </a>
             <a
@@ -250,7 +270,7 @@ export function CustomerSafetyView({
               )}`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
+              className="flex items-center justify-center gap-2 rounded-full border border-[#17645F] bg-[#FAF7F2] px-4 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-[#17645F] transition hover:bg-[#17645F] hover:text-[#F3EEE8]"
             >
               <MessageCircle className="h-4 w-4" />
               WhatsApp
@@ -262,10 +282,10 @@ export function CustomerSafetyView({
         <Card className="space-y-4 p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-sm font-extrabold uppercase tracking-[0.14em] text-[#17645F]">
                 {sw ? "Watu wa Kuaminika" : "Trusted Contacts"}
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-[#17645F]/75">
                 {sw
                   ? "Hifadhi hadi namba 3 za WhatsApp za kushiriki safari yako."
                   : "Save up to 3 WhatsApp contacts to share your live trip location."}
@@ -278,10 +298,10 @@ export function CustomerSafetyView({
 
           {feedback && (
             <div
-              className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs font-medium ${
+              className={`flex items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-xs font-semibold ${
                 feedback.tone === "ok"
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                  : "border-rose-200 bg-rose-50 text-rose-800"
+                  ? "border-[#17645F]/30 bg-[#17645F]/10 text-[#17645F]"
+                  : "border-[#A93232]/30 bg-[#A93232]/10 text-[#A93232]"
               }`}
             >
               {feedback.tone === "ok" ? (
@@ -294,12 +314,12 @@ export function CustomerSafetyView({
           )}
 
           {loading ? (
-            <div className="flex items-center gap-2 py-4 text-xs text-slate-500">
-              <Loader2 className="h-4 w-4 animate-spin text-teal-700" />
+            <div className="flex items-center gap-2 py-4 text-xs text-[#17645F]/75">
+              <Loader2 className="h-4 w-4 animate-spin text-[#17645F]" />
               {sw ? "Inapakia..." : "Loading..."}
             </div>
           ) : contacts.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">
+            <p className="rounded-2xl border border-dashed border-[#17645F]/25 bg-[#F3EEE8]/60 p-4 text-center text-xs text-[#17645F]/75">
               {sw
                 ? "Bado hujaongeza mtu wa kuaminika."
                 : "No trusted contacts saved yet."}
@@ -309,20 +329,20 @@ export function CustomerSafetyView({
               {contacts.map((c) => (
                 <div
                   key={c.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#17645F]/15 bg-[#F3EEE8]/65 p-3"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-teal-800">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#17645F] text-[#F3EEE8]">
                       <UserCheck className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-900">
+                      <p className="text-sm font-bold text-[#122927]">
                         {c.contactName}{" "}
-                        <span className="text-xs font-normal text-slate-500">
+                        <span className="text-xs font-normal text-[#17645F]/70">
                           ({c.relationship})
                         </span>
                       </p>
-                      <p className="font-mono text-xs text-slate-600">
+                      <p className="font-mono text-xs text-[#17645F]">
                         {c.contactPhone}
                       </p>
                     </div>
@@ -332,7 +352,7 @@ export function CustomerSafetyView({
                       href={buildWhatsAppShareUrl(c)}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                      className="inline-flex items-center gap-1 rounded-full bg-[#17645F] px-3.5 py-1.5 text-xs font-bold text-[#F3EEE8] hover:bg-[#114E4A]"
                     >
                       <Share2 className="h-3.5 w-3.5" />
                       Share
@@ -341,7 +361,7 @@ export function CustomerSafetyView({
                       type="button"
                       disabled={deletingId === c.id}
                       onClick={() => void handleDelete(c.id)}
-                      className="rounded-lg border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                      className="rounded-full border border-[#A93232]/25 bg-[#FAF7F2] p-1.5 text-[#A93232] hover:bg-[#A93232]/10 disabled:opacity-50"
                       aria-label="Delete trusted contact"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -354,7 +374,7 @@ export function CustomerSafetyView({
 
           <form
             onSubmit={handleAddContact}
-            className="space-y-3 border-t border-slate-100 pt-4"
+            className="space-y-3 border-t border-[#17645F]/10 pt-4"
           >
             <div className="grid gap-2.5 sm:grid-cols-3">
               <input
@@ -364,7 +384,7 @@ export function CustomerSafetyView({
                 value={contactName}
                 onChange={(e) => setContactName(e.target.value)}
                 placeholder={sw ? "Jina" : "Name"}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-900 disabled:bg-slate-100"
+                className="rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3.5 py-2 text-xs text-[#122927] disabled:opacity-50"
               />
               <input
                 type="tel"
@@ -373,13 +393,13 @@ export function CustomerSafetyView({
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
                 placeholder="+255 777 123 456"
-                className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-900 disabled:bg-slate-100"
+                className="rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3.5 py-2 text-xs text-[#122927] disabled:opacity-50"
               />
               <select
                 disabled={atLimit || saving}
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 disabled:bg-slate-100"
+                className="rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3.5 py-2 text-xs font-semibold text-[#122927] disabled:opacity-50"
               >
                 <option value="Family">{sw ? "Familia" : "Family"}</option>
                 <option value="Friend">{sw ? "Rafiki" : "Friend"}</option>
@@ -388,13 +408,13 @@ export function CustomerSafetyView({
               </select>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <label className="flex items-center gap-2 text-xs text-slate-600">
+              <label className="flex items-center gap-2 text-xs text-[#17645F]/80">
                 <input
                   type="checkbox"
                   checked={autoShareTrips}
                   disabled={atLimit || saving}
                   onChange={(e) => setAutoShareTrips(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-teal-700"
+                  className="h-4 w-4 rounded border-[#17645F]/30 accent-[#17645F]"
                 />
                 {sw ? "Shiriki safari kiotomatiki" : "Auto-share trip links"}
               </label>
@@ -423,25 +443,25 @@ export function CustomerSafetyView({
       </main>
 
       {/* Bottom Mobile Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-2xl grid-cols-3 py-2 text-center text-[11px] font-semibold">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#17645F]/15 bg-[#FAF7F2]/95 backdrop-blur">
+        <div className="mx-auto grid max-w-2xl grid-cols-3 py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.16em]">
           <Link
             href="/dashboard"
-            className="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-700"
+            className="flex flex-col items-center gap-1 text-[#17645F]/60 hover:text-[#17645F]"
           >
             <Compass className="h-5 w-5" />
             {sw ? "Agiza" : "Book"}
           </Link>
           <Link
             href="/trips"
-            className="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-700"
+            className="flex flex-col items-center gap-1 text-[#17645F]/60 hover:text-[#17645F]"
           >
             <History className="h-5 w-5" />
             {sw ? "Safari" : "Trips"}
           </Link>
           <Link
             href="/safety"
-            className="flex flex-col items-center gap-1 text-teal-700"
+            className="flex flex-col items-center gap-1 text-[#17645F]"
           >
             <ShieldCheck className="h-5 w-5" />
             {sw ? "Usalama" : "Safety"}

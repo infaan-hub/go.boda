@@ -21,7 +21,7 @@ const UngujaMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[320px] w-full items-center justify-center rounded-2xl bg-slate-900 text-xs font-semibold text-teal-200">
+      <div className="flex h-[320px] w-full items-center justify-center rounded-3xl bg-[#17645F] text-xs font-bold uppercase tracking-[0.16em] text-[#F3EEE8]">
         Loading Live Unguja Tracker Map...
       </div>
     ),

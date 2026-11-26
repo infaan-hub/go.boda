@@ -12,3 +12,9 @@ export {
   PwaInstallBanner,
   LanguageSwitchLink,
 } from "./pwa";
+export {
+  EditorialScrollHero,
+  ScrollReveal,
+  type EditorialScrollHeroProps,
+  type EditorialHeroFeature,
+} from "./scroll-stage";
