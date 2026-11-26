@@ -18,9 +18,12 @@ async function probeServiceHealth(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 800);
   try {
-    const res = await fetch(`${url}/healthz`, { signal: controller.signal });
+    const res = (await fetch(`${url}/healthz`, {
+      signal: controller.signal,
+    })) as unknown as { ok?: boolean; status?: number };
     const latencyMs = Math.round(performance.now() - started);
-    return { status: res.ok ? "online" : "offline", latencyMs };
+    const isOk = Boolean(res.ok ?? (typeof res.status === "number" && res.status >= 200 && res.status < 300));
+    return { status: isOk ? "online" : "offline", latencyMs };
   } catch {
     return { status: "offline", latencyMs: Math.round(performance.now() - started) };
   } finally {

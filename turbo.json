@@ -1,9 +1,27 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "LOG_LEVEL",
+    "PORT",
+    "API_GATEWAY_PORT",
+    "CORS_ALLOWED_ORIGINS",
+    "AUTH_SERVICE_URL",
+    "OPERATOR_SERVICE_URL",
+    "GEO_ZONE_SERVICE_URL",
+    "LOCATION_SERVICE_URL",
+    "PRICING_SERVICE_URL",
+    "DISPATCH_SERVICE_URL",
+    "TRIP_SERVICE_URL",
+    "PAYMENT_WALLET_SERVICE_URL",
+    "NOTIFICATION_SERVICE_URL",
+    "SAFETY_SERVICE_URL"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["NEXT_PUBLIC_*"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
