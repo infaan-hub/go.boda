@@ -13,7 +13,7 @@ export const swMessages = {
       "Kagua muunganisho wako wa intaneti. Taarifa za safari yako zimehifadhiwa kwenye simu.",
     retry: "Jaribu Tena",
     languageLabel: "Lugha",
-    phaseBadge: "Awamu ya 3 Safari, Maombi na Arifa",
+    phaseBadge: "Awamu ya 4 Usalama, Ufuatiliaji na Safari",
   },
   roles: {
     customer: "Mteja",

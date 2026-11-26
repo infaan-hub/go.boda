@@ -175,6 +175,7 @@ app.addHook("onRequest", async (request, reply) => {
   } else if (
     path.startsWith("/api/v1/trips") ||
     path.startsWith("/api/v1/dispatch/") ||
+    path.startsWith("/api/v1/safety/") ||
     path === "/api/v1/auth/me" ||
     path === "/api/v1/notifications/me" ||
     path === "/api/v1/notifications/subscriptions" ||
