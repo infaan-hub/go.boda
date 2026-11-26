@@ -22,7 +22,9 @@ const { getSql } = await import("../packages/db/dist/index.js");
 const PILOT_ADMIN_PHONE = "+255770000112";
 const TEST_CUST_PHONE = "+255779000901";
 const TEST_RIDER_PHONE = "+255779000902";
+const TEST_ADMIN_REG_PHONE = "+255779000903";
 const TEST_PLATE = "Z 902 P9X";
+const TEST_ADMIN_REG_PLATE = "Z 903 P9R";
 const TEST_TRUSTED_OWNER_CUST = "phase9-cust-owner-test";
 const TEST_TRUSTED_OWNER_PARTNER = "phase9-partner-owner-test";
 
@@ -120,10 +122,14 @@ async function cleanup() {
     await sql`DELETE FROM location.operator_positions WHERE operator_id = ${createdRiderUserId}::uuid`;
     await sql`DELETE FROM operator.profiles WHERE user_id = ${createdRiderUserId}::uuid`;
   }
-  await sql`DELETE FROM operator.profiles WHERE plate_number = ${TEST_PLATE}`;
-  await sql`DELETE FROM location.operator_positions WHERE plate_number = ${TEST_PLATE}`;
-  await sql`DELETE FROM auth.otp_codes WHERE phone IN (${PILOT_ADMIN_PHONE}, ${TEST_CUST_PHONE}, ${TEST_RIDER_PHONE})`;
-  await sql`DELETE FROM auth.users WHERE phone IN (${TEST_CUST_PHONE}, ${TEST_RIDER_PHONE})`;
+  await sql`DELETE FROM operator.profiles WHERE plate_number IN (${TEST_PLATE}, ${TEST_ADMIN_REG_PLATE})`;
+  await sql`DELETE FROM location.operator_positions WHERE plate_number IN (${TEST_PLATE}, ${TEST_ADMIN_REG_PLATE})`;
+  await sql`
+    DELETE FROM finance.wallet_accounts
+    WHERE owner_id IN (SELECT id FROM auth.users WHERE phone = ${TEST_ADMIN_REG_PHONE})
+  `;
+  await sql`DELETE FROM auth.otp_codes WHERE phone IN (${PILOT_ADMIN_PHONE}, ${TEST_CUST_PHONE}, ${TEST_RIDER_PHONE}, ${TEST_ADMIN_REG_PHONE})`;
+  await sql`DELETE FROM auth.users WHERE phone IN (${TEST_CUST_PHONE}, ${TEST_RIDER_PHONE}, ${TEST_ADMIN_REG_PHONE})`;
 }
 
 async function runTests() {
@@ -271,8 +277,70 @@ async function runTests() {
         redirect: "manual",
       });
       assert.equal(authed.status, 200, `Authenticated ${path} must return 200 OK`);
+
+      // Also verify Next.js App Router RSC prefetch (?_rsc=...) returns 200 OK (never 404)
+      const rscRes = await fetch(`${admUrl}${path}?_rsc=phase9test`, {
+        headers: {
+          cookie: adminCookie,
+          RSC: "1",
+          "Next-Router-Prefetch": "1",
+        },
+        redirect: "manual",
+      });
+      assert.equal(rscRes.status, 200, `RSC prefetch ${path}?_rsc=... must return 200 OK`);
     }
-    console.log(`   [PASS] All ${phase9AdminPages.length}/13 new /admin/* pages enforce auth & return 200 OK!`);
+    console.log(`   [PASS] All ${phase9AdminPages.length}/13 new /admin/* pages enforce auth & return 200 OK (HTML + RSC prefetch)!`);
+
+    // Verify Admin Rider-Driver Registration endpoint (clear 400 validation + forgiving 201 create)
+    const badReg = await fetch(`${admUrl}/api/ops/operators/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: adminCookie },
+      body: JSON.stringify({
+        username: "bad_plate_test",
+        password: "UngujaPassword123!",
+        fullName: "Test Rider",
+        phone: TEST_ADMIN_REG_PHONE,
+        transportType: "BODABODA",
+        plateNumber: "T 123 ABC",
+        homeKituo: "Darajani",
+        nationalIdNo: "ZNZ123",
+        licenseNo: "DL12",
+        vehicleModel: "Boxer 150",
+        vehicleColor: "Black",
+        payoutMobileNumber: "",
+        helmetVerified: true,
+      }),
+    });
+    assert.equal(badReg.status, 400);
+    const badRegJson = await badReg.json();
+    assert.ok(
+      typeof badRegJson.message === "string" && badRegJson.message.includes("Plate number"),
+      "400 validation response must return clear human-readable field message"
+    );
+
+    const goodReg = await fetch(`${admUrl}/api/ops/operators/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: adminCookie },
+      body: JSON.stringify({
+        username: "@Phase9 Rider",
+        password: "UngujaPassword123!",
+        fullName: "Mussa Hamad",
+        phone: "+255 779 000 903",
+        transportType: "BODABODA",
+        plateNumber: "z 903 p9r",
+        homeKituo: "Darajani",
+        nationalIdNo: "ZNZ-903",
+        licenseNo: "ZN-903",
+        licenseExpiry: "",
+        insuranceExpiry: "",
+        vehicleModel: "Honda CG 125",
+        vehicleColor: "Red",
+        payoutMobileNumber: "",
+        helmetVerified: true,
+      }),
+    });
+    assert.equal(goodReg.status, 201, "Admin Rider-Driver registration must normalize spaces/blank payout and return 201");
+    console.log("   [PASS] Admin /api/ops/operators/register validation messages & forgiving input normalization verified!");
 
     // -----------------------------------------------------------------------
     // 3. ALL 13 NEW /api/ops/* ENDPOINTS (401 LOCK + LIVE NEON INTERACTIONS)

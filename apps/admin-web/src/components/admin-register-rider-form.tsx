@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Bike, CarFront, KeyRound, ShieldCheck, UserRound, X } from "lucide-react";
 import { Button, Card } from "@goboda/ui";
-import { TransportType } from "@goboda/shared-types";
 
 interface RegisteredRider {
   username: string;
@@ -64,9 +63,17 @@ export function AdminRegisterRiderForm({
         rider?: RegisteredRider;
         error?: string;
         message?: string;
+        details?: { fieldErrors?: Record<string, string[] | undefined> };
       };
       if (!res.ok || !json.registered || !json.rider) {
-        setError(json.message || json.error || "Registration failed.");
+        const fieldMessages = json.details?.fieldErrors
+          ? Object.entries(json.details.fieldErrors)
+              .flatMap(([k, errs]) => (errs ?? []).map((msg) => `${k}: ${msg}`))
+              .join(" • ")
+          : "";
+        setError(
+          json.message || fieldMessages || json.error || "Registration failed."
+        );
         return;
       }
       setRegistered(json.rider);
@@ -308,11 +315,10 @@ export function AdminRegisterRiderForm({
             </div>
 
             <label className={labelClass}>
-              Payout mobile number
+              Payout mobile number (optional — defaults to Phone)
               <input
                 name="payoutMobileNumber"
                 type="tel"
-                required
                 placeholder="+255770123456"
                 className={inputClass}
               />

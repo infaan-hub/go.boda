@@ -6,43 +6,106 @@ import { normalizeTzPhone, verifyAdminRequest } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
-const optionalDate = z
-  .string()
-  .trim()
-  .regex(/^\d{4}-\d{2}-\d{2}$/)
-  .optional()
-  .or(z.literal(""));
+const optionalDate = z.preprocess(
+  (v) => {
+    if (v == null) return "";
+    const s = String(v).trim();
+    if (!s) return "";
+    const isoMatch = s.match(/^(\d{4}-\d{2}-\d{2})/);
+    return isoMatch ? isoMatch[1] : s;
+  },
+  z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
+    .optional()
+    .or(z.literal(""))
+);
+
+const cleanPhoneString = (v: unknown) =>
+  typeof v === "string" ? v.replace(/[\s\-()]/g, "").trim() : v;
 
 const registerSchema = z.object({
-  username: z
+  username: z.preprocess(
+    (v) =>
+      typeof v === "string"
+        ? v.trim().replace(/^@+/, "").replace(/\s+/g, "_")
+        : v,
+    z
+      .string()
+      .min(3, "Username must be at least 3 characters")
+      .max(40, "Username must be at most 40 characters")
+      .regex(
+        /^[a-zA-Z0-9._-]+$/,
+        "Username may only contain letters, numbers, dots, dashes and underscores"
+      )
+  ),
+  password: z
     .string()
-    .trim()
-    .min(3)
-    .max(40)
-    .regex(
-      /^[a-zA-Z0-9._-]+$/,
-      "Username may only contain letters, numbers, dots, dashes and underscores"
-    ),
-  password: z.string().min(8).max(128),
+    .min(8, "Password must be at least 8 characters")
+    .max(128),
 
-  fullName: z.string().trim().min(2).max(120),
-  phone: z.string().trim().min(9).max(20),
+  fullName: z.string().trim().min(2, "Full name is required").max(120),
+  phone: z.preprocess(
+    cleanPhoneString,
+    z
+      .string()
+      .min(9, "Phone number must have at least 9 digits (e.g. +255770123456)")
+      .max(20, "Phone number is too long")
+  ),
   transportType: z.enum(["BODABODA", "BAJAJI"]),
-  plateNumber: z
-    .string()
-    .trim()
-    .toUpperCase()
-    .regex(/^Z[\s-]?[A-Z0-9\s-]{2,12}$/, "Unguja vehicle plate must start with Z"),
-  homeKituo: z.string().trim().min(2).max(120),
-  nationalIdNo: z.string().trim().min(5).max(50),
-  licenseNo: z.string().trim().min(4).max(50),
+  plateNumber: z.preprocess(
+    (v) =>
+      typeof v === "string"
+        ? v.trim().toUpperCase().replace(/\s+/g, " ")
+        : v,
+    z
+      .string()
+      .regex(
+        /^Z[\s-]?[A-Z0-9\s-]{1,14}$/,
+        "Unguja vehicle plate must start with Z (e.g. Z 104 AAB)"
+      )
+  ),
+  homeKituo: z.string().trim().min(2, "Home kituo is required").max(120),
+  nationalIdNo: z.string().trim().min(2, "National ID is required").max(50),
+  licenseNo: z.string().trim().min(2, "License number is required").max(50),
   licenseExpiry: optionalDate,
-  vehicleModel: z.string().trim().min(2).max(80),
-  vehicleColor: z.string().trim().min(2).max(40),
+  vehicleModel: z.string().trim().min(2, "Vehicle model is required").max(80),
+  vehicleColor: z.string().trim().min(2, "Vehicle color is required").max(40),
   insuranceExpiry: optionalDate,
-  payoutMobileNumber: z.string().trim().min(9).max(20),
+  payoutMobileNumber: z.preprocess(
+    (v) => {
+      const cleaned = cleanPhoneString(v);
+      return typeof cleaned === "string" ? cleaned : "";
+    },
+    z
+      .string()
+      .max(20, "Payout mobile number is too long")
+      .refine(
+        (val) => val === "" || val.length >= 9,
+        "Payout mobile number must have at least 9 digits (or leave blank to use Phone)"
+      )
+      .optional()
+      .default("")
+  ),
   helmetVerified: z.boolean().default(false),
 });
+
+const FIELD_LABELS: Record<string, string> = {
+  username: "Username",
+  password: "Password",
+  fullName: "Full name",
+  phone: "Phone number",
+  transportType: "Transport type",
+  plateNumber: "Plate number",
+  homeKituo: "Home kituo",
+  nationalIdNo: "National ID",
+  licenseNo: "License number",
+  licenseExpiry: "License expiry",
+  vehicleModel: "Vehicle model",
+  vehicleColor: "Vehicle color",
+  insuranceExpiry: "Insurance expiry",
+  payoutMobileNumber: "Payout mobile number",
+};
 
 export async function POST(request: Request) {
   const auth = await verifyAdminRequest(request);
@@ -51,8 +114,20 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = registerSchema.safeParse(body);
   if (!parsed.success) {
+    const summary = parsed.error.issues
+      .map((issue) => {
+        const key = String(issue.path[0] ?? "");
+        const label = FIELD_LABELS[key] || key || "Field";
+        return `${label}: ${issue.message}`;
+      })
+      .join(" • ");
+
     return NextResponse.json(
-      { error: "VALIDATION_ERROR", details: parsed.error.flatten() },
+      {
+        error: "VALIDATION_ERROR",
+        message: summary || "Please check the highlighted form fields.",
+        details: parsed.error.flatten(),
+      },
       { status: 400 }
     );
   }
@@ -60,7 +135,7 @@ export async function POST(request: Request) {
   const d = parsed.data;
   const username = normalizeUsername(d.username);
   const phone = normalizeTzPhone(d.phone);
-  const payoutPhone = normalizeTzPhone(d.payoutMobileNumber);
+  const payoutPhone = normalizeTzPhone(d.payoutMobileNumber || d.phone);
   const plate = d.plateNumber.replace(/\s+/g, " ").trim();
   const role = d.transportType === "BAJAJI" ? "BAJAJI_DRIVER" : "BODABODA_RIDER";
   const operatorTitle = getOperatorTitle(d.transportType);
