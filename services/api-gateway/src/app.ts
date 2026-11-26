@@ -4,13 +4,29 @@ import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import httpProxy from "@fastify/http-proxy";
+import { jwtVerify } from "jose";
 import { createLogger, REQUEST_ID_HEADER } from "@goboda/logger";
 import {
   checkDatabaseHealth,
   getUngujaBootstrapSummary,
 } from "@goboda/db";
-import { MICROSERVICES_REGISTRY, UNGUJA_GEO } from "@goboda/shared-types";
+import {
+  MICROSERVICES_REGISTRY,
+  UNGUJA_GEO,
+  UserRole,
+} from "@goboda/shared-types";
 import { loadGatewayConfig } from "./config.js";
+
+function getJwtSecretBytes(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("JWT_SECRET is required in production");
+    }
+    return new TextEncoder().encode("dev-only-insecure-goboda-jwt-secret");
+  }
+  return new TextEncoder().encode(secret);
+}
 
 export const SERVICE_NAME = "api-gateway";
 export const SERVICE_VERSION = "0.1.0";
@@ -74,7 +90,67 @@ app.addHook("onRequest", async (request, reply) => {
   // Strip untrusted client identity headers before downstream auth propagation
   delete request.headers["x-user-id"];
   delete request.headers["x-user-role"];
+  delete request.headers["x-user-phone"];
   delete request.headers["x-transport-type"];
+
+  const authHeader = request.headers.authorization;
+  let verifiedRole: UserRole | null = null;
+  if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+    try {
+      const { payload } = await jwtVerify(
+        authHeader.slice(7).trim(),
+        getJwtSecretBytes(),
+        {
+          issuer: "goboda-auth-service",
+          audience: "goboda-platform",
+        }
+      );
+      if (payload.sub && typeof payload.role === "string") {
+        verifiedRole = payload.role as UserRole;
+        request.headers["x-user-id"] = payload.sub;
+        request.headers["x-user-role"] = payload.role;
+        if (typeof payload.phone === "string") {
+          request.headers["x-user-phone"] = payload.phone;
+        }
+      }
+    } catch {
+      // Invalid tokens are treated as unauthenticated below
+    }
+  }
+
+  const path = request.url.split("?")[0] ?? "/";
+
+  // Edge RBAC enforcement
+  if (/^\/api\/v1\/[^/]+\/admin(\/|$)/.test(path)) {
+    if (!verifiedRole) {
+      return reply.code(401).send({ error: "UNAUTHORIZED" });
+    }
+    if (verifiedRole !== UserRole.ADMIN) {
+      return reply.code(403).send({
+        error: "ADMIN_REQUIRED",
+        message: "Operations Admin role is required for this endpoint.",
+      });
+    }
+  } else if (path.startsWith("/api/v1/operators")) {
+    if (!verifiedRole) {
+      return reply.code(401).send({ error: "UNAUTHORIZED" });
+    }
+    if (
+      verifiedRole !== UserRole.BODABODA_RIDER &&
+      verifiedRole !== UserRole.BAJAJI_DRIVER &&
+      verifiedRole !== UserRole.ADMIN
+    ) {
+      return reply.code(403).send({
+        error: "OPERATOR_ROLE_REQUIRED",
+        message:
+          "Only Bodaboda Riders, Bajaji Drivers, or Admins can access operator routes.",
+      });
+    }
+  } else if (path === "/api/v1/auth/me") {
+    if (!verifiedRole) {
+      return reply.code(401).send({ error: "UNAUTHORIZED" });
+    }
+  }
 });
 
 app.addHook("onResponse", async (request, reply) => {
