@@ -5,9 +5,11 @@ import {
   PARTNER_COOKIE_NAME,
   readPartnerSessionToken,
 } from "@partner/lib/partner-auth";
+import { TransportType } from "@goboda/shared-types";
 import { PartnerHomeView } from "@partner/components/partner-home-view";
 
 interface PartnerProfileRow {
+  transportType: string | null;
   plateNumber: string | null;
   homeKituo: string | null;
   kycStatus: string | null;
@@ -38,7 +40,8 @@ export default async function PartnerDashboardPage({
   try {
     const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
-      SELECT plate_number AS "plateNumber",
+      SELECT transport_type AS "transportType",
+             plate_number AS "plateNumber",
              home_kituo AS "homeKituo",
              kyc_status AS "kycStatus"
       FROM operator.profiles
@@ -50,11 +53,18 @@ export default async function PartnerDashboardPage({
     profile = null;
   }
 
+  const assignedTransportType: TransportType =
+    profile?.transportType === "BAJAJI"
+      ? TransportType.BAJAJI
+      : profile?.transportType === "BODABODA"
+        ? TransportType.BODABODA
+        : partner.transportType;
+
   return (
     <PartnerHomeView
       locale={locale}
       partnerName={partner.name}
-      partnerTransportType={partner.transportType}
+      partnerTransportType={assignedTransportType}
       partnerPlateNumber={profile?.plateNumber ?? undefined}
       partnerKituo={profile?.homeKituo ?? undefined}
     />

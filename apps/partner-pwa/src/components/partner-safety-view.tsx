@@ -114,6 +114,8 @@ export function PartnerSafetyView({
     }
   }, [ownerKey, loadContacts]);
 
+  const activeRole = partnerRole ?? role;
+
   const handleAddContact = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ownerKey) return;
@@ -125,7 +127,7 @@ export function PartnerSafetyView({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ownerKey,
-          ownerRole: role,
+          ownerRole: activeRole,
           contactName,
           contactPhone,
           relationship,
@@ -182,14 +184,14 @@ export function PartnerSafetyView({
     const cleanDigits = contact.contactPhone.replace(/[^\d]/g, "");
     const plate = partnerPlateNumber ? ` (${partnerPlateNumber})` : "";
     const roleLabel =
-      role === "BODABODA_RIDER" ? "Bodaboda Rider" : "Bajaji Driver";
+      activeRole === "BODABODA_RIDER" ? "Bodaboda Rider" : "Bajaji Driver";
     const message = sw
       ? `Habari ${contact.contactName}, niko kazini Go.boda (${roleLabel}${plate}). Kwa dharura piga ${OPS_DESK_DISPLAY} au 112.`
       : `Hi ${contact.contactName}, I am on shift with Go.boda (${roleLabel}${plate}). In an emergency call ${OPS_DESK_DISPLAY} or 112.`;
     return `https://wa.me/${cleanDigits}?text=${encodeURIComponent(message)}`;
   };
 
-  const isBodaboda = role === "BODABODA_RIDER";
+  const isBodaboda = activeRole === "BODABODA_RIDER";
   const atLimit = contacts.length >= 3;
   const nightMode = sunlightMode;
 
@@ -316,7 +318,43 @@ export function PartnerSafetyView({
           </div>
         </section>
 
-        {!partnerRole && (
+        {partnerRole ? (
+          <div
+            className={cn(
+              "flex flex-wrap items-center justify-between gap-2 rounded-full border px-4 py-2",
+              nightMode
+                ? "border-[#F3EEE8]/15 bg-[#123D3A]"
+                : "border-[#17645F]/15 bg-[#FAF7F2]"
+            )}
+          >
+            <span
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-xs font-bold uppercase tracking-[0.12em]",
+                isBodaboda
+                  ? "bg-[#17645F] text-[#F3EEE8]"
+                  : "bg-[#B86B2B] text-[#FAF7F2]"
+              )}
+            >
+              {isBodaboda ? (
+                <Bike className="h-4 w-4" />
+              ) : (
+                <CarFront className="h-4 w-4" />
+              )}
+              {isBodaboda
+                ? sw
+                  ? "Rider wa Bodaboda"
+                  : "Bodaboda Rider"
+                : sw
+                  ? "Dereva wa Bajaji"
+                  : "Bajaji Driver"}
+            </span>
+            {partnerPlateNumber ? (
+              <span className="font-mono text-xs font-bold opacity-80">
+                {partnerPlateNumber}
+              </span>
+            ) : null}
+          </div>
+        ) : (
           <div
             className={cn(
               "grid grid-cols-2 gap-2 rounded-full border p-1.5",

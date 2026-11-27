@@ -270,7 +270,9 @@ export function PartnerHomeView({
     return () => clearInterval(interval);
   }, [tripStatus]);
 
-  const isBodabodaRider = operatorType === TransportType.BODABODA;
+  const hasAssignedCategory = Boolean(partnerTransportType);
+  const activeOperatorType = partnerTransportType ?? operatorType;
+  const isBodabodaRider = activeOperatorType === TransportType.BODABODA;
 
   const requiredKycDocs = isBodabodaRider
     ? [
@@ -659,18 +661,31 @@ export function PartnerHomeView({
       {/* Editorial Bodaboda Scroll-Transition Hero on Rider-Driver Home */}
       {activeTab === "shift" ? (
         <EditorialScrollHero
-          eyebrowItems={[
-            "BODABODA RIDER",
-            "BAJAJI DRIVER",
-            "88% NET PAYOUT",
-            "UNGUJA",
-          ]}
+          eyebrowItems={
+            hasAssignedCategory
+              ? [
+                  isBodabodaRider ? "BODABODA RIDER" : "BAJAJI DRIVER",
+                  ...(partnerPlateNumber ? [partnerPlateNumber] : []),
+                  "88% NET PAYOUT",
+                  "UNGUJA",
+                ]
+              : [
+                  "BODABODA RIDER",
+                  "BAJAJI DRIVER",
+                  "88% NET PAYOUT",
+                  "UNGUJA",
+                ]
+          }
           displayWordLeft={locale === "sw" ? "Endesha Na" : "Drive With"}
           displayWordRight="Go.Boda"
           taglineLines={
             locale === "sw"
-              ? ["POKEA SAFARI KARIBU", "NA MALIPO YA PAPO", "HAPO KWA SIMU."]
-              : ["ACCEPT NEARBY TRIPS", "AND KEEP 88% NET", "ON EVERY UNGUJA RIDE."]
+              ? isBodabodaRider
+                ? ["POKEA SAFARI ZA BODABODA", "NA MALIPO YA PAPO", "HAPO KWA SIMU."]
+                : ["POKEA SAFARI ZA BAJAJI", "NA MALIPO YA PAPO", "HAPO KWA SIMU."]
+              : isBodabodaRider
+                ? ["ACCEPT BODABODA TRIPS", "AND KEEP 88% NET", "ON EVERY UNGUJA RIDE."]
+                : ["ACCEPT BAJAJI TRIPS", "AND KEEP 88% NET", "ON EVERY UNGUJA RIDE."]
           }
           ctaLabel={
             isOnline
@@ -683,7 +698,11 @@ export function PartnerHomeView({
           }
           ctaHref="#workspace"
           imageSrc="/partner/images/bodaboda-hero.webp"
-          imageAlt="Go.boda Zanzibar Bodaboda Rider"
+          imageAlt={
+            isBodabodaRider
+              ? "Go.boda Zanzibar Bodaboda Rider"
+              : "Go.boda Zanzibar Bajaji Driver"
+          }
           scrollHint={
             locale === "sw" ? "Shuka chini kuanza zamu" : "Scroll to shift console"
           }
@@ -711,55 +730,103 @@ export function PartnerHomeView({
         id="workspace"
         className="mx-auto max-w-3xl scroll-mt-20 space-y-5 px-4 pt-8 sm:px-6"
       >
-        {/* Role Switcher (Bodaboda Rider vs Bajaji Driver) */}
+        {/* Assigned Operator Category Badge (locked when signed in; switcher only in unassigned preview) */}
         <ScrollReveal>
-          <div
-            className={cn(
-              "grid grid-cols-2 gap-2 rounded-full border p-1.5",
-              nightMode
-                ? "border-[#F3EEE8]/15 bg-[#123D3A]"
-                : "border-[#17645F]/15 bg-[#FAF7F2]"
-            )}
-          >
-            <button
-              type="button"
-              disabled={Boolean(activeTrip)}
-              onClick={() => {
-                setOperatorType(TransportType.BODABODA);
-                setKycSubmitted(false);
-              }}
+          {hasAssignedCategory ? (
+            <div
               className={cn(
-                "flex items-center justify-center gap-2 rounded-full py-2.5 text-xs font-bold uppercase tracking-[0.12em] transition disabled:opacity-50",
-                isBodabodaRider
-                  ? "bg-[#17645F] text-[#F3EEE8] shadow-sm"
-                  : nightMode
-                    ? "text-[#F3EEE8]/70"
-                    : "text-[#17645F]/70 hover:text-[#17645F]"
+                "flex flex-wrap items-center justify-between gap-3 rounded-full border px-4 py-2.5 shadow-sm",
+                nightMode
+                  ? "border-[#F3EEE8]/15 bg-[#123D3A] text-[#F3EEE8]"
+                  : "border-[#17645F]/15 bg-[#FAF7F2] text-[#122927]"
               )}
             >
-              <Bike className="h-4 w-4" />
-              {t("roles.bodabodaRider")}
-            </button>
-            <button
-              type="button"
-              disabled={Boolean(activeTrip)}
-              onClick={() => {
-                setOperatorType(TransportType.BAJAJI);
-                setKycSubmitted(false);
-              }}
+              <div className="flex items-center gap-2.5">
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.12em] shadow-sm",
+                    isBodabodaRider
+                      ? "bg-[#17645F] text-[#F3EEE8]"
+                      : "bg-[#B86B2B] text-[#FAF7F2]"
+                  )}
+                >
+                  {isBodabodaRider ? (
+                    <Bike className="h-4 w-4" />
+                  ) : (
+                    <CarFront className="h-4 w-4" />
+                  )}
+                  {isBodabodaRider
+                    ? t("roles.bodabodaRider")
+                    : t("roles.bajajiDriver")}
+                </span>
+                {partnerName ? (
+                  <span className="text-xs font-bold truncate">
+                    {partnerName}
+                  </span>
+                ) : null}
+              </div>
+              {partnerPlateNumber ? (
+                <span
+                  className={cn(
+                    "rounded-full border px-3 py-1 font-mono text-[11px] font-bold",
+                    nightMode
+                      ? "border-[#F3EEE8]/25 bg-[#0F3F3C] text-[#E6C99E]"
+                      : "border-[#17645F]/20 bg-[#F3EEE8] text-[#17645F]"
+                  )}
+                >
+                  {partnerPlateNumber}
+                </span>
+              ) : null}
+            </div>
+          ) : (
+            <div
               className={cn(
-                "flex items-center justify-center gap-2 rounded-full py-2.5 text-xs font-bold uppercase tracking-[0.12em] transition disabled:opacity-50",
-                !isBodabodaRider
-                  ? "bg-[#B86B2B] text-[#FAF7F2] shadow-sm"
-                  : nightMode
-                    ? "text-[#F3EEE8]/70"
-                    : "text-[#17645F]/70 hover:text-[#17645F]"
+                "grid grid-cols-2 gap-2 rounded-full border p-1.5",
+                nightMode
+                  ? "border-[#F3EEE8]/15 bg-[#123D3A]"
+                  : "border-[#17645F]/15 bg-[#FAF7F2]"
               )}
             >
-              <CarFront className="h-4 w-4" />
-              {t("roles.bajajiDriver")}
-            </button>
-          </div>
+              <button
+                type="button"
+                disabled={Boolean(activeTrip)}
+                onClick={() => {
+                  setOperatorType(TransportType.BODABODA);
+                  setKycSubmitted(false);
+                }}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-full py-2.5 text-xs font-bold uppercase tracking-[0.12em] transition disabled:opacity-50",
+                  isBodabodaRider
+                    ? "bg-[#17645F] text-[#F3EEE8] shadow-sm"
+                    : nightMode
+                      ? "text-[#F3EEE8]/70"
+                      : "text-[#17645F]/70 hover:text-[#17645F]"
+                )}
+              >
+                <Bike className="h-4 w-4" />
+                {t("roles.bodabodaRider")}
+              </button>
+              <button
+                type="button"
+                disabled={Boolean(activeTrip)}
+                onClick={() => {
+                  setOperatorType(TransportType.BAJAJI);
+                  setKycSubmitted(false);
+                }}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-full py-2.5 text-xs font-bold uppercase tracking-[0.12em] transition disabled:opacity-50",
+                  !isBodabodaRider
+                    ? "bg-[#B86B2B] text-[#FAF7F2] shadow-sm"
+                    : nightMode
+                      ? "text-[#F3EEE8]/70"
+                      : "text-[#17645F]/70 hover:text-[#17645F]"
+                )}
+              >
+                <CarFront className="h-4 w-4" />
+                {t("roles.bajajiDriver")}
+              </button>
+            </div>
+          )}
         </ScrollReveal>
 
         {/* EARNINGS OR WALLET TAB */}

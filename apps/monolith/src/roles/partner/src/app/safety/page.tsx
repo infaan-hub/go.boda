@@ -25,16 +25,23 @@ export default async function PartnerSafetyPage({
         : "en";
 
   let plateNumber: string | undefined;
+  let assignedRole: "BODABODA_RIDER" | "BAJAJI_DRIVER" | undefined = partner?.role;
   if (partner) {
     try {
       const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
       const rows = (await sql`
-        SELECT plate_number AS "plateNumber"
+        SELECT transport_type AS "transportType",
+               plate_number AS "plateNumber"
         FROM operator.profiles
         WHERE user_id = ${partner.id}::uuid
         LIMIT 1
-      `) as Array<{ plateNumber: string | null }>;
+      `) as Array<{ transportType: string | null; plateNumber: string | null }>;
       plateNumber = rows[0]?.plateNumber ?? undefined;
+      if (rows[0]?.transportType === "BAJAJI") {
+        assignedRole = "BAJAJI_DRIVER";
+      } else if (rows[0]?.transportType === "BODABODA") {
+        assignedRole = "BODABODA_RIDER";
+      }
     } catch {
       plateNumber = undefined;
     }
@@ -45,7 +52,7 @@ export default async function PartnerSafetyPage({
       locale={locale}
       partnerId={partner?.id}
       partnerName={partner?.name}
-      partnerRole={partner?.role}
+      partnerRole={assignedRole}
       partnerPlateNumber={plateNumber}
     />
   );
