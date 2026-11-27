@@ -17,10 +17,10 @@ export default function PartnerNotFoundPage() {
         </p>
         <div className="flex justify-center gap-3 pt-2">
           <Link
-            href="/partner/dashboard"
+            href="/partner/shift"
             className="rounded-full bg-[#17645F] px-5 py-2 text-xs font-bold uppercase tracking-[0.14em] text-[#F3EEE8] hover:bg-[#114E4A]"
           >
-            Shift Dashboard
+            Shift
           </Link>
           <Link
             href="/partner/login"

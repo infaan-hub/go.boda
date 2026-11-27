@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
   AlertTriangle,
   Bike,
@@ -11,21 +10,13 @@ import {
   MessageCircle,
   PhoneCall,
   Plus,
-  Power,
   Share2,
   ShieldAlert,
-  ShieldCheck,
-  Sun,
   Trash2,
   UserCheck,
 } from "lucide-react";
-import {
-  Badge,
-  BrandLogo,
-  Button,
-  LanguageSwitchLink,
-  cn,
-} from "@goboda/ui";
+import { Badge, Button, cn } from "@goboda/ui";
+import { PartnerPortalShell } from "./partner-portal-shell";
 
 interface TrustedContactRow {
   id: string;
@@ -194,50 +185,26 @@ export function PartnerSafetyView({
   const isBodaboda = activeRole === "BODABODA_RIDER";
   const atLimit = contacts.length >= 3;
   const nightMode = sunlightMode;
+  const categoryLabel = partnerRole
+    ? isBodaboda
+      ? sw
+        ? "Rider wa Bodaboda"
+        : "Bodaboda Rider"
+      : sw
+        ? "Dereva wa Bajaji"
+        : "Bajaji Driver"
+    : sw
+      ? "Mwendeshaji Go.Boda"
+      : "Go.Boda Operator";
 
   return (
-    <div
-      className={cn(
-        "min-h-screen pb-24 transition-colors",
-        nightMode ? "bg-[#0F3F3C] text-[#F3EEE8]" : "bg-[#F3EEE8] text-[#122927]"
-      )}
+    <PartnerPortalShell
+      locale={locale}
+      categoryLabel={categoryLabel}
+      nightMode={nightMode}
+      onToggleNightMode={() => setSunlightMode((v) => !v)}
+      showSignOut={Boolean(partnerId)}
     >
-      <header
-        className={cn(
-          "sticky top-0 z-30 border-b backdrop-blur",
-          nightMode
-            ? "border-[#F3EEE8]/15 bg-[#0F3F3C]/95"
-            : "border-[#17645F]/15 bg-[#F3EEE8]/95"
-        )}
-      >
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3.5 sm:px-6">
-          <BrandLogo
-            dark={nightMode}
-            subtitle={sw ? "Usalama" : "Safety"}
-          />
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setSunlightMode((v) => !v)}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em]",
-                nightMode
-                  ? "border-[#F3EEE8]/30 bg-[#17645F] text-[#F3EEE8]"
-                  : "border-[#17645F]/30 bg-[#FAF7F2] text-[#17645F]"
-              )}
-            >
-              <Sun className="h-3.5 w-3.5" />
-              {nightMode ? (sw ? "Mchana" : "Day") : sw ? "Usiku" : "Night"}
-            </button>
-            <LanguageSwitchLink
-              currentLocale={locale}
-              hrefSw="/partner/safety?lang=sw"
-              hrefEn="/partner/safety?lang=en"
-            />
-          </div>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-3xl space-y-5 px-4 pt-6 sm:px-6">
         <div
           className={cn(
@@ -587,42 +554,6 @@ export function PartnerSafetyView({
           </form>
         </section>
       </main>
-
-      {/* Bottom Navigation */}
-      <nav
-        className={cn(
-          "fixed bottom-0 left-0 right-0 z-30 border-t backdrop-blur",
-          nightMode
-            ? "border-[#F3EEE8]/15 bg-[#0F3F3C]/95"
-            : "border-[#17645F]/15 bg-[#FAF7F2]/95"
-        )}
-      >
-        <div className="mx-auto grid max-w-2xl grid-cols-2 py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.16em]">
-          <Link
-            href={partnerId ? "/partner/dashboard" : "/partner/login"}
-            className="flex items-center justify-center gap-2 opacity-65 hover:opacity-100"
-          >
-            <Power className="h-4 w-4" />
-            {partnerId
-              ? sw
-                ? "Zamu"
-                : "Shift"
-              : sw
-                ? "Ingia"
-                : "Sign In"}
-          </Link>
-          <Link
-            href="/partner/safety"
-            className={cn(
-              "flex items-center justify-center gap-2",
-              nightMode ? "text-[#E6C99E]" : "text-[#17645F]"
-            )}
-          >
-            <ShieldCheck className="h-4 w-4" />
-            {sw ? "Usalama" : "Safety"}
-          </Link>
-        </div>
-      </nav>
-    </div>
+    </PartnerPortalShell>
   );
 }

@@ -67,7 +67,7 @@ self.addEventListener("push", (event) => {
       badge: "/partner/icons/icon.svg",
       vibrate: [250, 120, 250, 120, 400],
       requireInteraction: true,
-      data: { url: data.url || "/partner" },
+      data: { url: data.url || "/partner/shift" },
     })
   );
 });

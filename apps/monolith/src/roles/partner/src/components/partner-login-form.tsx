@@ -46,7 +46,7 @@ export function PartnerLoginForm() {
         );
         return;
       }
-      router.replace("/partner/dashboard");
+      router.replace("/partner/shift");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Network error");

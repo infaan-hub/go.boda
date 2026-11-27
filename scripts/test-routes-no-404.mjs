@@ -225,6 +225,10 @@ async function run() {
       "/partner/login",
       "/partner/register",
       "/partner/dashboard",
+      "/partner/shift",
+      "/partner/earnings",
+      "/partner/kyc",
+      "/partner/safety",
       "/safety",
       "/offline",
       "/en",
@@ -234,6 +238,10 @@ async function run() {
       "/en/partner/login",
       "/sw/partner/register",
       "/en/partner/dashboard",
+      "/en/partner/shift",
+      "/sw/partner/earnings",
+      "/en/partner/kyc",
+      "/sw/partner/safety",
       "/sw/safety",
     ];
 

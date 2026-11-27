@@ -167,12 +167,19 @@ try {
 
   /* ================= PARTNER ================= */
   console.log("\n5. Partner: unauthenticated gating");
-  const partDashAnon = await fetch(`${partUrl}/partner/dashboard`, { redirect: "manual" });
-  assert.equal(partDashAnon.status, 307, "anon /partner/dashboard must redirect");
-  assert.ok(
-    (partDashAnon.headers.get("location") || "").endsWith("/partner/login"),
-    "anon /partner/dashboard -> /partner/login"
-  );
+  for (const protectedRoute of [
+    "/partner/shift",
+    "/partner/earnings",
+    "/partner/kyc",
+    "/partner/dashboard",
+  ]) {
+    const anonRes = await fetch(`${partUrl}${protectedRoute}`, { redirect: "manual" });
+    assert.equal(anonRes.status, 307, `anon ${protectedRoute} must redirect`);
+    assert.ok(
+      (anonRes.headers.get("location") || "").endsWith("/partner/login"),
+      `anon ${protectedRoute} -> /partner/login`
+    );
+  }
 
   const partLoginPage = await fetch(`${partUrl}/partner/login`, { redirect: "manual" });
   assert.equal(partLoginPage.status, 200, "/partner/login renders 200");
@@ -261,7 +268,7 @@ try {
   });
   assert.equal(partBadLogin.status, 401, "wrong partner password -> 401");
 
-  console.log("9. Partner: username/password login -> dashboard");
+  console.log("9. Partner: username/password login -> dedicated pages (/partner/shift, /earnings, /kyc, /safety)");
   const partLogin = await fetch(`${partUrl}/api/partner/auth/login`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -277,23 +284,45 @@ try {
   const partCookie = extractCookie(partLogin, "goboda_partner_session");
   assert.ok(partCookie, "partner session cookie set");
 
-  const partDashAuthed = await fetch(`${partUrl}/partner/dashboard`, {
+  for (const subPage of ["/partner/shift", "/partner/earnings", "/partner/kyc", "/partner/safety"]) {
+    const subRes = await fetch(`${partUrl}${subPage}`, {
+      redirect: "manual",
+      headers: { cookie: partCookie },
+    });
+    assert.equal(subRes.status, 200, `authed ${subPage} -> 200`);
+    const subHtml = await subRes.text();
+    assert.ok(
+      subHtml.includes('href="/partner/shift"') &&
+        subHtml.includes('href="/partner/earnings"') &&
+        subHtml.includes('href="/partner/kyc"') &&
+        subHtml.includes('href="/partner/safety"'),
+      `${subPage} renders all 4 dedicated sidebar links`
+    );
+    assert.ok(
+      !subHtml.includes("Commission Float") && !subHtml.includes(">Wallet<"),
+      `${subPage} has wallet feature removed`
+    );
+    if (subPage === "/partner/shift") {
+      assert.ok(
+        subHtml.includes(TEST_PARTNER.fullName),
+        "partner shift page renders the registered partner name"
+      );
+    }
+  }
+
+  const partDashRedirect = await fetch(`${partUrl}/partner/dashboard`, {
     redirect: "manual",
     headers: { cookie: partCookie },
   });
-  assert.equal(partDashAuthed.status, 200, "authed /partner/dashboard -> 200");
-  const partDashHtml = await partDashAuthed.text();
-  assert.ok(
-    partDashHtml.includes(TEST_PARTNER.fullName),
-    "partner dashboard renders the registered partner name"
-  );
+  assert.equal(partDashRedirect.status, 307, "authed /partner/dashboard redirects to /partner/shift");
+  assert.ok((partDashRedirect.headers.get("location") || "").endsWith("/partner/shift"));
 
   const partLoginAuthed = await fetch(`${partUrl}/partner/login`, {
     redirect: "manual",
     headers: { cookie: partCookie },
   });
   assert.equal(partLoginAuthed.status, 307, "authed /partner/login redirects");
-  assert.ok((partLoginAuthed.headers.get("location") || "").endsWith("/partner/dashboard"));
+  assert.ok((partLoginAuthed.headers.get("location") || "").endsWith("/partner/shift"));
 
   console.log("10. Partner: duplicate plate rejected");
   const dupRes = await fetch(`${partUrl}/api/partner/register`, {

@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
@@ -15,29 +14,21 @@ import {
   ExternalLink,
   FileCheck2,
   KeyRound,
-  LogOut,
   MapPin,
-  Menu,
   MessageSquare,
-  Moon,
   PhoneCall,
   Power,
   ShieldAlert,
   ShieldCheck,
   Star,
-  Sun,
   TrendingUp,
   User,
-  Wallet,
-  X,
   XCircle,
 } from "lucide-react";
 import {
   Badge,
-  BrandLogo,
   Button,
   EditorialScrollHero,
-  LanguageSwitchLink,
   ScrollReveal,
   cn,
 } from "@goboda/ui";
@@ -47,10 +38,11 @@ import {
   TripStatus,
   formatTzs,
 } from "@goboda/shared-types";
+import { PartnerPortalShell } from "./partner-portal-shell";
 import {
-  PartnerWalletPanel,
-  type WalletLedgerRow,
-} from "./partner-wallet-panel";
+  PartnerEarningsPanel,
+  type EarningsLedgerRow,
+} from "./partner-earnings-panel";
 
 interface DemoOffer {
   tripCode: string;
@@ -129,12 +121,14 @@ function playOfferChime() {
 }
 
 export function PartnerHomeView({
+  page = "shift",
   locale,
   partnerName,
   partnerTransportType,
   partnerPlateNumber,
   partnerKituo,
 }: {
+  page?: "shift" | "earnings" | "kyc";
   locale: "sw" | "en";
   partnerName?: string;
   partnerTransportType?: TransportType;
@@ -142,33 +136,18 @@ export function PartnerHomeView({
   partnerKituo?: string;
 }) {
   const t = useTranslations();
-  const router = useRouter();
-  const [activeTab, setActiveTab] = React.useState<
-    "shift" | "earnings" | "wallet" | "kyc"
-  >("shift");
   const [operatorType, setOperatorType] = React.useState<TransportType>(
     partnerTransportType ?? TransportType.BODABODA
   );
   const [isOnline, setIsOnline] = React.useState(false);
   const [sunlightMode, setSunlightMode] = React.useState(false);
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
-  React.useEffect(() => {
-    if (!sidebarOpen) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setSidebarOpen(false);
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [sidebarOpen]);
-
-  // Shift & Wallet ACID Preview Counters
+  // Shift & Earnings Counters
   const [todayNetTzs, setTodayNetTzs] = React.useState(24500);
-  const [withdrawableEarningsTzs, setWithdrawableEarningsTzs] =
-    React.useState(18400);
   const [tripsToday, setTripsToday] = React.useState(7);
-  const [floatBalanceTzs, setFloatBalanceTzs] = React.useState(6200);
-  const [walletLedger, setWalletLedger] = React.useState<WalletLedgerRow[]>([
+  const [earningsLedger, setEarningsLedger] = React.useState<
+    EarningsLedgerRow[]
+  >([
     {
       id: "l-1",
       label: "Trip GB-76640 • Darajani → ZNZ Airport (Net 88%)",
@@ -178,17 +157,10 @@ export function PartnerHomeView({
     },
     {
       id: "l-2",
-      label: "Trip GB-76511 • Cash 12% Commission Debit",
+      label: "Trip GB-76511 • Forodhani → Mwanakwerekwe (Net 88%)",
       channel: "CASH",
-      deltaTzs: -540,
+      deltaTzs: 3960,
       time: "13:05",
-    },
-    {
-      id: "l-3",
-      label: "Commission Float Top-Up (M-Pesa)",
-      channel: "TOPUP",
-      deltaTzs: 5000,
-      time: "09:15",
     },
   ]);
 
@@ -400,36 +372,16 @@ export function PartnerHomeView({
       hour: "2-digit",
       minute: "2-digit",
     });
-    if (activeTrip.paymentMethod === "CASH") {
-      setFloatBalanceTzs((v) => v - commission);
-      setWalletLedger((prev) => [
-        {
-          id: `cash-${Date.now()}`,
-          label: `Trip ${activeTrip.tripCode} • Cash 12% Commission`,
-          channel: "CASH",
-          deltaTzs: -commission,
-          time: nowTime,
-        },
-        ...prev,
-      ]);
-    } else {
-      // Digital payment auto-offsets negative float before crediting withdrawable earnings
-      const offset =
-        floatBalanceTzs < 0 ? Math.min(Math.abs(floatBalanceTzs), net) : 0;
-      const credit = net - offset;
-      if (offset > 0) setFloatBalanceTzs((v) => v + offset);
-      if (credit > 0) setWithdrawableEarningsTzs((v) => v + credit);
-      setWalletLedger((prev) => [
-        {
-          id: `dig-${Date.now()}`,
-          label: `Trip ${activeTrip.tripCode} • ${activeTrip.paymentMethod} Net (88%)`,
-          channel: activeTrip.paymentMethod,
-          deltaTzs: credit,
-          time: nowTime,
-        },
-        ...prev,
-      ]);
-    }
+    setEarningsLedger((prev) => [
+      {
+        id: `trip-${Date.now()}`,
+        label: `Trip ${activeTrip.tripCode} • ${activeTrip.paymentMethod} Net (88%)`,
+        channel: activeTrip.paymentMethod,
+        deltaTzs: net,
+        time: nowTime,
+      },
+      ...prev,
+    ]);
     setActiveTrip(null);
     setTripStatus(null);
     setSosCode(null);
@@ -466,12 +418,6 @@ export function PartnerHomeView({
     setKycSubmitted(true);
   };
 
-  const handleSignOut = async () => {
-    await fetch("/api/partner/auth", { method: "DELETE" }).catch(() => null);
-    router.replace("/partner/login");
-    router.refresh();
-  };
-
   const formatTimer = (sec: number) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
@@ -486,180 +432,19 @@ export function PartnerHomeView({
   const operatorNetTzs = activeTrip ? activeTrip.fareTzs - commissionTzs : 0;
 
   const nightMode = sunlightMode;
+  const categoryLabel = isBodabodaRider
+    ? t("roles.bodabodaRider")
+    : t("roles.bajajiDriver");
 
   return (
-    <div
-      className={cn(
-        "min-h-screen pb-12 transition-colors",
-        nightMode ? "bg-[#0F3F3C] text-[#F3EEE8]" : "bg-[#F3EEE8] text-[#122927]"
-      )}
+    <PartnerPortalShell
+      locale={locale}
+      categoryLabel={categoryLabel}
+      nightMode={nightMode}
+      onToggleNightMode={() => setSunlightMode((v) => !v)}
     >
-      {/* Slide-Over Deep Zanzibar Teal Sidebar Drawer (Closed by Default until 3-line toggle is tapped) */}
-      <div
-        aria-hidden={!sidebarOpen}
-        className={cn(
-          "fixed inset-0 z-50 flex transition-opacity duration-300",
-          sidebarOpen
-            ? "visible pointer-events-auto opacity-100"
-            : "invisible pointer-events-none opacity-0"
-        )}
-      >
-        <button
-          type="button"
-          tabIndex={sidebarOpen ? 0 : -1}
-          aria-label="Close sidebar overlay"
-          onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 bg-[#122927]/50 backdrop-blur-sm"
-        />
-        <aside
-          className={cn(
-            "relative z-10 flex h-full w-72 max-w-[85vw] flex-col border-r border-[#114E4A] bg-[#17645F] p-4 text-[#F3EEE8] shadow-2xl transition-transform duration-300 ease-out",
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          )}
-        >
-          {/* Sidebar Header with Close Button Inside Sidebar */}
-          <div className="flex items-center justify-between gap-2 px-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab("shift");
-                setSidebarOpen(false);
-              }}
-              className="text-left"
-            >
-              <BrandLogo dark />
-            </button>
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(false)}
-              aria-label="Close sidebar"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#F3EEE8]/25 bg-[#114E4A]/70 text-[#F3EEE8] transition hover:bg-[#F3EEE8] hover:text-[#17645F]"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Sidebar Navigation: Shift, Earnings, Wallet, KYC, Safety */}
-          <nav className="mt-7 flex-1 space-y-1.5 overflow-y-auto">
-            <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#F3EEE8]/55">
-              {isBodabodaRider
-                ? t("roles.bodabodaRider")
-                : t("roles.bajajiDriver")}
-            </p>
-            {(
-              [
-                { id: "shift", label: t("partner.navHome"), icon: Power },
-                { id: "earnings", label: t("partner.navEarnings"), icon: TrendingUp },
-                { id: "wallet", label: t("partner.navWallet"), icon: Wallet },
-                { id: "kyc", label: t("partner.navOnboarding"), icon: FileCheck2 },
-              ] as const
-            ).map((item) => {
-              const active = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setSidebarOpen(false);
-                  }}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-full px-3.5 py-2.5 text-left text-xs transition",
-                    active
-                      ? "bg-[#F3EEE8] font-bold text-[#17645F] shadow-sm"
-                      : "font-medium text-[#F3EEE8]/85 hover:bg-[#114E4A] hover:text-[#F3EEE8]"
-                  )}
-                >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                </button>
-              );
-            })}
-
-            <Link
-              href="/partner/safety"
-              onClick={() => setSidebarOpen(false)}
-              className="flex w-full items-center gap-3 rounded-full px-3.5 py-2.5 text-left text-xs font-medium text-[#F3EEE8]/85 transition hover:bg-[#114E4A] hover:text-[#F3EEE8]"
-            >
-              <ShieldCheck className="h-4 w-4 shrink-0" />
-              <span className="truncate">
-                {locale === "sw" ? "Usalama" : "Safety"}
-              </span>
-            </Link>
-          </nav>
-
-          {/* Sidebar Footer Actions: Night/Day, SW/EN, Sign Out */}
-          <div className="mt-4 space-y-2.5 border-t border-[#F3EEE8]/15 pt-4">
-            <div className="flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => setSunlightMode((v) => !v)}
-                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-[#F3EEE8]/25 bg-[#114E4A]/70 px-3 py-1.5 text-xs font-bold text-[#F3EEE8] transition hover:bg-[#F3EEE8] hover:text-[#17645F]"
-              >
-                {nightMode ? (
-                  <Sun className="h-3.5 w-3.5" />
-                ) : (
-                  <Moon className="h-3.5 w-3.5" />
-                )}
-                <span>
-                  {nightMode
-                    ? locale === "sw"
-                      ? "Mchana"
-                      : "Day"
-                    : locale === "sw"
-                      ? "Usiku"
-                      : "Night"}
-                </span>
-              </button>
-              <LanguageSwitchLink
-                dark
-                currentLocale={locale}
-                hrefSw="/partner/dashboard?lang=sw"
-                hrefEn="/partner/dashboard?lang=en"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-[#F3EEE8]/25 bg-transparent px-3.5 py-2 text-xs font-bold text-[#F3EEE8] transition hover:border-[#A93232] hover:bg-[#A93232] hover:text-white"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              <span>{locale === "sw" ? "Toka" : "Sign Out"}</span>
-            </button>
-          </div>
-        </aside>
-      </div>
-
-      {/* Sticky Minimal Top Header with Three-Line Sidebar Open Button Only */}
-      <header
-        className={cn(
-          "sticky top-0 z-20 border-b px-5 py-3 backdrop-blur",
-          nightMode
-            ? "border-[#F3EEE8]/15 bg-[#0F3F3C]/95"
-            : "border-[#17645F]/15 bg-[#FAF7F2]/95"
-        )}
-      >
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open sidebar"
-            aria-expanded={sidebarOpen}
-            className={cn(
-              "inline-flex h-10 w-10 items-center justify-center rounded-full border transition",
-              nightMode
-                ? "border-[#F3EEE8]/25 bg-[#17645F] text-[#F3EEE8] hover:bg-[#F3EEE8] hover:text-[#17645F]"
-                : "border-[#17645F]/20 bg-[#F3EEE8] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
-            )}
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-        </div>
-      </header>
-
-      {/* Editorial Bodaboda Scroll-Transition Hero on Rider-Driver Home */}
-      {activeTab === "shift" ? (
+      {/* Editorial Bodaboda Scroll-Transition Hero on Shift Page */}
+      {page === "shift" ? (
         <EditorialScrollHero
           eyebrowItems={
             hasAssignedCategory
@@ -710,12 +495,12 @@ export function PartnerHomeView({
             {
               icon: <TrendingUp className="h-4 w-4" />,
               title: "88% NET FARE",
-              subtitle: locale === "sw" ? "MALIPO YA HARAKA" : "INSTANT PAYOUT",
+              subtitle: locale === "sw" ? "MAPATO YA HARAKA" : "UPFRONT TZS",
             },
             {
-              icon: <Wallet className="h-4 w-4" />,
-              title: "M-PESA & TIGO",
-              subtitle: locale === "sw" ? "FLOAT SALAMA" : "AUTO FLOAT",
+              icon: <MapPin className="h-4 w-4" />,
+              title: "UNGUJA VITUO",
+              subtitle: locale === "sw" ? "SAFARI ZA KARIBU" : "NEARBY DISPATCH",
             },
             {
               icon: <ShieldCheck className="h-4 w-4" />,
@@ -829,53 +614,17 @@ export function PartnerHomeView({
           )}
         </ScrollReveal>
 
-        {/* EARNINGS OR WALLET TAB */}
-        {activeTab === "earnings" || activeTab === "wallet" ? (
-          <PartnerWalletPanel
-            mode={activeTab}
+        {/* EARNINGS PAGE */}
+        {page === "earnings" ? (
+          <PartnerEarningsPanel
             locale={locale}
             nightMode={nightMode}
             isBodabodaRider={isBodabodaRider}
-            withdrawableEarningsTzs={withdrawableEarningsTzs}
             todayNetTzs={todayNetTzs}
             tripsToday={tripsToday}
-            floatBalanceTzs={floatBalanceTzs}
-            payoutPhone={kycPayoutPhone}
-            ledger={walletLedger}
-            onFloatTopup={(amt, ch) => {
-              setFloatBalanceTzs((v) => v + amt);
-              setWalletLedger((prev) => [
-                {
-                  id: `topup-${Date.now()}`,
-                  label: `Float Top-Up (${ch})`,
-                  channel: "TOPUP",
-                  deltaTzs: amt,
-                  time: new Date().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }),
-                },
-                ...prev,
-              ]);
-            }}
-            onWithdrawEarnings={(amt, ch) => {
-              setWithdrawableEarningsTzs((v) => Math.max(0, v - amt));
-              setWalletLedger((prev) => [
-                {
-                  id: `payout-${Date.now()}`,
-                  label: `Instant Payout (${ch} → ${kycPayoutPhone})`,
-                  channel: "PAYOUT",
-                  deltaTzs: -amt,
-                  time: new Date().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }),
-                },
-                ...prev,
-              ]);
-            }}
+            ledger={earningsLedger}
           />
-        ) : activeTab === "kyc" ? (
+        ) : page === "kyc" ? (
           <form
             onSubmit={handleSubmitKyc}
             className={cn(
@@ -924,14 +673,12 @@ export function PartnerHomeView({
                   {Object.keys(kycDocs).length}/{requiredKycDocs.length} photos
                   attached.
                 </p>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setActiveTab("shift")}
+                <Link
+                  href="/partner/shift"
+                  className="inline-flex items-center rounded-full border border-[#17645F]/45 bg-[#FAF7F2]/80 px-4 py-2 text-xs font-semibold text-[#17645F] transition hover:bg-[#17645F] hover:text-[#F3EEE8]"
                 >
                   {locale === "sw" ? "Rudi Kwenye Zamu" : "Back to Shift"}
-                </Button>
+                </Link>
               </div>
             ) : (
               <>
@@ -1568,15 +1315,16 @@ export function PartnerHomeView({
               </div>
             </ScrollReveal>
 
-            {/* Daily Earnings & Commission Float Cards */}
+            {/* Daily Earnings & Trips Summary Cards */}
             <ScrollReveal delayMs={160}>
               <div className="grid grid-cols-2 gap-3">
-                <div
+                <Link
+                  href="/partner/earnings"
                   className={cn(
-                    "rounded-3xl border p-5 shadow-sm",
+                    "block rounded-3xl border p-5 shadow-sm transition hover:-translate-y-0.5",
                     nightMode
-                      ? "border-[#F3EEE8]/15 bg-[#123D3A]"
-                      : "border-[#17645F]/15 bg-[#FAF7F2]"
+                      ? "border-[#F3EEE8]/15 bg-[#123D3A] hover:border-[#F3EEE8]/40"
+                      : "border-[#17645F]/15 bg-[#FAF7F2] hover:border-[#17645F]/45"
                   )}
                 >
                   <p className="text-[10px] font-bold uppercase tracking-[0.18em] opacity-70">
@@ -1591,33 +1339,34 @@ export function PartnerHomeView({
                     {formatTzs(todayNetTzs)}
                   </p>
                   <p className="mt-1.5 text-xs opacity-70">
-                    {t("partner.tripsCompleted")}: {tripsToday}
+                    {locale === "sw" ? "88% mapato halisi" : "88% net earnings"}
                   </p>
-                </div>
+                </Link>
 
-                <div
+                <Link
+                  href="/partner/earnings"
                   className={cn(
-                    "rounded-3xl border p-5 shadow-sm",
+                    "block rounded-3xl border p-5 shadow-sm transition hover:-translate-y-0.5",
                     nightMode
-                      ? "border-[#F3EEE8]/15 bg-[#123D3A]"
-                      : "border-[#17645F]/15 bg-[#FAF7F2]"
+                      ? "border-[#F3EEE8]/15 bg-[#123D3A] hover:border-[#F3EEE8]/40"
+                      : "border-[#17645F]/15 bg-[#FAF7F2] hover:border-[#17645F]/45"
                   )}
                 >
                   <p className="text-[10px] font-bold uppercase tracking-[0.18em] opacity-70">
-                    {t("partner.commissionFloat")}
+                    {t("partner.tripsCompleted")}
                   </p>
                   <p className="mt-1.5 font-display text-3xl leading-none text-[#B86B2B]">
-                    {formatTzs(floatBalanceTzs)}
+                    {tripsToday}
                   </p>
                   <p className="mt-1.5 text-[11px] opacity-70">
-                    {t("partner.floatHealthy")}
+                    {locale === "sw" ? "Safari za leo" : "Completed today"}
                   </p>
-                </div>
+                </Link>
               </div>
             </ScrollReveal>
           </>
         )}
       </main>
-    </div>
+    </PartnerPortalShell>
   );
 }

@@ -4,6 +4,12 @@ import {
   readPartnerSessionToken,
 } from "./lib/partner-auth";
 
+const PROTECTED_PARTNER_PAGES = new Set([
+  "/partner/shift",
+  "/partner/earnings",
+  "/partner/kyc",
+]);
+
 function applyLocale(response: NextResponse, lang: string | null): NextResponse {
   if (lang === "sw" || lang === "en") {
     response.cookies.set("NEXT_LOCALE", lang, {
@@ -26,12 +32,12 @@ export async function middleware(request: NextRequest) {
   const trimmedPath = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   const lang = searchParams.get("lang");
 
-  // Legacy /en or /sw root -> set cookie and redirect to /partner/dashboard or /partner/login
+  // Legacy /en or /sw root -> set cookie and redirect to /partner/shift or /partner/login
   if (trimmedPath === "/en" || trimmedPath === "/sw") {
     const loc = trimmedPath === "/sw" ? "sw" : "en";
     const authed = await hasPartnerSession(request);
     const target = request.nextUrl.clone();
-    target.pathname = authed ? "/partner/dashboard" : "/partner/login";
+    target.pathname = authed ? "/partner/shift" : "/partner/login";
     return applyLocale(NextResponse.redirect(target), loc);
   }
 
@@ -46,31 +52,32 @@ export async function middleware(request: NextRequest) {
       stripped === "/partner/register"
     ) {
       target.pathname = "/partner/login";
-    } else if (stripped === "/dashboard") {
-      target.pathname = "/partner/dashboard";
+    } else if (stripped === "/dashboard" || stripped === "/partner/dashboard") {
+      target.pathname = "/partner/shift";
     } else {
       target.pathname = stripped;
     }
     return applyLocale(NextResponse.redirect(target), loc);
   }
 
-  if (trimmedPath === "/safety") {
+  if (trimmedPath === "/safety" || trimmedPath === "/partner/safety") {
     return applyLocale(NextResponse.next(), lang);
   }
 
-  // Root and shortcut aliases -> canonical /partner/* routes
+  // Root, legacy dashboard, and shortcut aliases -> canonical /partner/shift or /partner/login
   if (
     trimmedPath === "/" ||
     trimmedPath === "/partner" ||
     trimmedPath === "/login" ||
     trimmedPath === "/register" ||
     trimmedPath === "/partner/register" ||
-    trimmedPath === "/dashboard"
+    trimmedPath === "/dashboard" ||
+    trimmedPath === "/partner/dashboard"
   ) {
     const authed = await hasPartnerSession(request);
     return applyLocale(
       NextResponse.redirect(
-        new URL(authed ? "/partner/dashboard" : "/partner/login", request.url)
+        new URL(authed ? "/partner/shift" : "/partner/login", request.url)
       ),
       lang
     );
@@ -80,14 +87,14 @@ export async function middleware(request: NextRequest) {
     const authed = await hasPartnerSession(request);
     if (authed) {
       return applyLocale(
-        NextResponse.redirect(new URL("/partner/dashboard", request.url)),
+        NextResponse.redirect(new URL("/partner/shift", request.url)),
         lang
       );
     }
     return applyLocale(NextResponse.next(), lang);
   }
 
-  if (trimmedPath === "/partner/dashboard") {
+  if (PROTECTED_PARTNER_PAGES.has(trimmedPath)) {
     const authed = await hasPartnerSession(request);
     if (!authed) {
       return applyLocale(

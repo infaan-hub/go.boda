@@ -2,7 +2,7 @@
   "name": "Go.boda Partner — Riders & Drivers",
   "short_name": "Go.boda Partner",
   "description": "Receive nearby Unguja Bodaboda Rider & Bajaji Driver trip requests and get paid per trip.",
-  "start_url": "/partner/dashboard",
+  "start_url": "/partner/shift",
   "scope": "/partner/",
   "display": "standalone",
   "orientation": "portrait",
