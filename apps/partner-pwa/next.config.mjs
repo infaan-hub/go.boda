@@ -4,6 +4,16 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const isDev = process.env.NODE_ENV !== "production";
 
+// VS Code, Cursor, Windsurf, and Antigravity render webviews from vscode-webview://
+// nested inside the workbench (vscode-file://). frame-ancestors checks every
+// ancestor, so allow both schemes (plus localhost preview hosts) explicitly while
+// keeping arbitrary third-party websites blocked from framing the app.
+// In development, keep X-Frame-Options: SAMEORIGIN + frame-ancestors 'self' so the
+// Mobile Preview extension's local relay strips headers and rewrites session cookies.
+const frameAncestors = isDev
+  ? "'self'"
+  : "'self' vscode-webview: vscode-file: http://localhost:* http://127.0.0.1:*";
+
 const cspReportOnly = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live",
@@ -12,14 +22,19 @@ const cspReportOnly = [
   "font-src 'self' data: https://assets.vercel.com",
   "connect-src 'self' https://*.vercel.app https://vercel.live wss://ws-us3.pusher.com",
   "worker-src 'self' blob:",
-  isDev ? "frame-ancestors 'self'" : "frame-ancestors 'none'",
+  `frame-ancestors ${frameAncestors}`,
   "base-uri 'self'",
   "form-action 'self'",
 ].join("; ");
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "X-Frame-Options", value: isDev ? "SAMEORIGIN" : "DENY" },
+  // Omit X-Frame-Options in production so CSP frame-ancestors governs framing without
+  // tripping preview preflight checks that reject DENY/SAMEORIGIN on remote URLs.
+  // Keep SAMEORIGIN in development so localhost preview relays continue to engage.
+  ...(isDev ? [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] : []),
+  // Enforced (not report-only) so both the preview tool and the browser see the allowlist.
+  { key: "Content-Security-Policy", value: `frame-ancestors ${frameAncestors}` },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
