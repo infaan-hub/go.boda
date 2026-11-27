@@ -2,6 +2,7 @@ import { randomInt, randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSql } from "@goboda/db";
+import { emitCustomerRealtimeEvent } from "@/lib/customer-realtime";
 import {
   DEFAULT_TARIFFS_TZS,
   PLATFORM_FINANCE,
@@ -11,6 +12,12 @@ import {
 } from "@goboda/shared-types";
 
 export const dynamic = "force-dynamic";
+
+const stopSchema = z.object({
+  label: z.string().trim().min(1).max(160),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+});
 
 const createTripSchema = z.object({
   customerId: z.string().uuid().optional(),
@@ -26,6 +33,7 @@ const createTripSchema = z.object({
     lng: z.number().min(-180).max(180),
   }),
   dropoffLabel: z.string().trim().min(2).max(160),
+  stops: z.array(stopSchema).max(2).default([]),
   paymentMethod: paymentMethodSchema.default("CASH"),
   promoCode: z.string().trim().max(32).optional(),
 });
@@ -163,10 +171,17 @@ export async function POST(request: Request) {
       }
     }
 
-    const straightMeters = Math.max(
-      400,
-      haversineMeters({ lat: effLat, lng: effLng }, d.dropoff)
-    );
+    // Multi-leg distance: effective pickup -> stops -> dropoff
+    const legPoints: Array<{ lat: number; lng: number }> = [
+      { lat: effLat, lng: effLng },
+      ...d.stops.map((s) => ({ lat: s.lat, lng: s.lng })),
+      { lat: d.dropoff.lat, lng: d.dropoff.lng },
+    ];
+    let straightMeters = 0;
+    for (let i = 0; i < legPoints.length - 1; i++) {
+      straightMeters += haversineMeters(legPoints[i]!, legPoints[i + 1]!);
+    }
+    straightMeters = Math.max(400, straightMeters);
     const distanceMeters = Math.round(straightMeters * 1.24);
     const durationSeconds = Math.max(180, Math.round((distanceMeters / 1000 / 24) * 3600));
 
@@ -253,7 +268,7 @@ export async function POST(request: Request) {
         distance_meters, duration_seconds,
         payment_method, promo_code, gross_fare_tzs, discount_tzs,
         estimated_fare_tzs, commission_pct, commission_tzs, operator_net_tzs,
-        start_pin
+        start_pin, stops_count, multi_stop_fare_tzs
       )
       VALUES (
         ${tripCode}, ${customerId}::uuid, ${d.transportType}, ${operatorTitle}, 'SEARCHING',
@@ -263,7 +278,7 @@ export async function POST(request: Request) {
         ${distanceMeters}, ${durationSeconds},
         ${d.paymentMethod}, ${appliedPromo}, ${grossFareTzs}, ${discountTzs},
         ${estimatedFareTzs}, ${commissionPct}, ${commissionTzs}, ${operatorNetTzs},
-        ${startPin}
+        ${startPin}, ${d.stops.length}, ${estimatedFareTzs}
       )
       RETURNING
         id, trip_code AS "tripCode", customer_id AS "customerId",
@@ -280,7 +295,44 @@ export async function POST(request: Request) {
     const trip = inserted[0]!;
     const tripId = String(trip.id);
 
+    // Store intermediate stops
+    for (let i = 0; i < d.stops.length; i++) {
+      const s = d.stops[i]!;
+      await sql`
+        INSERT INTO trip.trip_stops (trip_id, stop_order, label, lat, lng, is_pickup, is_dropoff)
+        VALUES (${tripId}::uuid, ${i + 1}, ${s.label}, ${s.lat}, ${s.lng}, FALSE, FALSE)
+      `;
+    }
+
+    // Customer notification record
+    await sql`
+      INSERT INTO notif.messages (user_id, phone, channel, event_subject, locale, title, body, payload, status, provider_ref)
+      VALUES (
+        ${customerId}::uuid,
+        ${null},
+        'WEB_PUSH',
+        'trip.created',
+        'sw',
+        ${`Safari ${tripCode} imeundwa`},
+        ${`Inatafuta ${d.transportType === "BODABODA" ? "Rider" : "Driver"} karibu...`},
+        ${JSON.stringify({
+          titleSw: `Safari ${tripCode} imeundwa`,
+          bodySw: `Inatafuta ${d.transportType === "BODABODA" ? "Rider" : "Driver"} karibu...`,
+          titleEn: `Trip ${tripCode} created`,
+          bodyEn: `Matching a nearby ${d.transportType === "BODABODA" ? "Rider" : "Driver"}...`,
+          tripId,
+          tripCode,
+          url: "/trips",
+        })}::jsonb,
+        'QUEUED',
+        'trip-created'
+      )
+    `.catch(() => null);
+
+    emitCustomerRealtimeEvent({ customerId, tripId, reason: "trip_created" });
+
     // 4. Fan out live dispatch offers to up to 5 nearby online Riders/Drivers
+
     const candidates = (await sql`
       SELECT
         operator_id AS "operatorId",

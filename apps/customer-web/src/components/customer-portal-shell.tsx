@@ -13,8 +13,10 @@ import {
   X,
 } from "lucide-react";
 import { BrandLogo, LanguageSwitchLink, cn } from "@goboda/ui";
+import { Bell, UserCircle } from "lucide-react";
+import { CustomerRealtimeProvider, useCustomerRealtime } from "./customer-realtime-provider";
 
-export function CustomerPortalShell({
+function CustomerPortalShellInner({
   locale,
   customerName,
   showSignOut = true,
@@ -30,6 +32,7 @@ export function CustomerPortalShell({
   const sw = locale === "sw";
   const pathname = usePathname();
   const router = useRouter();
+  const realtime = useCustomerRealtime();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const cleanPath = (pathname || "/dashboard").replace(/\/$/, "") || "/";
@@ -84,6 +87,20 @@ export function CustomerPortalShell({
       matchPath: cleanPath === "/track" || cleanPath.startsWith("/track/"),
       label: sw ? "Fuatilia" : "Track",
       icon: Navigation,
+      isBook: false,
+    },
+    {
+      href: "/notifications",
+      matchPath: cleanPath === "/notifications",
+      label: sw ? "Arifa" : "Notifications",
+      icon: Bell,
+      isBook: false,
+    },
+    {
+      href: "/profile",
+      matchPath: cleanPath === "/profile",
+      label: sw ? "Wasifu" : "Profile",
+      icon: UserCircle,
       isBook: false,
     },
   ];
@@ -166,6 +183,11 @@ export function CustomerPortalShell({
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
                     <span className="truncate">{item.label}</span>
+                    {item.href === "/notifications" && realtime.unreadCount > 0 && (
+                      <span className="ml-auto rounded-full bg-[#A93232] px-2 py-0.5 text-[10px] font-bold text-white">
+                        {realtime.unreadCount}
+                      </span>
+                    )}
                   </a>
                 );
               }
@@ -244,7 +266,29 @@ export function CustomerPortalShell({
         </div>
       </header>
 
+      {realtime.toast && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-2xl border border-[#17645F]/20 bg-[#FAF7F2] p-4 shadow-lg">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold text-[#122927]">{realtime.toast.title}</p>
+              <p className="mt-1 text-xs text-[#17645F]/80">{realtime.toast.body}</p>
+              <a href={realtime.toast.url} className="mt-2 inline-block text-xs font-bold text-[#17645F] underline">
+                {sw ? "Fungua" : "Open"}
+              </a>
+            </div>
+            <button type="button" onClick={realtime.dismissToast} className="text-[#17645F]/60 hover:text-[#17645F]">✕</button>
+          </div>
+        </div>
+      )}
       {children}
     </div>
+  );
+}
+
+export function CustomerPortalShell(props: React.ComponentProps<typeof CustomerPortalShellInner>) {
+  return (
+    <CustomerRealtimeProvider locale={props.locale} enabled={Boolean(props.showSignOut)}>
+      <CustomerPortalShellInner {...props} />
+    </CustomerRealtimeProvider>
   );
 }

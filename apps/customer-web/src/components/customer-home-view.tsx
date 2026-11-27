@@ -310,6 +310,15 @@ export function CustomerHomeView({
   const [outsideError, setOutsideError] = React.useState<string | null>(null);
   const [gpsStatus, setGpsStatus] = React.useState<string | null>(null);
 
+  // Multi-stop errands
+  const [stops, setStops] = React.useState<Array<{ label: string; lat: number; lng: number }>>([]);
+
+  // Saved places
+  const [savedPlaces, setSavedPlaces] = React.useState<Array<{ id: string; label: string; kind: string; lat: number; lng: number }>>([]);
+
+  // Live trip tracking
+  const [liveOperator, setLiveOperator] = React.useState<{ lat: number | null; lng: number | null; heading: number | null; etaMin: number | null }>({ lat: null, lng: null, heading: null, etaMin: null });
+
   // Phase 4 Full Customer Trip Flow, Quick-Chat, SOS, Live Share & Rating state
   const [activeTrip, setActiveTrip] = React.useState<ActiveCustomerTrip | null>(
     null
@@ -361,6 +370,15 @@ export function CustomerHomeView({
     void loadNearby(pickup.lat, pickup.lng);
   }, [pickup.lat, pickup.lng, loadNearby]);
 
+  React.useEffect(() => {
+    fetch("/api/customer/places", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (j?.places) setSavedPlaces(j.places);
+      })
+      .catch(() => null);
+  }, []);
+
   // Support 1-tap "Book Return Trip" query parameters from /trips
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -411,6 +429,7 @@ export function CustomerHomeView({
       body: JSON.stringify({
         pickup: { lat: pickup.lat, lng: pickup.lng },
         dropoff: { lat: dropoff.lat, lng: dropoff.lng },
+        stops: stops.map((s) => ({ lat: s.lat, lng: s.lng })),
         promoCode: appliedPromoCode || undefined,
       }),
     })
@@ -445,7 +464,7 @@ export function CustomerHomeView({
       });
 
     return () => controller.abort();
-  }, [pickup.lat, pickup.lng, dropoff.lat, dropoff.lng, appliedPromoCode, locale]);
+  }, [pickup.lat, pickup.lng, dropoff.lat, dropoff.lng, stops, appliedPromoCode, locale]);
 
   // Auto-transition SEARCHING -> ASSIGNED after 1.5s radar match
   React.useEffect(() => {
@@ -457,6 +476,61 @@ export function CustomerHomeView({
     }, 1500);
     return () => clearTimeout(timer);
   }, [activeTrip]);
+
+  // Live operator tracking poll
+  React.useEffect(() => {
+    if (!activeTrip) return;
+    const tripId = activeTrip.shareToken;
+    if (!tripId || tripId.startsWith("demo")) return;
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/trips/${tripId}/live`, { cache: "no-store" });
+        if (!res.ok) return;
+        const json = (await res.json()) as {
+          trip?: {
+            status?: string;
+            operatorName?: string;
+            operatorPlate?: string;
+            operatorPhone?: string;
+            operatorLat?: number | null;
+            operatorLng?: number | null;
+            operatorHeading?: number | null;
+            startPin?: string;
+            estimatedFareTzs?: number;
+          };
+        };
+        if (cancelled || !json.trip) return;
+        const t = json.trip;
+        setLiveOperator({
+          lat: t.operatorLat ?? null,
+          lng: t.operatorLng ?? null,
+          heading: t.operatorHeading ?? null,
+          etaMin: null,
+        });
+        setActiveTrip((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            status: (t.status as TripStatus) ?? prev.status,
+            operatorName: t.operatorName ?? prev.operatorName,
+            operatorPlate: t.operatorPlate ?? prev.operatorPlate,
+            operatorPhone: t.operatorPhone ?? prev.operatorPhone,
+            startPin: t.startPin ?? prev.startPin,
+            fareTzs: t.estimatedFareTzs ?? prev.fareTzs,
+          };
+        });
+      } catch {
+        // ignore
+      }
+    };
+    void poll();
+    const interval = setInterval(poll, 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [activeTrip?.shareToken]);
 
   // Debounced bilingual Unguja landmark search
   React.useEffect(() => {
@@ -584,39 +658,65 @@ export function CustomerHomeView({
   const fallbackBodaFare = DEFAULT_TARIFFS_TZS.BODABODA.minFareTzs;
   const fallbackBajajiFare = DEFAULT_TARIFFS_TZS.BAJAJI.minFareTzs;
 
-  const handleRequestTransport = () => {
+  const handleRequestTransport = async () => {
     if (!activeQuote || !quoteData) return;
     const matched = vehicles.find((v) => v.transportType === selectedType);
     const isBoda = selectedType === TransportType.BODABODA;
-    const pin = String(Math.floor(1000 + Math.random() * 9000));
-    const tripCode = `GB-${Math.floor(10000 + Math.random() * 90000)}`;
     setChatMessages([]);
     setSosDrawerOpen(false);
     setRatingStars(5);
     setHelmetProvided(true);
 
-    setActiveTrip({
-      tripCode,
-      status: TripStatus.SEARCHING,
-      transportType: selectedType,
-      operatorName: isBoda ? "Hassan Ali" : "Khamis Bakari",
-      operatorPlate: isBoda ? "Z 104 AAB" : "Z 612 BBA",
-      operatorPhone: "+255770123456",
-      operatorRating: matched?.ratingAvg ?? 4.9,
-      operatorEtaMin: matched?.etaMinutes ?? (isBoda ? 2 : 3),
-      startPin: pin,
-      fareTzs: activeQuote.finalFareTzs,
-      paymentMethod,
-      pickupLabel: snappedPickupPoint ? snappedPickupPoint.label : pickup.label,
-      dropoffLabel: dropoff.label,
-      pickupNote,
-      cashChangeNote:
-        paymentMethod === PaymentMethod.CASH ? cashChangeNote : "",
-      distanceKm: quoteData.route.distanceKm,
-      shareToken: isBoda ? "demo-unguja" : "demo-bajaji",
-      sosTriggered: false,
-      sosAlertCode: null,
-    });
+    try {
+      const res = await fetch("/api/trips", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          transportType: selectedType,
+          pickup: { lat: pickup.lat, lng: pickup.lng },
+          pickupLabel: snappedPickupPoint ? snappedPickupPoint.label : pickup.label,
+          pickupNote,
+          dropoff: { lat: dropoff.lat, lng: dropoff.lng },
+          dropoffLabel: dropoff.label,
+          stops: stops.map((s) => ({ label: s.label, lat: s.lat, lng: s.lng })),
+          paymentMethod,
+          promoCode: appliedPromoCode || undefined,
+        }),
+      });
+      const data = (await res.json()) as { trip?: Record<string, unknown>; error?: string };
+      if (!res.ok || !data.trip) {
+        alert(data.error ?? "TRIP_CREATE_FAILED");
+        return;
+      }
+      const trip = data.trip;
+      const tripId = String(trip.id);
+      const pin = String(trip.startPin ?? Math.floor(1000 + Math.random() * 9000));
+      const tripCode = String(trip.tripCode ?? `GB-${Math.floor(10000 + Math.random() * 90000)}`);
+      setActiveTrip({
+        tripCode,
+        status: (trip.status as TripStatus) ?? TripStatus.SEARCHING,
+        transportType: selectedType,
+        operatorName: isBoda ? "Matching..." : "Matching...",
+        operatorPlate: "—",
+        operatorPhone: "",
+        operatorRating: matched?.ratingAvg ?? 4.9,
+        operatorEtaMin: matched?.etaMinutes ?? (isBoda ? 2 : 3),
+        startPin: pin,
+        fareTzs: activeQuote.finalFareTzs,
+        paymentMethod,
+        pickupLabel: snappedPickupPoint ? snappedPickupPoint.label : pickup.label,
+        dropoffLabel: dropoff.label,
+        pickupNote,
+        cashChangeNote: paymentMethod === PaymentMethod.CASH ? cashChangeNote : "",
+        distanceKm: quoteData.route.distanceKm,
+        shareToken: tripId,
+        sosTriggered: false,
+        sosAlertCode: null,
+      });
+      // store tripId on activeTrip? use shareToken as tripId for live polling
+    } catch {
+      alert("TRIP_CREATE_FAILED");
+    }
   };
 
   const handleSendChat = (preset: (typeof CUSTOMER_CHAT_PRESETS)[number]) => {
@@ -824,7 +924,28 @@ export function CustomerHomeView({
                 <div className="overflow-hidden rounded-3xl border border-[#17645F]/20 shadow-sm">
                   <UngujaMap
                     locale={locale}
-                    vehicles={vehicles}
+                    vehicles={
+                      activeTrip && liveOperator.lat != null && liveOperator.lng != null
+                        ? [
+                            ...vehicles,
+                            {
+                              operatorId: activeTrip.shareToken,
+                              transportType: activeTrip.transportType,
+                              operatorTitle:
+                                activeTrip.transportType === TransportType.BODABODA
+                                  ? "RIDER"
+                                  : "DRIVER",
+                              homeKituo: activeTrip.operatorName,
+                              lat: liveOperator.lat,
+                              lng: liveOperator.lng,
+                              heading: liveOperator.heading ?? 0,
+                              ratingAvg: activeTrip.operatorRating,
+                              distanceMeters: 0,
+                              etaMinutes: activeTrip.operatorEtaMin,
+                            },
+                          ]
+                        : vehicles
+                    }
                     pickup={pickup}
                     snappedPickup={snappedPickupPoint}
                     dropoff={dropoff}
@@ -927,7 +1048,7 @@ export function CustomerHomeView({
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setActiveTrip(null)}
+                        onClick={async () => { if (activeTrip?.shareToken && !activeTrip.shareToken.startsWith("demo")) { await fetch(`/api/trips/${activeTrip.shareToken}/cancel`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}) }); } setActiveTrip(null); }}
                       >
                         {locale === "sw" ? "Ghairi Ombi" : "Cancel Request"}
                       </Button>
@@ -1257,7 +1378,7 @@ export function CustomerHomeView({
                               type="button"
                               size="sm"
                               variant="outline"
-                              onClick={() => setActiveTrip(null)}
+                              onClick={async () => { if (activeTrip?.shareToken && !activeTrip.shareToken.startsWith("demo")) { await fetch(`/api/trips/${activeTrip.shareToken}/cancel`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}) }); } setActiveTrip(null); }}
                             >
                               {locale === "sw" ? "Ghairi Safari" : "Cancel Trip"}
                             </Button>
@@ -1445,6 +1566,80 @@ export function CustomerHomeView({
                       </div>
                     )}
 
+                    {/* Multi-stop errands editor */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#17645F]/75">
+                          {locale === "sw" ? "Maeneo ya Kusimama (1-2)" : "Stopovers (1-2)"}
+                        </p>
+                        {stops.length < 2 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const label = locale === "sw" ? "Kusimama" : "Stop";
+                              setStops((prev) => [...prev, { label, lat: dropoff.lat, lng: dropoff.lng }]);
+                            }}
+                            className="rounded-full border border-[#17645F]/30 bg-[#F3EEE8] px-3 py-1 text-[11px] font-bold text-[#17645F] hover:bg-[#17645F] hover:text-white"
+                          >
+                            + {locale === "sw" ? "Ongeza Simu" : "Add Stop"}
+                          </button>
+                        )}
+                      </div>
+                      {stops.map((s, i) => (
+                        <div key={i} className="flex items-center gap-2 rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3.5 py-2">
+                          <span className="text-xs font-bold text-[#B86B2B]">S{i + 1}</span>
+                          <input
+                            value={s.label}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setStops((prev) => prev.map((x, idx) => (idx === i ? { ...x, label: v } : x)));
+                            }}
+                            className="flex-1 bg-transparent text-sm font-medium text-[#122927] focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setStops((prev) => prev.filter((_, idx) => idx !== i))}
+                            className="text-[#A93232] hover:text-[#8A2626]"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Save current dropoff as a favorite spot */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#17645F]/75">
+                        {locale === "sw" ? "Hifadhi mahali:" : "Save place:"}
+                      </span>
+                      {["HOME", "WORK", "HOTEL_VILLA"].map((kind) => (
+                        <button
+                          key={kind}
+                          type="button"
+                          onClick={async () => {
+                            await fetch("/api/customer/places", {
+                              method: "POST",
+                              headers: { "content-type": "application/json" },
+                              body: JSON.stringify({
+                                label: dropoff.label,
+                                kind,
+                                lat: dropoff.lat,
+                                lng: dropoff.lng,
+                              }),
+                            });
+                            const r = await fetch("/api/customer/places", { cache: "no-store" });
+                            if (r.ok) {
+                              const j = await r.json();
+                              setSavedPlaces(j.places ?? []);
+                            }
+                          }}
+                          className="rounded-full border border-[#17645F]/20 bg-[#F3EEE8] px-3 py-0.5 text-[11px] font-semibold text-[#17645F] hover:bg-[#17645F] hover:text-white"
+                        >
+                          {kind === "HOME" ? (locale === "sw" ? "Nyumbani" : "Home") : kind === "WORK" ? (locale === "sw" ? "Kazi" : "Work") : (locale === "sw" ? "Hoteli/Villa" : "Hotel/Villa")}
+                        </button>
+                      ))}
+                    </div>
+
                     {/* Pickup Note & Quick Chips */}
                     <div className="space-y-1.5">
                       <input
@@ -1480,6 +1675,35 @@ export function CustomerHomeView({
                       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#17645F]/75">
                         {t("customer.quickDestinations")}
                       </p>
+                      {savedPlaces.length > 0 && (
+                        <div className="space-y-1.5 pb-2">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#17645F]/75">
+                            {locale === "sw" ? "Maeneo Yaliyohifadhiwa" : "Saved Places"}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {savedPlaces.map((sp) => (
+                              <button
+                                key={sp.id}
+                                type="button"
+                                onClick={() => {
+                                  const label = sp.label;
+                                  if (activeField === "pickup") {
+                                    setPickup({ lat: sp.lat, lng: sp.lng, label });
+                                    setPickupQuery(label);
+                                  } else {
+                                    setDropoff({ lat: sp.lat, lng: sp.lng, label });
+                                    setDropoffQuery(label);
+                                  }
+                                }}
+                                className="rounded-full border border-[#B86B2B]/30 bg-[#B86B2B]/10 px-3 py-1 text-xs font-semibold text-[#8E4F1B] hover:bg-[#B86B2B]/20"
+                              >
+                                {sp.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap gap-1.5">
                         {PRESET_SPOTS.map((spot) => {
                           const label =

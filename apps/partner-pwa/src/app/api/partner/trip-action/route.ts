@@ -137,6 +137,35 @@ export async function POST(request: Request) {
         reason: "offer_accepted",
       });
 
+      const tripCustomerRows = (await sql`
+        SELECT customer_id AS "customerId", trip_code AS "tripCode"
+        FROM trip.trips WHERE id = ${offer.tripId}::uuid LIMIT 1
+      `) as Array<{ customerId: string; tripCode: string }>;
+      const cust = tripCustomerRows[0];
+      if (cust?.customerId) {
+        const titleSw = `Rider amepatikana — ${op?.fullName ?? auth.partner.name}`;
+        const bodySw = `Safari ${cust.tripCode}: ${op?.plateNumber ?? "Z 000 AAA"}. PIN ya kuanza imetumwa.`;
+        const titleEn = `Rider assigned — ${op?.fullName ?? auth.partner.name}`;
+        const bodyEn = `Trip ${cust.tripCode}: ${op?.plateNumber ?? "Z 000 AAA"}. Start PIN sent.`;
+        await sql`
+          INSERT INTO notif.messages (user_id, phone, channel, event_subject, locale, title, body, payload, status, provider_ref)
+          VALUES (
+            ${cust.customerId}::uuid, NULL, 'WEB_PUSH', 'trip.assigned', 'en',
+            ${titleEn}, ${bodyEn},
+            ${JSON.stringify({ titleSw, bodySw, titleEn, bodyEn, tripId: offer.tripId, tripCode: cust.tripCode, operatorName: op?.fullName ?? auth.partner.name, operatorPlate: op?.plateNumber ?? "Z 000 AAA", url: "/trips" })}::jsonb,
+            'SENT', 'trip-assigned'
+          )
+        `.catch(() => null);
+        void deliverWebPushToUser(cust.customerId, {
+          title: titleEn, body: bodyEn, url: "/trips", eventSubject: "trip.assigned",
+        }).catch(() => null);
+      }
+
+      emitPartnerRealtimeEvent({
+        operatorId,
+        reason: "offer_accepted",
+      });
+
       return NextResponse.json({ accepted: true, tripId: offer.tripId });
     }
 
@@ -160,10 +189,27 @@ export async function POST(request: Request) {
         UPDATE trip.trips
         SET status = 'ARRIVED_AT_PICKUP', arrived_at = NOW(), updated_at = NOW()
         WHERE id = ${d.tripId}::uuid AND operator_id = ${operatorId}::uuid AND status = 'ASSIGNED'
-        RETURNING id, status
+        RETURNING id, status, customer_id AS "customerId", trip_code AS "tripCode"
       `;
       if (!updated[0]) {
         return NextResponse.json({ error: "INVALID_STATE_TRANSITION" }, { status: 409 });
+      }
+      const u = updated[0] as { id: string; status: string; customerId: string; tripCode: string };
+      if (u.customerId) {
+        const titleSw = "Rider amefika mahali pa kuchukuliwa";
+        const bodySw = `Safari ${u.tripCode}: tafadhali toa PIN ya kuanza.`;
+        const titleEn = "Rider arrived at pickup";
+        const bodyEn = `Trip ${u.tripCode}: please share your start PIN.`;
+        await sql`
+          INSERT INTO notif.messages (user_id, phone, channel, event_subject, locale, title, body, payload, status, provider_ref)
+          VALUES (
+            ${u.customerId}::uuid, NULL, 'WEB_PUSH', 'trip.arrived', 'en',
+            ${titleEn}, ${bodyEn},
+            ${JSON.stringify({ titleSw, bodySw, titleEn, bodyEn, tripId: d.tripId, tripCode: u.tripCode, url: "/trips" })}::jsonb,
+            'SENT', 'trip-arrived'
+          )
+        `.catch(() => null);
+        void deliverWebPushToUser(u.customerId, { title: titleEn, body: bodyEn, url: "/trips", eventSubject: "trip.arrived" }).catch(() => null);
       }
       emitPartnerRealtimeEvent({ operatorId, reason: "trip_arrived" });
       return NextResponse.json({ arrived: true, trip: updated[0] });
@@ -171,11 +217,11 @@ export async function POST(request: Request) {
 
     if (d.action === "START") {
       const rows = (await sql`
-        SELECT id, start_pin AS "startPin", status
+        SELECT id, start_pin AS "startPin", status, customer_id AS "customerId", trip_code AS "tripCode"
         FROM trip.trips
         WHERE id = ${d.tripId}::uuid AND operator_id = ${operatorId}::uuid
         LIMIT 1
-      `) as Array<{ id: string; startPin: string; status: string }>;
+      `) as Array<{ id: string; startPin: string; status: string; customerId: string; tripCode: string }>;
       const trip = rows[0];
       if (!trip || trip.status !== "ARRIVED_AT_PICKUP") {
         return NextResponse.json({ error: "INVALID_STATE_TRANSITION" }, { status: 409 });
@@ -189,6 +235,22 @@ export async function POST(request: Request) {
         WHERE id = ${d.tripId}::uuid
         RETURNING id, status
       `;
+      if (trip.customerId) {
+        const titleSw = "Safari imeanza";
+        const bodySw = `Safari ${trip.tripCode}: inaendelea salama.`;
+        const titleEn = "Trip started";
+        const bodyEn = `Trip ${trip.tripCode}: ride in progress.`;
+        await sql`
+          INSERT INTO notif.messages (user_id, phone, channel, event_subject, locale, title, body, payload, status, provider_ref)
+          VALUES (
+            ${trip.customerId}::uuid, NULL, 'WEB_PUSH', 'trip.started', 'en',
+            ${titleEn}, ${bodyEn},
+            ${JSON.stringify({ titleSw, bodySw, titleEn, bodyEn, tripId: d.tripId, tripCode: trip.tripCode, url: "/trips" })}::jsonb,
+            'SENT', 'trip-started'
+          )
+        `.catch(() => null);
+        void deliverWebPushToUser(trip.customerId, { title: titleEn, body: bodyEn, url: "/trips", eventSubject: "trip.started" }).catch(() => null);
+      }
       emitPartnerRealtimeEvent({ operatorId, reason: "trip_started" });
       return NextResponse.json({ started: true, trip: updated[0] });
     }
@@ -307,6 +369,21 @@ export async function POST(request: Request) {
     const bodyEn = `Net earnings +TZS ${Number(trip.operatorNetTzs).toLocaleString()} recorded.`;
     const titleSw = `Safari ${trip.tripCode} Imekamilika`;
     const bodySw = `Mapato halisi +TZS ${Number(trip.operatorNetTzs).toLocaleString()} yamerekodiwa.`;
+
+    const custTitleSw = `Safari ${trip.tripCode} imekamilika`;
+    const custBodySw = `Asante! Nauli ${Number(trip.estimatedFareTzs).toLocaleString()} TZS.`;
+    const custTitleEn = `Trip ${trip.tripCode} completed`;
+    const custBodyEn = `Thank you! Fare ${Number(trip.estimatedFareTzs).toLocaleString()} TZS.`;
+    await sql`
+      INSERT INTO notif.messages (user_id, phone, channel, event_subject, locale, title, body, payload, status, provider_ref)
+      VALUES (
+        ${trip.customerId}::uuid, NULL, 'WEB_PUSH', 'trip.completed', 'en',
+        ${custTitleEn}, ${custBodyEn},
+        ${JSON.stringify({ titleSw: custTitleSw, bodySw: custBodySw, titleEn: custTitleEn, bodyEn: custBodyEn, tripId: trip.id, tripCode: trip.tripCode, url: "/trips" })}::jsonb,
+        'SENT', 'trip-completed-customer'
+      )
+    `.catch(() => null);
+    void deliverWebPushToUser(trip.customerId, { title: custTitleEn, body: custBodyEn, url: "/trips", eventSubject: "trip.completed" }).catch(() => null);
 
     await sql`
       INSERT INTO notif.messages (

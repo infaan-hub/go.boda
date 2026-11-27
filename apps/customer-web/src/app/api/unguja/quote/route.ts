@@ -148,6 +148,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as {
     pickup?: Coordinates;
     dropoff?: Coordinates;
+    stops?: Coordinates[];
     promoCode?: string;
   } | null;
 
@@ -163,9 +164,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const [pickup, dropoff] = await Promise.all([
+    const stopsInput = (body.stops ?? []).slice(0, 2);
+    const [pickup, dropoff, ...stopsResolved] = await Promise.all([
       resolvePointPostgis(body.pickup),
       resolvePointPostgis(body.dropoff),
+      ...stopsInput.map((s) => resolvePointPostgis(s)),
     ]);
 
     if (!pickup.inUnguja || !dropoff.inUnguja) {
@@ -182,8 +185,36 @@ export async function POST(request: Request) {
         { status: 422 }
       );
     }
+    const stops = stopsResolved as Array<Awaited<ReturnType<typeof resolvePointPostgis>>>;
+    if (stops.some((s) => !s.inUnguja)) {
+      return NextResponse.json(
+        { error: "OUTSIDE_UNGUJA_SERVICE_AREA", messageEn: "Stops must be inside Unguja.", messageSw: "Maeneo ya kusimama lazima yawe Unguja." },
+        { status: 422 }
+      );
+    }
 
-    const route = await computeRouteOsrm(pickup.effective, dropoff.effective);
+    // Multi-leg route
+    const legPoints = [pickup.effective, ...stops.map((s) => s.effective), dropoff.effective];
+    let totalDistance = 0;
+    let totalDuration = 0;
+    const allCoords: Array<[number, number]> = [];
+    for (let i = 0; i < legPoints.length - 1; i++) {
+      const r = await computeRouteOsrm(legPoints[i]!, legPoints[i + 1]!);
+      totalDistance += r.distanceMeters;
+      totalDuration += r.durationSeconds;
+      const geom = r.geometry as { coordinates?: number[][] } | null;
+      if (geom && Array.isArray(geom.coordinates) && geom.coordinates.length >= 2) {
+        const coords = geom.coordinates as Array<[number, number]>;
+        if (allCoords.length === 0) allCoords.push(...coords);
+        else allCoords.push(...coords.slice(1));
+      }
+    }
+    const route = {
+      distanceMeters: Math.max(200, totalDistance),
+      durationSeconds: Math.max(60, totalDuration),
+      source: "osrm" as const,
+      geometry: allCoords.length >= 2 ? { type: "LineString" as const, coordinates: allCoords } : null,
+    };
     const km = route.distanceMeters / 1000;
     const mins = route.durationSeconds / 60;
     const step = PLATFORM_FINANCE.FARE_ROUNDING_STEP_TZS;

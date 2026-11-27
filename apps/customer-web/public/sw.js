@@ -1,5 +1,5 @@
-const CACHE_NAME = "goboda-customer-v2";
-const DATA_CACHE_NAME = "goboda-customer-data-v2";
+const CACHE_NAME = "goboda-customer-v3";
+const DATA_CACHE_NAME = "goboda-customer-data-v3";
 const OFFLINE_URL = "/offline";
 const PRECACHE_URLS = [OFFLINE_URL, "/manifest.webmanifest", "/icons/icon.svg"];
 
@@ -80,12 +80,19 @@ self.addEventListener("push", (event) => {
   const title = data.title || "Go.boda";
   const body = data.body || "Your Unguja transport update is ready.";
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon: "/icons/icon.svg",
-      badge: "/icons/icon.svg",
-      data: { url: data.url || "/" },
-    })
+    (async () => {
+      await self.registration.showNotification(title, {
+        body,
+        icon: "/icons/icon.svg",
+        badge: "/icons/icon.svg",
+        tag: data.tag || data.eventSubject || "goboda-customer",
+        data: { url: data.url || "/" },
+      });
+      const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      for (const client of clients) {
+        client.postMessage({ type: "GOBODA_PUSH_RECEIVED", eventSubject: data.eventSubject });
+      }
+    })()
   );
 });
 
