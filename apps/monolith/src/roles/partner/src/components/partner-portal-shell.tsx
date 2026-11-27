@@ -14,6 +14,7 @@ import {
   Moon,
   Power,
   Radio,
+  Route,
   ShieldCheck,
   Sun,
   TrendingUp,
@@ -91,7 +92,14 @@ function PartnerPortalShellInner({
     },
     {
       href: "/partner/trips",
-      label: locale === "sw" ? "Safari" : "Trips",
+      label: locale === "sw" ? "Safari Mpya" : "New Trips",
+      icon: Route,
+      badge: pendingOffersCount,
+      badgeTone: "amber" as const,
+    },
+    {
+      href: "/partner/tripshistory/",
+      label: locale === "sw" ? "Historia ya Safari" : "Trip history",
       icon: History,
       badge: 0,
       badgeTone: "teal" as const,
@@ -188,6 +196,8 @@ function PartnerPortalShellInner({
             {navItems.map((item) => {
               const active =
                 cleanPath === item.href ||
+                (item.href === "/partner/trips" && cleanPath.startsWith("/partner/trips/")) ||
+                (item.href === "/partner/tripshistory/" && cleanPath === "/partner/tripshistory") ||
                 (item.href === "/profile/" && cleanPath === "/partner/profile") ||
                 (item.href === "/partner/safety" && cleanPath === "/safety");
               return (

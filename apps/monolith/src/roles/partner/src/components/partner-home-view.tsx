@@ -1642,7 +1642,7 @@ function PartnerHomeContent({
                 </Link>
 
                 <Link
-                  href="/partner/trips"
+                  href="/partner/tripshistory/"
                   className={cn(
                     "block rounded-3xl border p-5 shadow-sm transition hover:-translate-y-0.5",
                     nightMode
@@ -1689,7 +1689,7 @@ function PartnerHomeContent({
                 </Link>
 
                 <Link
-                  href="/partner/trips"
+                  href="/partner/tripshistory/"
                   className={cn(
                     "flex items-center gap-3 rounded-3xl border p-4 shadow-sm transition hover:-translate-y-0.5",
                     nightMode

@@ -4,7 +4,10 @@ import { z } from "zod";
 import { getSql } from "@goboda/db";
 import { verifyPartnerRequest } from "../../../../lib/partner-auth";
 import { emitPartnerRealtimeEvent } from "../../../../lib/partner-realtime";
-import { deliverWebPushToUser } from "../../../../lib/partner-webpush";
+import {
+  deliverWebPushToCustomer,
+  deliverWebPushToUser,
+} from "../../../../lib/partner-webpush";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +33,22 @@ const actionSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     action: z.literal("COMPLETE_CASH"),
+    tripId: z.string().uuid(),
+  }),
+  z.object({
+    action: z.literal("COMPLETE_TRIP"),
+    tripId: z.string().uuid(),
+  }),
+  z.object({
+    action: z.literal("GPS_UPDATE"),
+    tripId: z.string().uuid(),
+    lat: z.number().min(-90).max(90),
+    lng: z.number().min(-180).max(180),
+    heading: z.number().min(0).max(360).default(0),
+    speedKmh: z.number().min(0).max(200).default(0),
+  }),
+  z.object({
+    action: z.literal("CONFIRM_DIGITAL"),
     tripId: z.string().uuid(),
   }),
 ]);
@@ -137,6 +156,28 @@ export async function POST(request: Request) {
         reason: "offer_accepted",
       });
 
+      const customerRows = await sql`
+        SELECT customer_id AS "customerId", trip_code AS "tripCode", pickup_label AS "pickupLabel"
+        FROM trip.trips WHERE id = ${offer.tripId}::uuid LIMIT 1
+      ` as Array<{ customerId: string; tripCode: string; pickupLabel: string }>;
+      const customer = customerRows[0];
+      if (customer) {
+        const title = `Rider confirmed trip ${customer.tripCode}`;
+        const body = `${op?.fullName ?? auth.partner.name} is on the way to ${customer.pickupLabel}.`;
+        const notifSql = getSql(process.env.NOTIF_DATABASE_URL ?? process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
+        await notifSql`
+          INSERT INTO notif.messages (user_id, channel, event_subject, locale, title, body, payload, status, provider_ref)
+          VALUES (${customer.customerId}::uuid, 'WEB_PUSH', 'trip.operator_confirmed', 'en', ${title}, ${body}, ${JSON.stringify({ tripId: offer.tripId, tripCode: customer.tripCode, operatorName: op?.fullName ?? auth.partner.name, url: `/trips` })}::jsonb, 'SENT', ${`trip-confirmed-${offer.tripId}`})
+        `.catch((err) => console.error("Customer trip confirmation notification failed:", err));
+        void deliverWebPushToCustomer(customer.customerId, {
+          title,
+          body,
+          url: "/trips",
+          eventSubject: "trip.operator_confirmed",
+          data: { tripId: offer.tripId, tripCode: customer.tripCode },
+        }).catch(() => null);
+      }
+
       return NextResponse.json({ accepted: true, tripId: offer.tripId });
     }
 
@@ -169,6 +210,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ arrived: true, trip: updated[0] });
     }
 
+    if (d.action === "GPS_UPDATE") {
+      const active = await sql`
+        SELECT id, transport_type AS "transportType", status
+        FROM trip.trips
+        WHERE id = ${d.tripId}::uuid AND operator_id = ${operatorId}::uuid
+          AND status IN ('ASSIGNED', 'ARRIVED_AT_PICKUP', 'IN_PROGRESS')
+        LIMIT 1
+      ` as Array<{ id: string; transportType: "BODABODA" | "BAJAJI"; status: string }>;
+      if (!active[0]) return NextResponse.json({ error: "TRIP_NOT_ACTIVE" }, { status: 409 });
+      const boundary = await sql`
+        SELECT ST_Contains((SELECT geom FROM geo.zones WHERE id = 'unguja-island'), ST_SetSRID(ST_MakePoint(${d.lng}, ${d.lat}), 4326)) AS inside
+      ` as Array<{ inside: boolean }>;
+      if (!boundary[0]?.inside) return NextResponse.json({ error: "OUTSIDE_UNGUJA_SERVICE_AREA" }, { status: 422 });
+      await sql`
+        UPDATE location.operator_positions
+        SET lat = ${d.lat}, lng = ${d.lng}, heading = ${d.heading}, speed_kmh = ${d.speedKmh},
+            geom = ST_SetSRID(ST_MakePoint(${d.lng}, ${d.lat}), 4326),
+            active_trip_id = ${d.tripId}::uuid, is_busy = TRUE, last_seen_at = NOW()
+        WHERE operator_id = ${operatorId}::uuid
+      `;
+      if (active[0].status === "IN_PROGRESS") {
+        await sql`
+          INSERT INTO location.trip_breadcrumbs (trip_id, operator_id, lat, lng, heading, speed_kmh)
+          VALUES (${d.tripId}::uuid, ${operatorId}::uuid, ${d.lat}, ${d.lng}, ${d.heading}, ${d.speedKmh})
+        `;
+      }
+      emitPartnerRealtimeEvent({ operatorId, reason: "trip_location_updated" });
+      return NextResponse.json({ recorded: true });
+    }
+
     if (d.action === "START") {
       const rows = (await sql`
         SELECT id, start_pin AS "startPin", status
@@ -193,6 +264,64 @@ export async function POST(request: Request) {
       return NextResponse.json({ started: true, trip: updated[0] });
     }
 
+    if (d.action === "COMPLETE_TRIP") {
+      const distanceRows = await sql`
+        SELECT COALESCE(SUM(ST_DistanceSphere(previous_geom, geom)), 0)::int AS meters
+        FROM (
+          SELECT ST_SetSRID(ST_MakePoint(lng, lat), 4326) AS geom,
+                 LAG(ST_SetSRID(ST_MakePoint(lng, lat), 4326)) OVER (ORDER BY recorded_at) AS previous_geom
+          FROM location.trip_breadcrumbs
+          WHERE trip_id = ${d.tripId}::uuid AND operator_id = ${operatorId}::uuid
+        ) route_points
+        WHERE previous_geom IS NOT NULL
+      ` as Array<{ meters: number }>;
+      const trackedDistance = Number(distanceRows[0]?.meters ?? 0);
+      const completed = await sql`
+        UPDATE trip.trips
+        SET status = 'COMPLETED_UNPAID',
+            distance_meters = CASE WHEN ${trackedDistance} >= 100 THEN ${trackedDistance} ELSE distance_meters END,
+            duration_seconds = GREATEST(1, EXTRACT(EPOCH FROM (NOW() - COALESCE(started_at, NOW())))::int),
+            final_fare_tzs = estimated_fare_tzs,
+            completed_at = NOW(), updated_at = NOW()
+        WHERE id = ${d.tripId}::uuid AND operator_id = ${operatorId}::uuid AND status = 'IN_PROGRESS'
+        RETURNING id, estimated_fare_tzs AS "fareTzs", distance_meters AS "distanceMeters", duration_seconds AS "durationSeconds"
+      `;
+      if (!completed[0]) return NextResponse.json({ error: "INVALID_STATE_TRANSITION" }, { status: 409 });
+      emitPartnerRealtimeEvent({ operatorId, reason: "trip_destination_reached" });
+      return NextResponse.json({ completed: true, trip: completed[0] });
+    }
+
+    if (d.action === "CONFIRM_DIGITAL") {
+      const tripRows = await sql`
+        SELECT status, payment_method AS "paymentMethod"
+        FROM trip.trips
+        WHERE id = ${d.tripId}::uuid AND operator_id = ${operatorId}::uuid
+        LIMIT 1
+      ` as Array<{ status: string; paymentMethod: string }>;
+      const trip = tripRows[0];
+      if (!trip || !["MOBILE_MONEY", "CARD"].includes(trip.paymentMethod)) {
+        return NextResponse.json({ error: "INVALID_PAYMENT_METHOD" }, { status: 409 });
+      }
+      if (trip.status === "PAID_COMPLETED") return NextResponse.json({ confirmed: true });
+      const paymentRows = await sql`
+        SELECT id FROM finance.payments
+        WHERE trip_id = ${d.tripId}::uuid AND status = 'CONFIRMED'
+        ORDER BY confirmed_at DESC NULLS LAST LIMIT 1
+      `;
+      if (!paymentRows[0]) {
+        return NextResponse.json({ error: "PAYMENT_NOT_CONFIRMED", message: "The customer payment has not been confirmed yet." }, { status: 409 });
+      }
+      const updated = await sql`
+        UPDATE trip.trips SET status = 'PAID_COMPLETED', updated_at = NOW()
+        WHERE id = ${d.tripId}::uuid AND operator_id = ${operatorId}::uuid AND status = 'COMPLETED_UNPAID'
+        RETURNING id
+      `;
+      if (!updated[0]) return NextResponse.json({ error: "INVALID_STATE_TRANSITION" }, { status: 409 });
+      await sql`UPDATE location.operator_positions SET is_busy = FALSE, active_trip_id = NULL, last_seen_at = NOW() WHERE operator_id = ${operatorId}::uuid`;
+      emitPartnerRealtimeEvent({ operatorId, reason: "trip_payment_confirmed" });
+      return NextResponse.json({ confirmed: true });
+    }
+
     // COMPLETE_CASH: complete trip + record zero-drift double-entry Cash commission journal
     const tripRows = (await sql`
       SELECT id, trip_code AS "tripCode", customer_id AS "customerId",
@@ -215,7 +344,7 @@ export async function POST(request: Request) {
     }>;
 
     const trip = tripRows[0];
-    if (!trip || trip.status !== "IN_PROGRESS") {
+    if (!trip || (trip.status !== "IN_PROGRESS" && trip.status !== "COMPLETED_UNPAID")) {
       return NextResponse.json({ error: "INVALID_STATE_TRANSITION" }, { status: 409 });
     }
 
@@ -328,7 +457,7 @@ export async function POST(request: Request) {
           tripId: trip.id,
           tripCode: trip.tripCode,
           operatorNetTzs: trip.operatorNetTzs,
-          url: "/partner/trips",
+          url: "/partner/tripshistory/",
         })}::jsonb,
         'SENT',
         'trip-completed'
@@ -343,7 +472,7 @@ export async function POST(request: Request) {
     void deliverWebPushToUser(operatorId, {
       title: titleEn,
       body: bodyEn,
-      url: "/partner/trips",
+      url: "/partner/tripshistory/",
       eventSubject: "trip.completed",
     }).catch(() => null);
 

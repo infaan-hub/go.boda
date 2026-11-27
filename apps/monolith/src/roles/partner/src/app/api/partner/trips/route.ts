@@ -100,6 +100,9 @@ export async function GET(request: Request) {
         ON r.trip_id = t.id AND r.ratee_id = ${auth.partner.id}::uuid
       WHERE t.operator_id = ${auth.partner.id}::uuid
         AND t.transport_type = ${assignedTransportType}
+        AND t.status IN (
+          'PAID_COMPLETED', 'CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_OPERATOR'
+        )
         AND (
           ${range} = 'all'
           OR (${range} = 'today' AND t.created_at >= CURRENT_DATE)

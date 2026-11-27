@@ -139,6 +139,19 @@ export async function deliverWebPushToUser(
   return sendToSubscriptions(subs, payload);
 }
 
+export async function deliverWebPushToCustomer(
+  userId: string,
+  payload: WebPushPayload
+): Promise<WebPushDeliveryResult> {
+  const sql = getSql(process.env.NOTIF_DATABASE_URL ?? process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
+  const subs = (await sql`
+    SELECT id, user_id AS "userId", endpoint, p256dh, auth_key AS "authKey"
+    FROM notif.push_subscriptions
+    WHERE user_id = ${userId}::uuid AND active = TRUE
+  `) as PushSubRow[];
+  return sendToSubscriptions(subs, payload);
+}
+
 export async function deliverWebPushToAll(
   payload: WebPushPayload
 ): Promise<WebPushDeliveryResult> {

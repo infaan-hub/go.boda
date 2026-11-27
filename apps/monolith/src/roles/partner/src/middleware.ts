@@ -8,6 +8,7 @@ const PROTECTED_PARTNER_PAGES = new Set([
   "/partner/shift",
   "/partner/hotspots",
   "/partner/trips",
+  "/partner/tripshistory",
   "/partner/earnings",
   "/partner/kyc",
   "/partner/notifications",
@@ -98,7 +99,10 @@ export async function middleware(request: NextRequest) {
     return applyLocale(NextResponse.next(), lang);
   }
 
-  if (PROTECTED_PARTNER_PAGES.has(trimmedPath)) {
+  if (
+    PROTECTED_PARTNER_PAGES.has(trimmedPath) ||
+    trimmedPath.startsWith("/partner/trips/")
+  ) {
     const authed = await hasPartnerSession(request);
     if (!authed) {
       return applyLocale(

@@ -102,6 +102,10 @@ export interface PartnerRealtimeActiveTrip {
   dropoffLat: number;
   dropoffLng: number;
   distanceMeters: number;
+  durationSeconds: number;
+  pickupDistanceMeters: number | null;
+  pickupEtaMinutes: number | null;
+  stops: Array<{ id: string; order: number; label: string; lat: number; lng: number; isPickup: boolean; isDropoff: boolean }>;
   paymentMethod: "CASH" | "MOBILE_MONEY" | "CARD";
   estimatedFareTzs: number;
   finalFareTzs: number | null;
@@ -153,6 +157,9 @@ export interface PartnerRealtimeSnapshot {
     kycStatus: string;
     helmetVerified: boolean;
     isOnline: boolean;
+    lat: number | null;
+    lng: number | null;
+    lastSeenAt: string | null;
     rejectionReason: string | null;
   } | null;
   compliance: {
@@ -192,6 +199,9 @@ interface ProfileRow {
   kycStatus: string;
   helmetVerified: boolean;
   isOnline: boolean;
+  lat: number | null;
+  lng: number | null;
+  lastSeenAt: string | null;
   rejectionReason: string | null;
 }
 
@@ -230,6 +240,9 @@ interface ActiveTripRow {
   dropoffLat: number;
   dropoffLng: number;
   distanceMeters: number;
+  durationSeconds: number;
+  pickupDistanceMeters: number | null;
+  pickupEtaMinutes: number | null;
   paymentMethod: "CASH" | "MOBILE_MONEY" | "CARD";
   estimatedFareTzs: number;
   finalFareTzs: number | null;
@@ -295,7 +308,10 @@ function resolveNotifUrl(eventSubject: string, payload: Record<string, unknown> 
   if (s.includes("offer") || s.includes("dispatch") || s.includes("shift")) {
     return "/partner/shift";
   }
-  if (s.includes("trip") || s.includes("completed")) {
+  if (s.includes("completed")) {
+    return "/partner/tripshistory/";
+  }
+  if (s.includes("trip")) {
     return "/partner/trips";
   }
   if (s.includes("sos") || s.includes("safety")) {
@@ -324,13 +340,24 @@ export async function buildPartnerRealtimeSnapshot(
            kyc_status AS "kycStatus",
            helmet_verified AS "helmetVerified",
            is_online AS "isOnline",
-           rejection_reason AS "rejectionReason"
-    FROM operator.profiles
-    WHERE user_id = ${operatorId}::uuid
+           rejection_reason AS "rejectionReason",
+           pos.lat,
+           pos.lng,
+           pos.last_seen_at AS "lastSeenAt"
+    FROM operator.profiles op
+    LEFT JOIN location.operator_positions pos ON pos.operator_id = op.user_id
+    WHERE op.user_id = ${operatorId}::uuid
     LIMIT 1
   `) as ProfileRow[];
 
-  const profile = profileRows[0] ?? null;
+  const profileRow = profileRows[0] ?? null;
+  const profile = profileRow
+    ? {
+        ...profileRow,
+        lat: profileRow.lat === null ? null : Number(profileRow.lat),
+        lng: profileRow.lng === null ? null : Number(profileRow.lng),
+      }
+    : null;
   const assignedTransportType: "BODABODA" | "BAJAJI" =
     profile?.transportType === "BAJAJI"
       ? "BAJAJI"
@@ -382,31 +409,36 @@ export async function buildPartnerRealtimeSnapshot(
         LIMIT 5
       `,
       sql`
-        SELECT id,
-               trip_code AS "tripCode",
-               transport_type AS "transportType",
-               status,
-               pickup_label AS "pickupLabel",
-               pickup_snapped AS "pickupSnapped",
-               pickup_snap_gate_name AS "pickupSnapGateName",
-               pickup_effective_lat AS "pickupEffectiveLat",
-               pickup_effective_lng AS "pickupEffectiveLng",
-               dropoff_label AS "dropoffLabel",
-               dropoff_lat AS "dropoffLat",
-               dropoff_lng AS "dropoffLng",
-               distance_meters::int AS "distanceMeters",
-               payment_method AS "paymentMethod",
-               estimated_fare_tzs::int AS "estimatedFareTzs",
-               final_fare_tzs::int AS "finalFareTzs",
-               commission_tzs::int AS "commissionTzs",
-               operator_net_tzs::int AS "operatorNetTzs",
-               start_pin AS "startPin",
-               updated_at AS "updatedAt"
-        FROM trip.trips
-        WHERE operator_id = ${operatorId}::uuid
-          AND transport_type = ${assignedTransportType}
-          AND status IN ('ASSIGNED', 'ARRIVED_AT_PICKUP', 'IN_PROGRESS', 'SOS_ACTIVE', 'COMPLETED_UNPAID')
-        ORDER BY updated_at DESC
+        SELECT t.id,
+               t.trip_code AS "tripCode",
+               t.transport_type AS "transportType",
+               t.status,
+               t.pickup_label AS "pickupLabel",
+               t.pickup_snapped AS "pickupSnapped",
+               t.pickup_snap_gate_name AS "pickupSnapGateName",
+               t.pickup_effective_lat AS "pickupEffectiveLat",
+               t.pickup_effective_lng AS "pickupEffectiveLng",
+               t.dropoff_label AS "dropoffLabel",
+               t.dropoff_lat AS "dropoffLat",
+               t.dropoff_lng AS "dropoffLng",
+               t.distance_meters::int AS "distanceMeters",
+               t.duration_seconds::int AS "durationSeconds",
+               offer.distance_meters::int AS "pickupDistanceMeters",
+               offer.eta_minutes::int AS "pickupEtaMinutes",
+               t.payment_method AS "paymentMethod",
+               t.estimated_fare_tzs::int AS "estimatedFareTzs",
+               t.final_fare_tzs::int AS "finalFareTzs",
+               t.commission_tzs::int AS "commissionTzs",
+               t.operator_net_tzs::int AS "operatorNetTzs",
+               t.start_pin AS "startPin",
+               t.updated_at AS "updatedAt"
+        FROM trip.trips t
+        LEFT JOIN dispatch.trip_locks trip_lock ON trip_lock.trip_id = t.id
+        LEFT JOIN dispatch.offers offer ON offer.id = trip_lock.offer_id
+        WHERE t.operator_id = ${operatorId}::uuid
+          AND t.transport_type = ${assignedTransportType}
+          AND t.status IN ('ASSIGNED', 'ARRIVED_AT_PICKUP', 'IN_PROGRESS', 'SOS_ACTIVE', 'COMPLETED_UNPAID')
+        ORDER BY t.updated_at DESC
         LIMIT 1
       `,
       sql`
@@ -505,9 +537,19 @@ export async function buildPartnerRealtimeSnapshot(
   );
 
   const activeTripRaw = (activeTripRows as ActiveTripRow[])[0] ?? null;
+  const activeTripStops = activeTripRaw
+    ? (await sql`
+        SELECT id, stop_order AS "order", label, lat, lng,
+               is_pickup AS "isPickup", is_dropoff AS "isDropoff"
+        FROM trip.trip_stops
+        WHERE trip_id = ${activeTripRaw.id}::uuid
+        ORDER BY stop_order ASC
+      `) as Array<{ id: string; order: number; label: string; lat: number; lng: number; isPickup: boolean; isDropoff: boolean }>
+    : [];
   const activeTrip: PartnerRealtimeActiveTrip | null = activeTripRaw
     ? {
         ...activeTripRaw,
+        stops: activeTripStops.map((stop) => ({ ...stop, lat: Number(stop.lat), lng: Number(stop.lng) })),
         pickupEffectiveLat: Number(activeTripRaw.pickupEffectiveLat),
         pickupEffectiveLng: Number(activeTripRaw.pickupEffectiveLng),
         dropoffLat: Number(activeTripRaw.dropoffLat),

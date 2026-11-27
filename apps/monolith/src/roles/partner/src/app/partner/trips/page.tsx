@@ -1,4 +1,4 @@
-import { PartnerTripsView } from "@partner/components/partner-trips-view";
+import { PartnerTripWorkflowView } from "@partner/components/partner-trip-workflow-view";
 import { requirePartnerPageData } from "@partner/lib/partner-page-data";
 
 export default async function PartnerTripsPage({
@@ -8,12 +8,5 @@ export default async function PartnerTripsPage({
 }) {
   const data = await requirePartnerPageData(searchParams);
 
-  return (
-    <PartnerTripsView
-      locale={data.locale}
-      partnerName={data.partnerName}
-      partnerTransportType={data.partnerTransportType}
-      partnerPlateNumber={data.partnerPlateNumber}
-    />
-  );
+  return <PartnerTripWorkflowView locale={data.locale} stage="queue" />;
 }
