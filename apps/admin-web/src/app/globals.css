@@ -21,3 +21,59 @@ body {
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+@keyframes goboda-draw {
+  from {
+    stroke-dashoffset: 320;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes goboda-ecg-scan {
+  0% {
+    stroke-dashoffset: 240;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes goboda-pulse-ring {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+
+.animate-goboda-draw {
+  stroke-dasharray: 320;
+  stroke-dashoffset: 0;
+  animation: goboda-draw 1.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-goboda-ecg {
+  stroke-dasharray: 120 120;
+  animation: goboda-ecg-scan 2.8s linear infinite;
+}
+
+.animate-goboda-ring {
+  animation: goboda-pulse-ring 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-goboda-draw,
+  .animate-goboda-ecg,
+  .animate-goboda-ring {
+    animation: none;
+  }
+}

@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useTranslations } from "next-intl";
 import {
   Bike,
-  CarFront,
   Route,
   ShieldAlert,
 } from "lucide-react";
@@ -15,13 +13,16 @@ import {
   ScrollReveal,
 } from "@goboda/ui";
 import { useAdminPortal } from "@/components/admin-portal-shell";
+import {
+  AdminKpiChartGrid,
+  AdminOperationsAnalytics,
+} from "@/components/admin-kpi-charts";
 
 function formatTzs(amount: number | null | undefined): string {
   return `TZS ${Number(amount ?? 0).toLocaleString("en-TZ")}`;
 }
 
 export default function AdminDashboardOverviewPage() {
-  const t = useTranslations();
   const { data, locale } = useAdminPortal();
   if (!data) return null;
 
@@ -72,142 +73,18 @@ export default function AdminDashboardOverviewPage() {
         />
       </div>
 
-      {/* Operational KPIs */}
+      {/* Animated Premium KPI Graphs & Live Operations Analytics */}
       <div id="workspace" className="scroll-mt-24 space-y-6">
         <ScrollReveal>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Link href="/admin/live-map" className="block">
-              <Card className="p-4 transition hover:border-[#17645F]/40">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#17645F]/75">
-                    {t("admin.onlineRiders")}
-                  </p>
-                  <Bike className="h-4 w-4 text-[#17645F]" />
-                </div>
-                <p className="mt-2 font-display text-3xl leading-none text-[#17645F]">
-                  {data.kpis.onlineRiders}
-                </p>
-              </Card>
-            </Link>
+          <AdminKpiChartGrid data={data} />
+        </ScrollReveal>
 
-            <Link href="/admin/live-map" className="block">
-              <Card className="p-4 transition hover:border-[#17645F]/40">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#17645F]/75">
-                    {t("admin.onlineDrivers")}
-                  </p>
-                  <CarFront className="h-4 w-4 text-[#B86B2B]" />
-                </div>
-                <p className="mt-2 font-display text-3xl leading-none text-[#122927]">
-                  {data.kpis.onlineDrivers}
-                </p>
-              </Card>
-            </Link>
-
-            <Link href="/admin/trips" className="block">
-              <Card className="p-4 transition hover:border-[#17645F]/40">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#17645F]/75">
-                    {t("admin.activeTrips")}
-                  </p>
-                  <Route className="h-4 w-4 text-[#17645F]" />
-                </div>
-                <p className="mt-2 font-display text-3xl leading-none text-[#17645F]">
-                  {data.kpis.activeTrips}
-                </p>
-                <p className="mt-1.5 text-xs text-[#17645F]/65">
-                  {data.kpis.completedTrips} completed of {data.kpis.totalTrips}
-                </p>
-              </Card>
-            </Link>
-
-            <Link href="/admin/sos" className="block">
-              <Card
-                className={`p-4 transition hover:border-[#17645F]/40 ${
-                  data.kpis.openSosCount > 0
-                    ? "border-[#A93232]/40 bg-[#A93232]/10"
-                    : ""
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#17645F]/75">
-                    {t("admin.openSos")}
-                  </p>
-                  <ShieldAlert className="h-4 w-4 text-[#A93232]" />
-                </div>
-                <p
-                  className={`mt-2 font-display text-3xl leading-none ${
-                    data.kpis.openSosCount > 0
-                      ? "text-[#A93232]"
-                      : "text-[#17645F]"
-                  }`}
-                >
-                  {data.kpis.openSosCount}
-                </p>
-              </Card>
-            </Link>
-
-            <Link href="/admin/finance" className="block">
-              <Card className="p-4 transition hover:border-[#17645F]/40">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#17645F]/75">
-                  Total GMV
-                </p>
-                <p className="mt-2 font-display text-2xl leading-none text-[#17645F]">
-                  {formatTzs(data.kpis.gmvTzs)}
-                </p>
-                <p className="mt-1.5 text-xs text-[#17645F]/65">
-                  Commission: {formatTzs(data.kpis.platformCommissionTzs)}
-                </p>
-              </Card>
-            </Link>
-
-            <Link href="/admin/operators" className="block">
-              <Card className="p-4 transition hover:border-[#17645F]/40">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#17645F]/75">
-                  Pending KYC
-                </p>
-                <p className="mt-2 font-display text-2xl leading-none text-[#B86B2B]">
-                  {data.kpis.pendingKycCount}
-                </p>
-                <p className="mt-1.5 text-xs text-[#17645F]/65">
-                  {data.kpis.approvedOperatorsCount} approved
-                </p>
-              </Card>
-            </Link>
-
-            <Link href="/admin/finance" className="block">
-              <Card className="p-4 transition hover:border-[#17645F]/40">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#17645F]/75">
-                  Ledger
-                </p>
-                <p
-                  className={`mt-2 font-display text-2xl leading-none ${
-                    data.kpis.ledgerBalanced ? "text-[#17645F]" : "text-[#A93232]"
-                  }`}
-                >
-                  {data.kpis.ledgerBalanced ? "Balanced" : "Mismatch"}
-                </p>
-              </Card>
-            </Link>
-
-            <Link href="/admin/vituo" className="block">
-              <Card className="p-4 transition hover:border-[#17645F]/40">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#17645F]/75">
-                  Unguja Locations
-                </p>
-                <p className="mt-2 font-display text-2xl leading-none text-[#17645F]">
-                  {data.ungujaBootstrap?.landmarksCount ?? 64}
-                </p>
-                <p className="mt-1.5 text-xs text-[#17645F]/65">
-                  {data.ungujaBootstrap?.snapPointsCount ?? 10} Stone Town pickup gates
-                </p>
-              </Card>
-            </Link>
-          </div>
+        <ScrollReveal delayMs={60}>
+          <AdminOperationsAnalytics data={data} />
         </ScrollReveal>
 
         {/* Recent Trips & Pending KYC */}
-        <ScrollReveal delayMs={80}>
+        <ScrollReveal delayMs={100}>
           <div className="grid gap-6 xl:grid-cols-3">
             <Card className="overflow-hidden xl:col-span-2">
               <div className="flex items-center justify-between border-b border-[#17645F]/15 px-5 py-3.5">
