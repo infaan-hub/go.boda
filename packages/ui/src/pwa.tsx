@@ -10,6 +10,40 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+const PWA_SNOOZE_KEY = "goboda_pwa_install_snooze_until";
+
+function isSnoozedToday(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = window.localStorage.getItem(PWA_SNOOZE_KEY);
+    if (!raw) return false;
+    const until = Number(raw);
+    if (!Number.isFinite(until)) return false;
+    return Date.now() < until;
+  } catch {
+    return false;
+  }
+}
+
+function snoozeUntilNextDay(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const now = new Date();
+    const nextDayMidnight = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+      0,
+      0,
+      0,
+      0
+    ).getTime();
+    window.localStorage.setItem(PWA_SNOOZE_KEY, String(nextDayMidnight));
+  } catch {
+    // Ignore storage quota or private-mode errors
+  }
+}
+
 export function PwaRegistrar({ swPath = "/sw.js" }: { swPath?: string }) {
   React.useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
@@ -36,63 +70,138 @@ export function PwaInstallBanner({
 }) {
   const [deferredPrompt, setDeferredPrompt] =
     React.useState<BeforeInstallPromptEvent | null>(null);
-  const [dismissed, setDismissed] = React.useState(false);
+  const [dismissed, setDismissed] = React.useState(true);
+  const [expanded, setExpanded] = React.useState(false);
 
   React.useEffect(() => {
-    const handler = (event: Event) => {
+    if (typeof window === "undefined") return;
+
+    const isStandalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone ===
+        true;
+    if (isStandalone || isSnoozedToday()) {
+      setDismissed(true);
+      return;
+    }
+
+    setDismissed(false);
+
+    const handleBeforeInstall = (event: Event) => {
       event.preventDefault();
+      if (isSnoozedToday()) {
+        setDismissed(true);
+        return;
+      }
       setDeferredPrompt(event as BeforeInstallPromptEvent);
     };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+
+    const handleInstalled = () => {
+      setDeferredPrompt(null);
+      setExpanded(false);
+      setDismissed(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    window.addEventListener("appinstalled", handleInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("appinstalled", handleInstalled);
+    };
   }, []);
 
   if (!deferredPrompt || dismissed) return null;
 
+  const handleLater = () => {
+    snoozeUntilNextDay();
+    setExpanded(false);
+    setDismissed(true);
+  };
+
   const handleInstall = async () => {
-    await deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    setDeferredPrompt(null);
+    try {
+      await deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice.outcome === "dismissed") {
+        snoozeUntilNextDay();
+      }
+    } finally {
+      setDeferredPrompt(null);
+      setExpanded(false);
+      setDismissed(true);
+    }
   };
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-md rounded-2xl border border-[#F3EEE8]/20 bg-[#17645F] p-4 text-[#F3EEE8] shadow-xl">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F3EEE8] text-[#17645F]">
-            <Download className="h-5 w-5" />
+    <div className="fixed right-0 top-1/2 z-40 -translate-y-1/2">
+      {expanded ? (
+        <div className="mr-3 w-[272px] max-w-[calc(100vw-1.5rem)] rounded-3xl border border-[#F3EEE8]/25 bg-[#17645F] p-4 text-[#F3EEE8] shadow-2xl">
+          <div className="flex items-start justify-between gap-2.5">
+            <div className="flex items-start gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F3EEE8] text-[#17645F] shadow-sm">
+                <Download className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs font-extrabold tracking-wide">{title}</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-[#F3EEE8]/85">
+                  {description}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              aria-label="Collapse install badge"
+              className="rounded-full p-1 text-[#F3EEE8]/75 transition hover:bg-white/10 hover:text-white"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
-          <div>
-            <p className="text-sm font-bold">{title}</p>
-            <p className="mt-0.5 text-xs text-[#F3EEE8]/80">{description}</p>
+          <div className="mt-3.5 flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="text-xs text-[#F3EEE8]/85 hover:bg-white/10 hover:text-white"
+              onClick={handleLater}
+            >
+              {dismissLabel}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="bg-[#F3EEE8] text-xs font-extrabold text-[#17645F] hover:bg-white"
+              onClick={handleInstall}
+            >
+              <Download className="h-3.5 w-3.5" />
+              {installLabel}
+            </Button>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setDismissed(true)}
-          aria-label={dismissLabel}
-          className="rounded-full p-1 text-[#F3EEE8]/75 hover:bg-white/10"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-      <div className="mt-3 flex justify-end gap-2">
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-[#F3EEE8] hover:bg-white/10"
-          onClick={() => setDismissed(true)}
-        >
-          {dismissLabel}
-        </Button>
-        <Button
-          size="sm"
-          className="bg-[#F3EEE8] text-[#17645F] hover:bg-white"
-          onClick={handleInstall}
-        >
-          {installLabel}
-        </Button>
-      </div>
+      ) : (
+        <div className="flex items-center overflow-hidden rounded-l-full border border-r-0 border-[#F3EEE8]/25 bg-[#17645F] text-[#F3EEE8] shadow-[0_10px_28px_rgba(18,41,39,0.28)]">
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            aria-label={title}
+            className="flex items-center gap-2 py-2.5 pl-3.5 pr-2.5 text-[11px] font-extrabold uppercase tracking-[0.14em] transition hover:bg-[#114E4A]"
+          >
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#F3EEE8] text-[#17645F]">
+              <Download className="h-3.5 w-3.5" />
+            </span>
+            <span>{installLabel}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleLater}
+            aria-label={dismissLabel}
+            title={dismissLabel}
+            className="border-l border-[#F3EEE8]/20 px-2 py-3 text-[#F3EEE8]/75 transition hover:bg-[#114E4A] hover:text-white"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
