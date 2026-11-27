@@ -94,11 +94,24 @@ export async function POST(request: Request) {
     const [tripRows, opPosRows, opProfRows] = await Promise.all([
       sql`SELECT id, status, transport_type AS "transportType" FROM trip.trips WHERE id = ${d.tripId}::uuid LIMIT 1`,
       sql`SELECT plate_number AS "plateNumber", transport_type AS "transportType" FROM location.operator_positions WHERE operator_id = ${d.operatorId}::uuid LIMIT 1`,
-      sql`SELECT full_name AS "fullName", phone, plate_number AS "plateNumber" FROM operator.profiles WHERE user_id = ${d.operatorId}::uuid LIMIT 1`,
+      sql`SELECT full_name AS "fullName", phone, plate_number AS "plateNumber", transport_type AS "transportType" FROM operator.profiles WHERE user_id = ${d.operatorId}::uuid LIMIT 1`,
     ]);
 
     const trip = tripRows[0] as { id: string; status: string; transportType: string } | undefined;
     if (!trip) return NextResponse.json({ error: "TRIP_NOT_FOUND" }, { status: 404 });
+
+    const opProf = opProfRows[0] as { fullName?: string; phone?: string; plateNumber?: string; transportType?: string } | undefined;
+    const opPos = opPosRows[0] as { plateNumber?: string; transportType?: string } | undefined;
+    const opTransportType = opProf?.transportType ?? opPos?.transportType;
+    if (opTransportType && opTransportType !== trip.transportType) {
+      return NextResponse.json(
+        {
+          error: "TRANSPORT_CATEGORY_MISMATCH",
+          message: `Cannot assign a ${opTransportType} operator to a ${trip.transportType} trip.`,
+        },
+        { status: 422 }
+      );
+    }
 
     const lockRows = await sql`
       INSERT INTO dispatch.trip_locks (trip_id, assigned_operator_id, offer_id)
@@ -113,8 +126,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const opProf = opProfRows[0] as { fullName?: string; phone?: string; plateNumber?: string } | undefined;
-    const opPos = opPosRows[0] as { plateNumber?: string } | undefined;
     const plate = opProf?.plateNumber ?? opPos?.plateNumber ?? "Z 000 OPS";
     const name = opProf?.fullName ?? "Verified Unguja Operator";
 

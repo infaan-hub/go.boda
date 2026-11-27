@@ -119,6 +119,10 @@ export async function POST(request: Request) {
         ${d.lat}, ${d.lng}, ST_SetSRID(ST_MakePoint(${d.lng}, ${d.lat}), 4326), NOW()
       )
       ON CONFLICT (operator_id) DO UPDATE SET
+        transport_type = EXCLUDED.transport_type,
+        operator_title = EXCLUDED.operator_title,
+        plate_number = EXCLUDED.plate_number,
+        home_kituo = EXCLUDED.home_kituo,
         is_online = EXCLUDED.is_online,
         lat = EXCLUDED.lat,
         lng = EXCLUDED.lng,

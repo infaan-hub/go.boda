@@ -561,6 +561,13 @@ app.get("/api/v1/dispatch/offers/pending", async (request, reply) => {
       AND expires_at <= NOW()
   `;
 
+  const expectedTransportType =
+    caller.role === UserRole.BODABODA_RIDER
+      ? TransportType.BODABODA
+      : caller.role === UserRole.BAJAJI_DRIVER
+        ? TransportType.BAJAJI
+        : null;
+
   const offers = (await sql`
     SELECT
       id, trip_id AS "tripId", operator_id AS "operatorId",
@@ -574,6 +581,7 @@ app.get("/api/v1/dispatch/offers/pending", async (request, reply) => {
       GREATEST(0, EXTRACT(EPOCH FROM (expires_at - NOW()))::int) AS "remainingSeconds"
     FROM dispatch.offers
     WHERE operator_id = ${targetOperatorId}::uuid
+      AND (${expectedTransportType}::text IS NULL OR transport_type = ${expectedTransportType})
       AND status = 'PENDING'
       AND expires_at > NOW()
     ORDER BY created_at DESC
@@ -619,6 +627,14 @@ app.post("/api/v1/dispatch/offers/:offerId/accept", async (request, reply) => {
 
   if (offer.operator_id !== caller.userId && caller.role !== UserRole.ADMIN) {
     return reply.code(403).send({ error: "OFFER_NOT_FOR_CALLER" });
+  }
+  if (
+    (caller.role === UserRole.BODABODA_RIDER &&
+      offer.transport_type !== TransportType.BODABODA) ||
+    (caller.role === UserRole.BAJAJI_DRIVER &&
+      offer.transport_type !== TransportType.BAJAJI)
+  ) {
+    return reply.code(403).send({ error: "TRANSPORT_CATEGORY_MISMATCH" });
   }
 
   if (offer.status !== "PENDING") {
@@ -771,6 +787,7 @@ app.post("/api/v1/dispatch/offers/:offerId/decline", async (request, reply) => {
     id: string;
     trip_id: string;
     operator_id: string;
+    transport_type: TransportType;
     status: string;
   }>;
 
@@ -778,6 +795,14 @@ app.post("/api/v1/dispatch/offers/:offerId/decline", async (request, reply) => {
   if (!offer) return reply.code(404).send({ error: "OFFER_NOT_FOUND" });
   if (offer.operator_id !== caller.userId && caller.role !== UserRole.ADMIN) {
     return reply.code(403).send({ error: "OFFER_NOT_FOR_CALLER" });
+  }
+  if (
+    (caller.role === UserRole.BODABODA_RIDER &&
+      offer.transport_type !== TransportType.BODABODA) ||
+    (caller.role === UserRole.BAJAJI_DRIVER &&
+      offer.transport_type !== TransportType.BAJAJI)
+  ) {
+    return reply.code(403).send({ error: "TRANSPORT_CATEGORY_MISMATCH" });
   }
 
   await sql`

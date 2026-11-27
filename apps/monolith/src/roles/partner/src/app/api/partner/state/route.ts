@@ -12,18 +12,26 @@ export async function GET(request: Request) {
 
   try {
     const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
-    const [profileRows, walletRows, ledgerRows, payoutRows, offerRows, activeTripRows] =
+    const profileRows = (await sql`
+      SELECT id, transport_type AS "transportType", operator_title AS "operatorTitle",
+             full_name AS "fullName", phone, home_kituo AS "homeKituo",
+             plate_number AS "plateNumber", kyc_status AS "kycStatus",
+             helmet_verified AS "helmetVerified", is_online AS "isOnline",
+             rejection_reason AS "rejectionReason"
+      FROM operator.profiles
+      WHERE user_id = ${operatorId}::uuid
+      LIMIT 1
+    `) as Array<{ transportType?: string } & Record<string, unknown>>;
+
+    const assignedTransportType =
+      profileRows[0]?.transportType === "BAJAJI"
+        ? "BAJAJI"
+        : profileRows[0]?.transportType === "BODABODA"
+          ? "BODABODA"
+          : auth.partner.transportType;
+
+    const [walletRows, ledgerRows, payoutRows, offerRows, activeTripRows] =
       await Promise.all([
-        sql`
-          SELECT id, transport_type AS "transportType", operator_title AS "operatorTitle",
-                 full_name AS "fullName", phone, home_kituo AS "homeKituo",
-                 plate_number AS "plateNumber", kyc_status AS "kycStatus",
-                 helmet_verified AS "helmetVerified", is_online AS "isOnline",
-                 rejection_reason AS "rejectionReason"
-          FROM operator.profiles
-          WHERE user_id = ${operatorId}::uuid
-          LIMIT 1
-        `,
         sql`
           SELECT account_type AS "accountType", balance_tzs::int AS "balanceTzs",
                  is_float_blocked AS "isFloatBlocked"
@@ -56,6 +64,7 @@ export async function GET(request: Request) {
                  expires_at AS "expiresAt"
           FROM dispatch.offers
           WHERE operator_id = ${operatorId}::uuid
+            AND transport_type = ${assignedTransportType}
             AND status = 'PENDING'
             AND expires_at > NOW()
           ORDER BY created_at DESC
@@ -69,6 +78,7 @@ export async function GET(request: Request) {
                  commission_tzs AS "commissionTzs", operator_net_tzs AS "operatorNetTzs"
           FROM trip.trips
           WHERE operator_id = ${operatorId}::uuid
+            AND transport_type = ${assignedTransportType}
             AND status IN ('ASSIGNED', 'ARRIVED_AT_PICKUP', 'IN_PROGRESS', 'SOS_ACTIVE', 'COMPLETED_UNPAID')
           ORDER BY updated_at DESC
           LIMIT 1

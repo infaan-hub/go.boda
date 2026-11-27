@@ -48,16 +48,50 @@ export async function POST(request: Request) {
     const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
 
     if (d.action === "ACCEPT_OFFER") {
-      const offerRows = (await sql`
-        SELECT id, trip_id AS "tripId", operator_id AS "operatorId", status
-        FROM dispatch.offers
-        WHERE id = ${d.offerId}::uuid AND operator_id = ${operatorId}::uuid
-        LIMIT 1
-      `) as Array<{ id: string; tripId: string; operatorId: string; status: string }>;
+      const [offerRows, opRows] = await Promise.all([
+        sql`
+          SELECT id, trip_id AS "tripId", operator_id AS "operatorId",
+                 transport_type AS "transportType", status
+          FROM dispatch.offers
+          WHERE id = ${d.offerId}::uuid AND operator_id = ${operatorId}::uuid
+          LIMIT 1
+        `,
+        sql`
+          SELECT full_name AS "fullName", plate_number AS "plateNumber", phone,
+                 transport_type AS "transportType"
+          FROM operator.profiles
+          WHERE user_id = ${operatorId}::uuid
+          LIMIT 1
+        `,
+      ]);
 
-      const offer = offerRows[0];
+      const offer = (offerRows as Array<{
+        id: string;
+        tripId: string;
+        operatorId: string;
+        transportType: string;
+        status: string;
+      }>)[0];
+      const op = (opRows as Array<{
+        fullName: string;
+        plateNumber: string;
+        phone: string;
+        transportType: string;
+      }>)[0];
+
       if (!offer || offer.status !== "PENDING") {
         return NextResponse.json({ error: "OFFER_NOT_AVAILABLE" }, { status: 409 });
+      }
+
+      const assignedTransportType = op?.transportType ?? auth.partner.transportType;
+      if (offer.transportType !== assignedTransportType) {
+        return NextResponse.json(
+          {
+            error: "TRANSPORT_CATEGORY_MISMATCH",
+            message: "Operators can only accept trip offers matching their assigned vehicle category.",
+          },
+          { status: 403 }
+        );
       }
 
       // Atomic first-accept-wins lock
@@ -70,14 +104,6 @@ export async function POST(request: Request) {
       if (lockRows.length === 0) {
         return NextResponse.json({ error: "TRIP_ALREADY_ASSIGNED" }, { status: 409 });
       }
-
-      const opRows = (await sql`
-        SELECT full_name AS "fullName", plate_number AS "plateNumber", phone
-        FROM operator.profiles
-        WHERE user_id = ${operatorId}::uuid
-        LIMIT 1
-      `) as Array<{ fullName: string; plateNumber: string; phone: string }>;
-      const op = opRows[0];
 
       await Promise.all([
         sql`UPDATE dispatch.offers SET status = 'ACCEPTED', responded_at = NOW() WHERE id = ${offer.id}::uuid`,
