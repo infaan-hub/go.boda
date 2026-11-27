@@ -165,10 +165,10 @@ export function EditorialScrollHero({
               (displayWordLeft + displayWordRight).length > 13
                 ? compact
                   ? "text-[clamp(2.6rem,11vw,5.8rem)] sm:text-[clamp(2.5rem,7.2vw,5.8rem)]"
-                  : "text-[clamp(3rem,12.5vw,7.8rem)] sm:text-[clamp(2.9rem,9.2vw,7.8rem)]"
+                  : "text-[clamp(4.2rem,14vw,7.8rem)] sm:text-[clamp(2.9rem,9.2vw,7.8rem)]"
                 : compact
                   ? "text-[clamp(3.3rem,14vw,7.4rem)] sm:text-[clamp(3.4rem,10.5vw,7.4rem)]"
-                  : "text-[clamp(3.8rem,15.5vw,10.2rem)] sm:text-[clamp(3.8rem,13.2vw,10.2rem)]"
+                  : "text-[clamp(5rem,17vw,10.2rem)] sm:text-[clamp(3.8rem,13.2vw,10.2rem)]"
             )}
             style={{
               transform: `translate3d(0, ${(-p * 54).toFixed(1)}px, 0) scale(${(1 + p * 0.04).toFixed(4)})`,
@@ -197,8 +197,8 @@ export function EditorialScrollHero({
             className={cn(
               "pointer-events-none relative z-20 flex items-end justify-center",
               compact
-                ? "-mt-6 sm:-mt-24 lg:-mt-28"
-                : "-mt-8 sm:-mt-28 lg:-mt-36"
+                ? "-mt-12 sm:-mt-24 lg:-mt-28"
+                : "-mt-16 sm:-mt-28 lg:-mt-36"
             )}
             style={{
               transform: `translate3d(${(p * 16).toFixed(1)}px, ${(-p * 18).toFixed(1)}px, 0) scale(${(1 + p * 0.1).toFixed(4)}) rotate(${(-p * 1.4).toFixed(2)}deg)`,
@@ -222,7 +222,7 @@ export function EditorialScrollHero({
             className="relative z-30 mt-5 flex w-full flex-col items-center justify-between gap-5 sm:flex-row sm:items-end lg:pointer-events-none lg:absolute lg:bottom-2 lg:left-0 lg:right-0 lg:mt-0"
           >
             <div
-              className="pointer-events-auto flex w-full flex-col items-center space-y-3.5 text-center sm:w-auto sm:max-w-[230px] sm:items-start sm:space-y-4 sm:text-left"
+              className="pointer-events-auto hidden w-full flex-col items-center space-y-3.5 text-center sm:flex sm:w-auto sm:max-w-[230px] sm:items-start sm:space-y-4 sm:text-left"
               style={{
                 transform: `translate3d(${(-p * 26).toFixed(1)}px, ${(-p * 20).toFixed(1)}px, 0)`,
                 opacity: Number((1 - p * 0.72).toFixed(3)),
