@@ -18,3 +18,10 @@ export {
   type EditorialScrollHeroProps,
   type EditorialHeroFeature,
 } from "./scroll-stage";
+export {
+  VerticalAuthShell,
+  VerticalAuthInput,
+  VerticalAuthSubmit,
+  type VerticalAuthShellProps,
+  type VerticalAuthInputProps,
+} from "./vertical-auth";

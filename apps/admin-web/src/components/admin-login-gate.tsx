@@ -3,8 +3,13 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { KeyRound, UserRound } from "lucide-react";
-import { BrandLogo, Button, Card, LanguageSwitchLink } from "@goboda/ui";
+import { KeyRound, ShieldCheck, UserRound } from "lucide-react";
+import {
+  LanguageSwitchLink,
+  VerticalAuthInput,
+  VerticalAuthShell,
+  VerticalAuthSubmit,
+} from "@goboda/ui";
 
 export interface AuthenticatedAdmin {
   id: string;
@@ -15,7 +20,7 @@ export interface AuthenticatedAdmin {
 
 export function AdminLoginGate() {
   const router = useRouter();
-  const locale = useLocale() === "sw" ? "sw" : "en";
+  const locale: "sw" | "en" = useLocale() === "sw" ? "sw" : "en";
   const isSw = locale === "sw";
 
   const [username, setUsername] = React.useState("");
@@ -59,95 +64,74 @@ export function AdminLoginGate() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#F3EEE8] px-4 py-10 text-[#122927]">
-      <div className="mb-8 flex w-full max-w-sm items-center justify-between">
-        <BrandLogo subtitle={isSw ? "Msimamizi" : "Admin"} />
+    <VerticalAuthShell
+      eyebrow={isSw ? "USIMAMIZI WA UNGUJA" : "ZANZIBAR OPERATIONS"}
+      headlineTop="Every Ride"
+      headlineBottom="Go.Boda"
+      canopySubtitle={
+        isSw
+          ? "Simamia Bodaboda, Bajaji, KYC na usalama Unguja nzima."
+          : "Live fleet control, KYC verification & safety across Unguja."
+      }
+      topRight={
         <LanguageSwitchLink
+          dark
           currentLocale={locale}
           hrefSw="/admin/login?lang=sw"
           hrefEn="/admin/login?lang=en"
         />
-      </div>
-
-      <div className="mb-6 text-center">
-        <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#17645F]/75">
-          ZANZIBAR OPERATIONS CONSOLE
+      }
+      formTitle={isSw ? "Ingia Msimamizi" : "Admin Sign In"}
+      formSubtitle={
+        isSw
+          ? "Weka jina la mtumiaji na nenosiri kuendelea."
+          : "Enter your username and password to continue."
+      }
+      error={error}
+      footer={
+        <p className="inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#17645F]/70">
+          <ShieldCheck className="h-3.5 w-3.5 text-[#17645F]" />
+          <span>
+            {isSw
+              ? "Kikao salama cha Go.boda Operations"
+              : "Protected Go.boda Operations Session"}
+          </span>
         </p>
-        <h1 className="mt-1 font-display text-5xl uppercase leading-none text-[#17645F]">
-          Every Ride Go.Boda
-        </h1>
-      </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <VerticalAuthInput
+          label={isSw ? "Jina la Mtumiaji" : "Username"}
+          icon={<UserRound className="h-4 w-4" />}
+          type="text"
+          autoComplete="username"
+          enterKeyHint="next"
+          required
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder={isSw ? "Weka jina la mtumiaji" : "Enter your username"}
+        />
 
-      <Card className="w-full max-w-sm border-[#17645F]/15 bg-[#FAF7F2] p-6 sm:p-7">
-        <h2 className="text-base font-extrabold uppercase tracking-[0.14em] text-[#17645F]">
-          {isSw ? "Ingia Msimamizi" : "Admin Sign In"}
-        </h2>
-        <p className="mt-1 text-xs text-[#17645F]/70">
-          {isSw
-            ? "Weka jina la mtumiaji na nenosiri."
-            : "Enter your username and password."}
-        </p>
+        <VerticalAuthInput
+          label={isSw ? "Nenosiri" : "Password"}
+          icon={<KeyRound className="h-4 w-4" />}
+          type="password"
+          autoComplete="current-password"
+          enterKeyHint="done"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+        />
 
-        {error ? (
-          <div className="mt-4 rounded-2xl border border-[#A93232]/25 bg-[#A93232]/10 px-3.5 py-2.5 text-xs font-semibold text-[#A93232]">
-            {error}
-          </div>
-        ) : null}
-
-        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-          <label className="block">
-            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#17645F]/80">
-              {isSw ? "Jina la Mtumiaji" : "Username"}
-            </span>
-            <div className="mt-1.5 flex items-center gap-2 rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3.5 py-2.5 focus-within:border-[#17645F] focus-within:bg-[#FAF7F2]">
-              <UserRound className="h-4 w-4 text-[#17645F]" />
-              <input
-                type="text"
-                autoComplete="username"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder={isSw ? "Jina la mtumiaji" : "Username"}
-                className="w-full bg-transparent text-sm text-[#122927] placeholder:text-[#17645F]/40 focus:outline-none"
-              />
-            </div>
-          </label>
-
-          <label className="block">
-            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#17645F]/80">
-              {isSw ? "Nenosiri" : "Password"}
-            </span>
-            <div className="mt-1.5 flex items-center gap-2 rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3.5 py-2.5 focus-within:border-[#17645F] focus-within:bg-[#FAF7F2]">
-              <KeyRound className="h-4 w-4 text-[#17645F]" />
-              <input
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-transparent text-sm text-[#122927] placeholder:text-[#17645F]/40 focus:outline-none"
-              />
-            </div>
-          </label>
-
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            className="w-full uppercase tracking-[0.14em]"
-            disabled={busy}
-          >
-            {busy
-              ? isSw
-                ? "Inaingia..."
-                : "Signing in..."
-              : isSw
-                ? "Ingia"
-                : "Sign In"}
-          </Button>
-        </form>
-      </Card>
-    </div>
+        <div className="pt-2">
+          <VerticalAuthSubmit
+            busy={busy}
+            label={isSw ? "Ingia" : "Sign In"}
+            busyLabel={isSw ? "Inaingia..." : "Signing in..."}
+          />
+        </div>
+      </form>
+    </VerticalAuthShell>
   );
 }
