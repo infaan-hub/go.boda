@@ -2,6 +2,8 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+const isDev = process.env.NODE_ENV !== "production";
+
 const cspReportOnly = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live",
@@ -10,14 +12,14 @@ const cspReportOnly = [
   "font-src 'self' data: https://tiles.openfreemap.org https://assets.vercel.com",
   "connect-src 'self' https://tiles.openfreemap.org https://router.project-osrm.org https://*.vercel.app https://vercel.live wss://ws-us3.pusher.com",
   "worker-src 'self' blob:",
-  "frame-ancestors 'none'",
+  isDev ? "frame-ancestors 'self'" : "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
 ].join("; ");
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Frame-Options", value: isDev ? "SAMEORIGIN" : "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
