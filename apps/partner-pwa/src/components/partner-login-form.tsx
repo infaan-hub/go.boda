@@ -58,8 +58,8 @@ export function PartnerLoginForm() {
   return (
     <VerticalAuthShell
       eyebrow="BODABODA RIDER • BAJAJI DRIVER"
-      headlineTop={isSw ? "ENDESHA" : "DRIVE"}
-      headlineBottom="UNGUJA"
+      headlineTop={isSw ? "Endesha Na" : "Drive With"}
+      headlineBottom="Go.Boda"
       canopySubtitle={
         isSw
           ? "Ingia kazini, pokea safari za karibu na fuatilia kipato chako."

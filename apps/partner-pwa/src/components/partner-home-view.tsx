@@ -17,7 +17,9 @@ import {
   KeyRound,
   LogOut,
   MapPin,
+  Menu,
   MessageSquare,
+  Moon,
   PhoneCall,
   Power,
   ShieldAlert,
@@ -27,6 +29,7 @@ import {
   TrendingUp,
   User,
   Wallet,
+  X,
   XCircle,
 } from "lucide-react";
 import {
@@ -148,6 +151,16 @@ export function PartnerHomeView({
   );
   const [isOnline, setIsOnline] = React.useState(false);
   const [sunlightMode, setSunlightMode] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!sidebarOpen) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setSidebarOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [sidebarOpen]);
 
   // Shift & Wallet ACID Preview Counters
   const [todayNetTzs, setTodayNetTzs] = React.useState(24500);
@@ -475,107 +488,171 @@ export function PartnerHomeView({
   return (
     <div
       className={cn(
-        "min-h-screen pb-24 transition-colors",
+        "min-h-screen pb-12 transition-colors",
         nightMode ? "bg-[#0F3F3C] text-[#F3EEE8]" : "bg-[#F3EEE8] text-[#122927]"
       )}
     >
-      {/* Editorial Minimal Top Navbar */}
-      <header
+      {/* Slide-Over Deep Zanzibar Teal Sidebar Drawer (Closed by Default until 3-line toggle is tapped) */}
+      <div
+        aria-hidden={!sidebarOpen}
         className={cn(
-          "sticky top-0 z-40 border-b backdrop-blur",
-          nightMode
-            ? "border-[#F3EEE8]/15 bg-[#0F3F3C]/95"
-            : "border-[#17645F]/15 bg-[#F3EEE8]/95"
+          "fixed inset-0 z-50 flex transition-opacity duration-300",
+          sidebarOpen
+            ? "visible pointer-events-auto opacity-100"
+            : "invisible pointer-events-none opacity-0"
         )}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-8">
-          <BrandLogo
-            dark={nightMode}
-            subtitle={
-              isBodabodaRider
-                ? t("roles.bodabodaRider")
-                : t("roles.bajajiDriver")
-            }
-          />
+        <button
+          type="button"
+          tabIndex={sidebarOpen ? 0 : -1}
+          aria-label="Close sidebar overlay"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-[#122927]/50 backdrop-blur-sm"
+        />
+        <aside
+          className={cn(
+            "relative z-10 flex h-full w-72 max-w-[85vw] flex-col border-r border-[#114E4A] bg-[#17645F] p-4 text-[#F3EEE8] shadow-2xl transition-transform duration-300 ease-out",
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          {/* Sidebar Header with Close Button Inside Sidebar */}
+          <div className="flex items-center justify-between gap-2 px-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("shift");
+                setSidebarOpen(false);
+              }}
+              className="text-left"
+            >
+              <BrandLogo dark />
+            </button>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close sidebar"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#F3EEE8]/25 bg-[#114E4A]/70 text-[#F3EEE8] transition hover:bg-[#F3EEE8] hover:text-[#17645F]"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-          <nav
-            className={cn(
-              "hidden items-center gap-6 text-[11px] font-bold uppercase tracking-[0.2em] md:flex",
-              nightMode ? "text-[#F3EEE8]/75" : "text-[#17645F]/75"
-            )}
-          >
+          {/* Sidebar Navigation: Shift, Earnings, Wallet, KYC, Safety */}
+          <nav className="mt-7 flex-1 space-y-1.5 overflow-y-auto">
+            <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#F3EEE8]/55">
+              {isBodabodaRider
+                ? t("roles.bodabodaRider")
+                : t("roles.bajajiDriver")}
+            </p>
             {(
               [
-                { id: "shift", label: t("partner.navHome") },
-                { id: "earnings", label: t("partner.navEarnings") },
-                { id: "wallet", label: t("partner.navWallet") },
-                { id: "kyc", label: t("partner.navOnboarding") },
+                { id: "shift", label: t("partner.navHome"), icon: Power },
+                { id: "earnings", label: t("partner.navEarnings"), icon: TrendingUp },
+                { id: "wallet", label: t("partner.navWallet"), icon: Wallet },
+                { id: "kyc", label: t("partner.navOnboarding"), icon: FileCheck2 },
               ] as const
-            ).map((nav) => (
-              <button
-                key={nav.id}
-                type="button"
-                onClick={() => setActiveTab(nav.id)}
-                className={cn(
-                  "uppercase transition hover:opacity-100",
-                  activeTab === nav.id
-                    ? nightMode
-                      ? "text-[#F3EEE8] underline underline-offset-4"
-                      : "text-[#17645F] underline underline-offset-4"
-                    : "opacity-75"
-                )}
-              >
-                {nav.label}
-              </button>
-            ))}
-            <Link href="/safety" className="opacity-75 transition hover:opacity-100">
-              {locale === "sw" ? "Usalama" : "Safety"}
+            ).map((item) => {
+              const active = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-full px-3.5 py-2.5 text-left text-xs transition",
+                    active
+                      ? "bg-[#F3EEE8] font-bold text-[#17645F] shadow-sm"
+                      : "font-medium text-[#F3EEE8]/85 hover:bg-[#114E4A] hover:text-[#F3EEE8]"
+                  )}
+                >
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
+
+            <Link
+              href="/safety"
+              onClick={() => setSidebarOpen(false)}
+              className="flex w-full items-center gap-3 rounded-full px-3.5 py-2.5 text-left text-xs font-medium text-[#F3EEE8]/85 transition hover:bg-[#114E4A] hover:text-[#F3EEE8]"
+            >
+              <ShieldCheck className="h-4 w-4 shrink-0" />
+              <span className="truncate">
+                {locale === "sw" ? "Usalama" : "Safety"}
+              </span>
             </Link>
           </nav>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setSunlightMode((v) => !v)}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] transition",
-                nightMode
-                  ? "border-[#F3EEE8]/30 bg-[#17645F] text-[#F3EEE8]"
-                  : "border-[#17645F]/30 bg-[#FAF7F2] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
-              )}
-            >
-              <Sun className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">
-                {nightMode
-                  ? locale === "sw"
-                    ? "Mchana"
-                    : "Day"
-                  : locale === "sw"
-                    ? "Usiku"
-                    : "Night"}
-              </span>
-            </button>
-            <LanguageSwitchLink
-              currentLocale={locale}
-              hrefSw="/partner/dashboard?lang=sw"
-              hrefEn="/partner/dashboard?lang=en"
-            />
+          {/* Sidebar Footer Actions: Night/Day, SW/EN, Sign Out */}
+          <div className="mt-4 space-y-2.5 border-t border-[#F3EEE8]/15 pt-4">
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setSunlightMode((v) => !v)}
+                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-[#F3EEE8]/25 bg-[#114E4A]/70 px-3 py-1.5 text-xs font-bold text-[#F3EEE8] transition hover:bg-[#F3EEE8] hover:text-[#17645F]"
+              >
+                {nightMode ? (
+                  <Sun className="h-3.5 w-3.5" />
+                ) : (
+                  <Moon className="h-3.5 w-3.5" />
+                )}
+                <span>
+                  {nightMode
+                    ? locale === "sw"
+                      ? "Mchana"
+                      : "Day"
+                    : locale === "sw"
+                      ? "Usiku"
+                      : "Night"}
+                </span>
+              </button>
+              <LanguageSwitchLink
+                dark
+                currentLocale={locale}
+                hrefSw="/partner/dashboard?lang=sw"
+                hrefEn="/partner/dashboard?lang=en"
+              />
+            </div>
+
             <button
               type="button"
               onClick={handleSignOut}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] transition",
-                nightMode
-                  ? "border-[#F3EEE8]/35 text-[#F3EEE8] hover:bg-[#F3EEE8] hover:text-[#17645F]"
-                  : "border-[#17645F] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
-              )}
+              className="flex w-full items-center justify-center gap-2 rounded-full border border-[#F3EEE8]/25 bg-transparent px-3.5 py-2 text-xs font-bold text-[#F3EEE8] transition hover:border-[#A93232] hover:bg-[#A93232] hover:text-white"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">
-                {locale === "sw" ? "Toka" : "Sign Out"}
-              </span>
+              <span>{locale === "sw" ? "Toka" : "Sign Out"}</span>
             </button>
           </div>
+        </aside>
+      </div>
+
+      {/* Sticky Minimal Top Header with Three-Line Sidebar Open Button Only */}
+      <header
+        className={cn(
+          "sticky top-0 z-20 border-b px-5 py-3 backdrop-blur",
+          nightMode
+            ? "border-[#F3EEE8]/15 bg-[#0F3F3C]/95"
+            : "border-[#17645F]/15 bg-[#FAF7F2]/95"
+        )}
+      >
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open sidebar"
+            aria-expanded={sidebarOpen}
+            className={cn(
+              "inline-flex h-10 w-10 items-center justify-center rounded-full border transition",
+              nightMode
+                ? "border-[#F3EEE8]/25 bg-[#17645F] text-[#F3EEE8] hover:bg-[#F3EEE8] hover:text-[#17645F]"
+                : "border-[#17645F]/20 bg-[#F3EEE8] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
+            )}
+          >
+            <Menu className="h-5 w-5" />
+          </button>
         </div>
       </header>
 
@@ -588,8 +665,8 @@ export function PartnerHomeView({
             "88% NET PAYOUT",
             "UNGUJA",
           ]}
-          displayWordLeft={locale === "sw" ? "ENDESHA" : "DRIVE"}
-          displayWordRight="UNGUJA"
+          displayWordLeft={locale === "sw" ? "Endesha Na" : "Drive With"}
+          displayWordRight="Go.Boda"
           taglineLines={
             locale === "sw"
               ? ["POKEA SAFARI KARIBU", "NA MALIPO YA PAPO", "HAPO KWA SIMU."]
@@ -1474,86 +1551,6 @@ export function PartnerHomeView({
           </>
         )}
       </main>
-
-      {/* Bottom Partner Navigation */}
-      <nav
-        className={cn(
-          "fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur",
-          nightMode
-            ? "border-[#F3EEE8]/15 bg-[#0F3F3C]/95"
-            : "border-[#17645F]/15 bg-[#FAF7F2]/95"
-        )}
-      >
-        <div className="mx-auto grid max-w-2xl grid-cols-5 py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.14em]">
-          <button
-            type="button"
-            onClick={() => setActiveTab("shift")}
-            className={cn(
-              "flex flex-col items-center gap-1",
-              activeTab === "shift"
-                ? nightMode
-                  ? "text-[#E6C99E]"
-                  : "text-[#17645F]"
-                : "opacity-55"
-            )}
-          >
-            <Power className="h-5 w-5" />
-            {t("partner.navHome")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("earnings")}
-            className={cn(
-              "flex flex-col items-center gap-1",
-              activeTab === "earnings"
-                ? nightMode
-                  ? "text-[#E6C99E]"
-                  : "text-[#17645F]"
-                : "opacity-55"
-            )}
-          >
-            <TrendingUp className="h-5 w-5" />
-            {t("partner.navEarnings")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("wallet")}
-            className={cn(
-              "flex flex-col items-center gap-1",
-              activeTab === "wallet"
-                ? nightMode
-                  ? "text-[#E6C99E]"
-                  : "text-[#17645F]"
-                : "opacity-55"
-            )}
-          >
-            <Wallet className="h-5 w-5" />
-            {t("partner.navWallet")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("kyc")}
-            className={cn(
-              "flex flex-col items-center gap-1",
-              activeTab === "kyc"
-                ? nightMode
-                  ? "text-[#E6C99E]"
-                  : "text-[#17645F]"
-                : "opacity-55"
-            )}
-          >
-            <FileCheck2 className="h-5 w-5" />
-            {t("partner.navOnboarding")}
-          </button>
-          <Link
-            href="/safety"
-            className="flex flex-col items-center gap-1 opacity-55 hover:opacity-100"
-          >
-            <ShieldCheck className="h-5 w-5" />
-            {locale === "sw" ? "Usalama" : "Safety"}
-          </Link>
-        </div>
-      </nav>
     </div>
   );
 }
