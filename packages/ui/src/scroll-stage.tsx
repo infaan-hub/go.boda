@@ -164,10 +164,10 @@ export function EditorialScrollHero({
               "pointer-events-none relative z-10 flex w-full select-none flex-col items-center justify-center gap-y-0.5 text-center font-display uppercase leading-[0.9] text-[#17645F] sm:flex-row sm:flex-wrap sm:gap-x-5 sm:gap-y-1 sm:leading-[0.88]",
               (displayWordLeft + displayWordRight).length > 13
                 ? compact
-                  ? "text-[clamp(2.6rem,11vw,5.8rem)] sm:text-[clamp(2.5rem,7.2vw,5.8rem)]"
+                  ? "text-[clamp(4rem,14vw,5.8rem)] sm:text-[clamp(2.5rem,7.2vw,5.8rem)]"
                   : "text-[clamp(5.5rem,18vw,7.8rem)] sm:text-[clamp(2.9rem,9.2vw,7.8rem)]"
                 : compact
-                  ? "text-[clamp(3.3rem,14vw,7.4rem)] sm:text-[clamp(3.4rem,10.5vw,7.4rem)]"
+                  ? "text-[clamp(4.5rem,16vw,7.4rem)] sm:text-[clamp(3.4rem,10.5vw,7.4rem)]"
                   : "text-[clamp(6.5rem,20vw,10.2rem)] sm:text-[clamp(3.8rem,13.2vw,10.2rem)]"
             )}
             style={{
@@ -197,7 +197,7 @@ export function EditorialScrollHero({
             className={cn(
               "pointer-events-none relative z-20 flex items-end justify-center",
               compact
-                ? "-mt-20 sm:-mt-24 lg:-mt-28"
+                ? "-mt-24 sm:-mt-24 lg:-mt-28"
                 : "-mt-28 sm:-mt-28 lg:-mt-36"
             )}
             style={{
