@@ -12,7 +12,6 @@ import {
   ExternalLink,
   Loader2,
   Radio,
-  Send,
   ShieldAlert,
 } from "lucide-react";
 import { Badge, Button, cn } from "@goboda/ui";
@@ -46,7 +45,6 @@ function PartnerNotificationsContent({
   const [filter, setFilter] = React.useState<"ALL" | "UNREAD" | "OPS" | "TRIPS">(
     "ALL"
   );
-  const [testingPush, setTestingPush] = React.useState(false);
   const [markingAll, setMarkingAll] = React.useState(false);
   const [feedback, setFeedback] = React.useState<string | null>(null);
 
@@ -81,28 +79,6 @@ function PartnerNotificationsContent({
       await refreshNow();
     } finally {
       setMarkingAll(false);
-    }
-  };
-
-  const handleSendTestPush = async () => {
-    setTestingPush(true);
-    setFeedback(null);
-    try {
-      const res = await fetch("/api/partner/notifications", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action: "SEND_TEST_PUSH", locale }),
-      });
-      if (res.ok) {
-        setFeedback(
-          sw
-            ? "Arifa ya majaribio imetumwa papo hapo kupitia WebSocket + Web Push!"
-            : "Instant test notification dispatched via WebSocket + Web Push!"
-        );
-        await refreshNow();
-      }
-    } finally {
-      setTestingPush(false);
     }
   };
 
@@ -253,20 +229,6 @@ function PartnerNotificationsContent({
             </Button>
           )}
 
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            disabled={testingPush}
-            onClick={() => void handleSendTestPush()}
-          >
-            {testingPush ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Send className="h-3.5 w-3.5" />
-            )}
-            {sw ? "Jaribu Arifa Sasa" : "Send Instant Test Push"}
-          </Button>
         </div>
       </section>
 

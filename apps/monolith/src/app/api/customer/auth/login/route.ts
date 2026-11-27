@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (customerRow.status === "SUSPENDED") {
+    if (customerRow.status === "SUSPENDED" || customerRow.status === "DELETED") {
       return NextResponse.json(
         {
           error: "ACCOUNT_SUSPENDED",

@@ -15,7 +15,9 @@ export interface AdminUngujaBootstrap {
   landmarksCount: number;
 }
 
-export interface AdminServiceStatus extends MicroserviceDescriptor {
+export interface AdminServiceStatus {
+  id: string;
+  name: string;
   productionUrl: string;
   status: "online" | "offline";
   latencyMs?: number;

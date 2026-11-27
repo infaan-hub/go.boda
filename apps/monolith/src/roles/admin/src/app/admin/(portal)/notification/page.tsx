@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Bell, Inbox, Loader2 } from "lucide-react";
 import { useAdminPortal } from "@admin/components/admin-portal-shell";
+import { AdminWebPushControls } from "@admin/components/admin-web-push-controls";
 
 interface AdminNotification {
   id: string;
@@ -52,6 +53,8 @@ export default function AdminNotificationsPage() {
           {sw ? "TAARIFA" : "NOTIFICATIONS"}
         </h1>
       </header>
+
+      <AdminWebPushControls />
 
       {loading ? (
         <div className="flex items-center gap-2 rounded-2xl border border-[#17645F]/15 bg-white p-6 text-sm text-[#17645F]">

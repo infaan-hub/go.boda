@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
   BarChart3,
+  Bell,
+  Bike,
   Calculator,
   CalendarClock,
   CheckCircle2,
@@ -26,6 +28,7 @@ import {
   Siren,
   SlidersHorizontal,
   Tag,
+  UserCog,
   Users,
   Volume2,
   Wallet,
@@ -228,6 +231,8 @@ export function AdminPortalShell({
           badge: kpis?.pendingKycCount || undefined,
           badgeTone: "amber",
         },
+        { href: "/admin/users", icon: UserCog, label: "Users" },
+        { href: "/admin/riders", icon: Bike, label: "Riders & Drivers" },
         { href: "/admin/compliance/expiries", icon: CalendarClock, label: "Expiries" },
         { href: "/admin/vituo", icon: MapPin, label: "Vituo" },
         { href: "/admin/heatmap", icon: Flame, label: "Heatmap" },
@@ -249,6 +254,7 @@ export function AdminPortalShell({
       items: [
         { href: "/admin/finance", icon: Wallet, label: t("admin.navFinance") },
         { href: "/admin/broadcasts", icon: Megaphone, label: "Broadcasts" },
+        { href: "/admin/notifications", icon: Bell, label: "Notifications" },
         { href: "/admin/support/inbox", icon: Inbox, label: "Support Inbox" },
         { href: "/admin/safety/helmets", icon: HardHat, label: "Helmets" },
         {

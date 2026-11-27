@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Bell, BellRing, CheckCheck, Loader2, Send } from "lucide-react";
+import { Bell, BellRing, CheckCheck, Loader2 } from "lucide-react";
 import { Badge, Button, Card, cn } from "@goboda/ui";
 import { CustomerPortalShell } from "./customer-portal-shell";
 import { useCustomerRealtime } from "./customer-realtime-provider";
@@ -62,15 +62,6 @@ export function CustomerNotificationsView({
     await load();
   };
 
-  const sendTest = async () => {
-    await fetch("/api/customer/notifications", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "SEND_TEST_PUSH", locale }),
-    });
-    await load();
-  };
-
   const shown = filter === "UNREAD" ? items.filter((n) => !n.read) : items;
 
   return (
@@ -83,9 +74,6 @@ export function CustomerNotificationsView({
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => markRead(undefined, true)}>
               <CheckCheck className="h-4 w-4" /> {sw ? "Soma Zote" : "Mark All Read"}
-            </Button>
-            <Button size="sm" variant="secondary" onClick={sendTest}>
-              <Send className="h-4 w-4" /> {sw ? "Jaribu Push" : "Test Push"}
             </Button>
           </div>
         </div>

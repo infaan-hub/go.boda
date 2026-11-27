@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   BarChart3,
   Bell,
+  Bike,
   Calculator,
   CalendarClock,
   CheckCircle2,
@@ -230,6 +231,8 @@ export function AdminPortalShell({
           badge: kpis?.pendingKycCount || undefined,
           badgeTone: "amber",
         },
+        { href: "/admin/riders/", icon: Bike, label: "Rider-Drivers" },
+        { href: "/admin/users/", icon: Users, label: "Users" },
         { href: "/admin/compliance/expiries", icon: CalendarClock, label: "Expiries" },
         { href: "/admin/vituo", icon: MapPin, label: "Vituo" },
         { href: "/admin/heatmap", icon: Flame, label: "Heatmap" },
@@ -275,6 +278,8 @@ export function AdminPortalShell({
 
   function isActiveHref(href: string) {
     if (cleanPath === href) return true;
+    if (href === "/admin/riders/" && cleanPath.startsWith("/admin/riders")) return true;
+    if (href === "/admin/users/" && cleanPath.startsWith("/admin/users")) return true;
     if (href === "/notification/" && cleanPath === "/admin/notification") return true;
     if (href === "/profile/" && cleanPath === "/admin/profile") return true;
     if (href === "/admin/operators" && cleanPath.startsWith("/admin/operators/")) return true;

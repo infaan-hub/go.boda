@@ -8,7 +8,6 @@ import {
   emitPartnerRealtimeEvent,
 } from "../../../../lib/partner-realtime";
 import {
-  deliverWebPushToUser,
   getVapidPublicKey,
   isWebPushConfigured,
 } from "../../../../lib/partner-webpush";
@@ -47,10 +46,6 @@ const actionSchema = z.discriminatedUnion("action", [
     action: z.literal("MARK_READ"),
     id: z.string().uuid().optional(),
     all: z.boolean().optional(),
-  }),
-  z.object({
-    action: z.literal("SEND_TEST_PUSH"),
-    locale: z.enum(["sw", "en"]).default("en"),
   }),
 ]);
 
@@ -127,78 +122,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ updated: true });
     }
 
-    // SEND_TEST_PUSH: Persist in notif.messages + dispatch instant Web Push + fire WebSocket/SSE event
-    const isBodaboda = auth.partner.transportType === "BODABODA";
-    const titleSw = "Go.Boda Taarifa ya Papo Hapo";
-    const bodySw = isBodaboda
-      ? "Arifa za Web Push na mtandao wa moja kwa moja ziko tayari kwa maombi ya Bodaboda Unguja."
-      : "Arifa za Web Push na mtandao wa moja kwa moja ziko tayari kwa maombi ya Bajaji Unguja.";
-    const titleEn = "Go.Boda Instant Alert Ready";
-    const bodyEn = isBodaboda
-      ? "Instant Web Push & live realtime connection are active for Unguja Bodaboda requests."
-      : "Instant Web Push & live realtime connection are active for Unguja Bajaji requests.";
-
-    const title = d.locale === "sw" ? titleSw : titleEn;
-    const textBody = d.locale === "sw" ? bodySw : bodyEn;
-
-    const pushResult = await deliverWebPushToUser(operatorId, {
-      title,
-      body: textBody,
-      url: "/partner/notifications",
-      eventSubject: "partner.push_test",
-    });
-
-    const inserted = await sql`
-      INSERT INTO notif.messages (
-        user_id, phone, channel, event_subject, locale, title, body, payload, status, provider_ref
-      )
-      VALUES (
-        ${operatorId}::uuid,
-        ${auth.partner.phone},
-        'WEB_PUSH',
-        'partner.push_test',
-        ${d.locale},
-        ${title},
-        ${textBody},
-        ${JSON.stringify({
-          titleSw,
-          bodySw,
-          titleEn,
-          bodyEn,
-          url: "/partner/notifications",
-          pushDelivered: pushResult.delivered,
-          pushAttempted: pushResult.attempted,
-          webPushConfigured: pushResult.configured,
-        })}::jsonb,
-        ${pushResult.delivered > 0 ? "SENT" : "SIMULATED"},
-        ${`partner-webpush-${pushResult.delivered}`}
-      )
-      RETURNING id, created_at AS "createdAt"
-    `;
-
-    emitPartnerRealtimeEvent({
-      operatorId,
-      transportType: auth.partner.transportType,
-      reason: "test_push_sent",
-    });
-
-    metric("partner.notifications.action", 1, {
-      action: "send_test_push",
-      outcome: "success",
-    });
-
-    return NextResponse.json(
-      {
-        sent: true,
-        notificationId: (inserted[0] as { id?: string } | undefined)?.id ?? null,
-        push: pushResult,
-      },
-      { status: 201 }
-    );
   } catch (err) {
     console.error("Partner notification action failed:", err);
     metric("partner.notifications.action", 1, {
-      action: d.action.toLowerCase(),
+      action: "mark_read",
       outcome: "error",
     });
     return NextResponse.json(

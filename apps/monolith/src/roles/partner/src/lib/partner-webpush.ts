@@ -68,7 +68,7 @@ async function sendToSubscriptions(
     };
   }
 
-  const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
+  const sql = getSql(process.env.NOTIF_DATABASE_URL ?? process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
   const bodyJson = JSON.stringify({
     title: payload.title,
     body: payload.body,
@@ -83,24 +83,20 @@ async function sendToSubscriptions(
   let failed = 0;
   let deactivated = 0;
 
-  await Promise.all(
-    subs.map(async (sub) => {
+  for (let offset = 0; offset < subs.length; offset += 50) {
+    await Promise.all(subs.slice(offset, offset + 50).map(async (sub) => {
       try {
         await webpush.sendNotification(
-          {
-            endpoint: sub.endpoint,
-            keys: { p256dh: sub.p256dh, auth: sub.authKey },
-          },
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.authKey } },
           bodyJson,
           { TTL: 60, urgency: "high" }
         );
         delivered += 1;
       } catch (err: unknown) {
         failed += 1;
-        const statusCode =
-          typeof err === "object" && err !== null && "statusCode" in err
-            ? Number((err as { statusCode?: number }).statusCode)
-            : 0;
+        const statusCode = typeof err === "object" && err !== null && "statusCode" in err
+          ? Number((err as { statusCode?: number }).statusCode)
+          : 0;
         if (statusCode === 404 || statusCode === 410) {
           deactivated += 1;
           await sql`
@@ -110,8 +106,8 @@ async function sendToSubscriptions(
           `.catch(() => null);
         }
       }
-    })
-  );
+    }));
+  }
 
   metric("partner.webpush.delivery", delivered, {
     outcome: delivered > 0 ? "delivered" : "zero",
@@ -133,13 +129,26 @@ export async function deliverWebPushToUser(
   userId: string,
   payload: WebPushPayload
 ): Promise<WebPushDeliveryResult> {
-  const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
+  const sql = getSql(process.env.NOTIF_DATABASE_URL ?? process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
   const subs = (await sql`
     SELECT id, user_id AS "userId", endpoint, p256dh, auth_key AS "authKey"
     FROM notif.push_subscriptions
     WHERE user_id = ${userId}::uuid AND active = TRUE
   `) as PushSubRow[];
 
+  return sendToSubscriptions(subs, payload);
+}
+
+export async function deliverWebPushToAll(
+  payload: WebPushPayload
+): Promise<WebPushDeliveryResult> {
+  const sql = getSql(process.env.NOTIF_DATABASE_URL ?? process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
+  const subs = (await sql`
+    SELECT id, user_id AS "userId", endpoint, p256dh, auth_key AS "authKey"
+    FROM notif.push_subscriptions
+    WHERE active = TRUE
+    ORDER BY updated_at DESC
+  `) as PushSubRow[];
   return sendToSubscriptions(subs, payload);
 }
 

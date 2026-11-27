@@ -253,3 +253,19 @@ export const DOMAIN_REGISTRY: readonly DomainDescriptor[] = [
 export function formatTzs(amount: number): string {
   return `TZS ${Math.round(amount).toLocaleString("en-US")}`;
 }
+
+export const MICROSERVICES_REGISTRY = [
+  { id: "auth-service", name: "Auth Service" },
+  { id: "operator-service", name: "Operator Service" },
+  { id: "geo-zone-service", name: "Geo Zone Service" },
+  { id: "location-service", name: "Location Service" },
+  { id: "pricing-service", name: "Pricing Service" },
+  { id: "dispatch-service", name: "Dispatch Service" },
+  { id: "trip-service", name: "Trip Service" },
+  { id: "payment-wallet-service", name: "Payment Wallet Service" },
+  { id: "notification-service", name: "Notification Service" },
+  { id: "safety-service", name: "Safety Service" },
+] as const;
+
+export type MicroserviceDescriptor = (typeof MICROSERVICES_REGISTRY)[number];
+

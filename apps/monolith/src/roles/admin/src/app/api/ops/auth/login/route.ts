@@ -15,6 +15,7 @@ interface AdminCredentialRow {
   phone: string | null;
   name: string | null;
   role: string;
+  status: string | null;
   passwordHash: string | null;
 }
 
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
   try {
     const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
-      SELECT id, phone, name, role, password_hash AS "passwordHash"
+      SELECT id, phone, name, role, status, password_hash AS "passwordHash"
       FROM auth.users
       WHERE LOWER(username) = LOWER(${parsed.data.username})
         AND role = 'ADMIN'
@@ -46,6 +47,13 @@ export async function POST(request: Request) {
           message: "Invalid admin username or password.",
         },
         { status: 401 }
+      );
+    }
+
+    if (admin.status === "SUSPENDED" || admin.status === "DELETED") {
+      return NextResponse.json(
+        { error: "ACCOUNT_SUSPENDED", message: "This admin account is suspended." },
+        { status: 403 }
       );
     }
 

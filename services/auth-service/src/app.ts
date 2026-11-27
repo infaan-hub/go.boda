@@ -286,7 +286,7 @@ app.post("/api/v1/auth/otp/verify", async (request, reply) => {
     return reply.code(500).send({ error: "USER_PROVISION_FAILED" });
   }
 
-  if (user.status === "SUSPENDED") {
+  if (user.status === "SUSPENDED" || user.status === "DELETED") {
     return reply.code(403).send({
       error: "ACCOUNT_SUSPENDED",
       message: "This Go.boda account is suspended. Contact operations support.",
@@ -363,7 +363,7 @@ app.post("/api/v1/auth/refresh", async (request, reply) => {
     !rec ||
     rec.revoked_at ||
     new Date(rec.expires_at).getTime() < Date.now() ||
-    rec.status === "SUSPENDED"
+    rec.status === "SUSPENDED" || rec.status === "DELETED"
   ) {
     return reply.code(401).send({ error: "INVALID_REFRESH_TOKEN" });
   }

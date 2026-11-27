@@ -8,11 +8,9 @@ import {
   BellOff,
   BellRing,
   CheckCheck,
-  CheckCircle2,
   ExternalLink,
   Loader2,
   Radio,
-  Send,
   ShieldAlert,
 } from "lucide-react";
 import { Badge, Button, cn } from "@goboda/ui";
@@ -46,9 +44,7 @@ function PartnerNotificationsContent({
   const [filter, setFilter] = React.useState<"ALL" | "UNREAD" | "OPS" | "TRIPS">(
     "ALL"
   );
-  const [testingPush, setTestingPush] = React.useState(false);
   const [markingAll, setMarkingAll] = React.useState(false);
-  const [feedback, setFeedback] = React.useState<string | null>(null);
 
   const notifications = snapshot?.notifications ?? [];
   const unreadCount = snapshot?.unreadCount ?? 0;
@@ -81,28 +77,6 @@ function PartnerNotificationsContent({
       await refreshNow();
     } finally {
       setMarkingAll(false);
-    }
-  };
-
-  const handleSendTestPush = async () => {
-    setTestingPush(true);
-    setFeedback(null);
-    try {
-      const res = await fetch("/api/partner/notifications", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action: "SEND_TEST_PUSH", locale }),
-      });
-      if (res.ok) {
-        setFeedback(
-          sw
-            ? "Arifa ya majaribio imetumwa papo hapo kupitia WebSocket + Web Push!"
-            : "Instant test notification dispatched via WebSocket + Web Push!"
-        );
-        await refreshNow();
-      }
-    } finally {
-      setTestingPush(false);
     }
   };
 
@@ -208,13 +182,6 @@ function PartnerNotificationsContent({
           </div>
         ) : null}
 
-        {feedback ? (
-          <div className="flex items-center gap-2 rounded-2xl border border-[#17645F]/35 bg-[#17645F]/15 px-3.5 py-2.5 text-xs font-semibold text-[#17645F]">
-            <CheckCircle2 className="h-4 w-4 shrink-0" />
-            <span>{feedback}</span>
-          </div>
-        ) : null}
-
         <div className="flex flex-wrap gap-2.5">
           {pushSubscribed ? (
             <Button
@@ -253,20 +220,6 @@ function PartnerNotificationsContent({
             </Button>
           )}
 
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            disabled={testingPush}
-            onClick={() => void handleSendTestPush()}
-          >
-            {testingPush ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Send className="h-3.5 w-3.5" />
-            )}
-            {sw ? "Jaribu Arifa Sasa" : "Send Instant Test Push"}
-          </Button>
         </div>
       </section>
 
