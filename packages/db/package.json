@@ -23,6 +23,7 @@
     "db:migrate:phase6": "tsx src/migrate-phase6.ts",
     "db:migrate:phase9": "tsx src/migrate-phase9.ts",
     "db:migrate:phase10": "tsx src/migrate-phase10.ts",
+    "db:migrate:phase11": "tsx src/migrate-phase11.ts",
     "clean": "node -e \"import('node:fs').then(fs => fs.rmSync('dist', { recursive: true, force: true }))\""
   },
   "dependencies": {

@@ -4,7 +4,6 @@ import * as React from "react";
 import {
   Bike,
   CarFront,
-  Compass,
   ExternalLink,
   Flame,
   Loader2,
@@ -18,7 +17,6 @@ import { TransportType } from "@goboda/shared-types";
 import { PartnerPortalShell } from "./partner-portal-shell";
 import { usePartnerRealtime } from "./partner-realtime-provider";
 import {
-  buildAppleMapsDirectionsUrl,
   buildGoogleMapsDirectionsUrl,
   formatShortCoords,
 } from "../lib/partner-navigation";
@@ -214,7 +212,7 @@ function PartnerHotspotsContent({
       </div>
 
       {/* Top Summary Strip */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="hidden grid-cols-3 gap-3 sm:grid">
         <div className={cn("rounded-3xl border p-4 shadow-sm", cardTone)}>
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-70">
             {sw ? "Vituo Moto" : "Hot Zones"}
@@ -409,7 +407,7 @@ function PartnerHotspotsContent({
                 </div>
 
                 {/* One-Tap Turn-by-Turn Navigation to Kituo */}
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 gap-2.5">
                   <a
                     href={buildGoogleMapsDirectionsUrl(h.lat, h.lng)}
                     target="_blank"
@@ -419,24 +417,6 @@ function PartnerHotspotsContent({
                     <Navigation className="h-3.5 w-3.5" />
                     Google Maps
                     <ExternalLink className="h-3 w-3 opacity-80" />
-                  </a>
-                  <a
-                    href={buildAppleMapsDirectionsUrl(
-                      h.lat,
-                      h.lng,
-                      sw ? h.nameSw : h.nameEn
-                    )}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={cn(
-                      "inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-xs font-bold uppercase tracking-[0.1em] transition",
-                      nightMode
-                        ? "border-[#F3EEE8]/35 text-[#F3EEE8] hover:bg-[#F3EEE8] hover:text-[#17645F]"
-                        : "border-[#17645F]/35 bg-[#FAF7F2] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
-                    )}
-                  >
-                    <Compass className="h-3.5 w-3.5" />
-                    Apple Maps
                   </a>
                 </div>
               </article>

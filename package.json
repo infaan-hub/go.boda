@@ -23,6 +23,7 @@
     "db:migrate:phase6": "pnpm --filter @goboda/db db:migrate:phase6",
     "db:migrate:phase9": "pnpm --filter @goboda/db db:migrate:phase9",
     "db:migrate:phase10": "pnpm --filter @goboda/db db:migrate:phase10",
+    "db:migrate:phase11": "pnpm --filter @goboda/db db:migrate:phase11",
     "db:seed:admin": "node scripts/seed-pilot-admin.mjs",
     "test:phase1": "pnpm typecheck && node --import tsx scripts/test-phase1.mjs",
     "test:phase2": "pnpm typecheck && node --import tsx scripts/test-phase2.mjs",
