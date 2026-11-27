@@ -263,6 +263,27 @@ function CustomerPortalShellInner({
           >
             <Menu className="h-5 w-5" />
           </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/notifications"
+              className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#17645F]/20 bg-[#F3EEE8] text-[#17645F] transition hover:bg-[#17645F] hover:text-[#F3EEE8]"
+              aria-label={sw ? "Arifa" : "Notifications"}
+            >
+              <Bell className="h-5 w-5" />
+              {realtime.unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#A93232] px-1 text-[10px] font-bold text-white">
+                  {realtime.unreadCount}
+                </span>
+              )}
+            </Link>
+            <Link
+              href="/profile"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#17645F]/20 bg-[#F3EEE8] text-[#17645F] transition hover:bg-[#17645F] hover:text-[#F3EEE8]"
+              aria-label={sw ? "Wasifu" : "Profile"}
+            >
+              <UserCircle className="h-5 w-5" />
+            </Link>
+          </div>
         </div>
       </header>
 
