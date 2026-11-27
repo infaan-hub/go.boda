@@ -3,14 +3,14 @@
   "short_name": "Go.boda Partner",
   "description": "Receive nearby Unguja Bodaboda Rider & Bajaji Driver trip requests and get paid per trip.",
   "start_url": "/partner/dashboard",
-  "scope": "/",
+  "scope": "/partner/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F3EEE8",
   "theme_color": "#17645F",
   "icons": [
     {
-      "src": "/icons/icon.svg",
+      "src": "/partner/icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

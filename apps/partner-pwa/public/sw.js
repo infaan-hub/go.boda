@@ -1,6 +1,6 @@
 const CACHE_NAME = "goboda-partner-v2";
-const OFFLINE_URL = "/offline";
-const PRECACHE_URLS = [OFFLINE_URL, "/manifest.webmanifest", "/icons/icon.svg"];
+const OFFLINE_URL = "/partner/offline";
+const PRECACHE_URLS = [OFFLINE_URL, "/partner/manifest.webmanifest", "/partner/icons/icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -16,7 +16,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE_NAME)
+            .filter((key) => key.startsWith("goboda-partner-") && key !== CACHE_NAME)
             .map((key) => caches.delete(key))
         )
       )
@@ -31,8 +31,8 @@ self.addEventListener("fetch", (event) => {
 
   // Cache-First for immutable Next.js static chunks & icons (fast 3G resume)
   if (
-    url.pathname.startsWith("/_next/static/") ||
-    url.pathname.startsWith("/icons/")
+    url.pathname.startsWith("/partner-static/_next/static/") ||
+    url.pathname.startsWith("/partner/icons/")
   ) {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
@@ -63,11 +63,11 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
-      icon: "/icons/icon.svg",
-      badge: "/icons/icon.svg",
+      icon: "/partner/icons/icon.svg",
+      badge: "/partner/icons/icon.svg",
       vibrate: [250, 120, 250, 120, 400],
       requireInteraction: true,
-      data: { url: data.url || "/" },
+      data: { url: data.url || "/partner" },
     })
   );
 });

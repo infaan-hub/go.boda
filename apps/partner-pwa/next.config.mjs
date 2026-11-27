@@ -49,6 +49,7 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  assetPrefix: process.env.VERCEL === "1" ? "/partner-static" : undefined,
   poweredByHeader: false,
   compress: true,
   transpilePackages: [
@@ -57,6 +58,17 @@ const nextConfig = {
     "@goboda/shared-types",
     "@goboda/db",
   ],
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/partner/manifest.webmanifest", destination: "/manifest.webmanifest" },
+        { source: "/partner/sw.js", destination: "/sw.js" },
+        { source: "/partner/icons/:path*", destination: "/icons/:path*" },
+        { source: "/partner/images/:path*", destination: "/images/:path*" },
+        { source: "/partner/offline", destination: "/offline" },
+      ],
+    };
+  },
   async headers() {
     return [
       {

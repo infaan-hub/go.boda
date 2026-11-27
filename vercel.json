@@ -1,0 +1,253 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "customer_web": {
+      "root": "apps/customer-web/",
+      "framework": "nextjs",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "geo_zone_service",
+          "format": "url",
+          "env": "GEO_ZONE_SERVICE_URL"
+        },
+        {
+          "type": "service",
+          "service": "location_service",
+          "format": "url",
+          "env": "LOCATION_SERVICE_URL"
+        },
+        {
+          "type": "service",
+          "service": "safety_service",
+          "format": "url",
+          "env": "SAFETY_SERVICE_URL"
+        }
+      ]
+    },
+    "admin_web": {
+      "root": "apps/admin-web/",
+      "framework": "nextjs"
+    },
+    "partner_pwa": {
+      "root": "apps/partner-pwa/",
+      "framework": "nextjs"
+    },
+    "api_gateway": {
+      "root": "services/api-gateway/",
+      "entrypoint": "api/index.ts",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "auth_service",
+          "format": "url",
+          "env": "AUTH_SERVICE_URL"
+        },
+        {
+          "type": "service",
+          "service": "operator_service",
+          "format": "url",
+          "env": "OPERATOR_SERVICE_URL"
+        },
+        {
+          "type": "service",
+          "service": "geo_zone_service",
+          "format": "url",
+          "env": "GEO_ZONE_SERVICE_URL"
+        },
+        {
+          "type": "service",
+          "service": "location_service",
+          "format": "url",
+          "env": "LOCATION_SERVICE_URL"
+        },
+        {
+          "type": "service",
+          "service": "pricing_service",
+          "format": "url",
+          "env": "PRICING_SERVICE_URL"
+        },
+        {
+          "type": "service",
+          "service": "dispatch_service",
+          "format": "url",
+          "env": "DISPATCH_SERVICE_URL"
+        },
+        {
+          "type": "service",
+          "service": "trip_service",
+          "format": "url",
+          "env": "TRIP_SERVICE_URL"
+        },
+        {
+          "type": "service",
+          "service": "payment_wallet_service",
+          "format": "url",
+          "env": "PAYMENT_WALLET_SERVICE_URL"
+        },
+        {
+          "type": "service",
+          "service": "notification_service",
+          "format": "url",
+          "env": "NOTIFICATION_SERVICE_URL"
+        },
+        {
+          "type": "service",
+          "service": "safety_service",
+          "format": "url",
+          "env": "SAFETY_SERVICE_URL"
+        }
+      ]
+    },
+    "auth_service": {
+      "root": "services/auth-service/",
+      "entrypoint": "api/index.ts"
+    },
+    "operator_service": {
+      "root": "services/operator-service/",
+      "entrypoint": "api/index.ts"
+    },
+    "geo_zone_service": {
+      "root": "services/geo-zone-service/",
+      "entrypoint": "api/index.ts"
+    },
+    "location_service": {
+      "root": "services/location-service/",
+      "entrypoint": "api/index.ts"
+    },
+    "pricing_service": {
+      "root": "services/pricing-service/",
+      "entrypoint": "api/index.ts"
+    },
+    "dispatch_service": {
+      "root": "services/dispatch-service/",
+      "entrypoint": "api/index.ts"
+    },
+    "trip_service": {
+      "root": "services/trip-service/",
+      "entrypoint": "api/index.ts"
+    },
+    "payment_wallet_service": {
+      "root": "services/payment-wallet-service/",
+      "entrypoint": "api/index.ts"
+    },
+    "notification_service": {
+      "root": "services/notification-service/",
+      "entrypoint": "api/index.ts"
+    },
+    "safety_service": {
+      "root": "services/safety-service/",
+      "entrypoint": "api/index.ts"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/admin-static/(.*)",
+      "destination": {
+        "service": "admin_web"
+      }
+    },
+    {
+      "source": "/partner-static/(.*)",
+      "destination": {
+        "service": "partner_pwa"
+      }
+    },
+    {
+      "source": "/api/ops/(.*)",
+      "destination": {
+        "service": "admin_web"
+      }
+    },
+    {
+      "source": "/api/partner/(.*)",
+      "destination": {
+        "service": "partner_pwa"
+      }
+    },
+    {
+      "source": "/api/safety/trusted-contacts",
+      "destination": {
+        "service": "customer_web"
+      }
+    },
+    {
+      "source": "/api/customer/(.*)",
+      "destination": {
+        "service": "customer_web"
+      }
+    },
+    {
+      "source": "/api/trips/(.*)",
+      "destination": {
+        "service": "customer_web"
+      }
+    },
+    {
+      "source": "/api/track/(.*)",
+      "destination": {
+        "service": "customer_web"
+      }
+    },
+    {
+      "source": "/api/support/(.*)",
+      "destination": {
+        "service": "customer_web"
+      }
+    },
+    {
+      "source": "/api/unguja/(.*)",
+      "destination": {
+        "service": "customer_web"
+      }
+    },
+    {
+      "source": "/api/v1/(.*)",
+      "destination": {
+        "service": "api_gateway"
+      }
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "api_gateway"
+      }
+    },
+    {
+      "source": "/healthz",
+      "destination": {
+        "service": "api_gateway"
+      }
+    },
+    {
+      "source": "/admin",
+      "destination": {
+        "service": "admin_web"
+      }
+    },
+    {
+      "source": "/admin/(.*)",
+      "destination": {
+        "service": "admin_web"
+      }
+    },
+    {
+      "source": "/partner",
+      "destination": {
+        "service": "partner_pwa"
+      }
+    },
+    {
+      "source": "/partner/(.*)",
+      "destination": {
+        "service": "partner_pwa"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "customer_web"
+      }
+    }
+  ]
+}

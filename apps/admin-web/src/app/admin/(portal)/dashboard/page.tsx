@@ -48,7 +48,7 @@ export default function AdminDashboardOverviewPage() {
           }
           ctaLabel={locale === "sw" ? "TAZAMA TAKWIMU" : "VIEW FLEET"}
           ctaHref="#workspace"
-          imageSrc="/images/bodaboda-hero.webp"
+          imageSrc="/admin/images/bodaboda-hero.webp"
           imageAlt="Go.boda Zanzibar Operations Bodaboda Fleet"
           scrollHint={
             locale === "sw" ? "Shuka chini kuona takwimu" : "Scroll to live operations"

@@ -17,7 +17,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE_NAME && key !== DATA_CACHE_NAME)
+            .filter((key) => key.startsWith("goboda-customer-") && key !== CACHE_NAME && key !== DATA_CACHE_NAME)
             .map((key) => caches.delete(key))
         )
       )

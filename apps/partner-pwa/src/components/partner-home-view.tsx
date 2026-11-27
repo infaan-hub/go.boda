@@ -682,7 +682,7 @@ export function PartnerHomeView({
                 : "START SHIFT"
           }
           ctaHref="#workspace"
-          imageSrc="/images/bodaboda-hero.webp"
+          imageSrc="/partner/images/bodaboda-hero.webp"
           imageAlt="Go.boda Zanzibar Bodaboda Rider"
           scrollHint={
             locale === "sw" ? "Shuka chini kuanza zamu" : "Scroll to shift console"

@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   title: "Go.boda Admin",
   description:
     "Manage Bodaboda Riders, Bajaji Drivers, Unguja zones, tariffs, trips, and safety alerts.",
-  manifest: "/manifest.webmanifest",
+  manifest: "/admin/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {

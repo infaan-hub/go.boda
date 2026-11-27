@@ -96,7 +96,7 @@ export function PartnerSafetyView({
     setLoading(true);
     try {
       const res = await fetch(
-        `/api/safety/trusted-contacts?ownerKey=${encodeURIComponent(key)}`,
+        `/api/partner/safety/trusted-contacts?ownerKey=${encodeURIComponent(key)}`,
         { cache: "no-store" }
       );
       if (res.ok) {
@@ -120,7 +120,7 @@ export function PartnerSafetyView({
     setSaving(true);
     setFeedback(null);
     try {
-      const res = await fetch("/api/safety/trusted-contacts", {
+      const res = await fetch("/api/partner/safety/trusted-contacts", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -167,7 +167,7 @@ export function PartnerSafetyView({
     setFeedback(null);
     try {
       const res = await fetch(
-        `/api/safety/trusted-contacts?id=${encodeURIComponent(id)}&ownerKey=${encodeURIComponent(ownerKey)}`,
+        `/api/partner/safety/trusted-contacts?id=${encodeURIComponent(id)}&ownerKey=${encodeURIComponent(ownerKey)}`,
         { method: "DELETE" }
       );
       if (res.ok) {

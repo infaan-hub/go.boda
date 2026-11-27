@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   title: "Go.boda Rider-Driver — Bodaboda Riders & Bajaji Drivers",
   description:
     "Accept nearby Unguja transport requests, complete trips, and receive fast per-trip payouts.",
-  manifest: "/manifest.webmanifest",
+  manifest: "/partner/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
@@ -52,7 +52,7 @@ export default async function PartnerRootLayout({
     <html lang={locale} className={`${anton.variable} ${jakarta.variable}`}>
       <body className="bg-[#F3EEE8] font-sans text-[#122927] antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <PwaRegistrar />
+          <PwaRegistrar swPath="/partner/sw.js" />
           {children}
           <PwaInstallBanner
             title={messages.common.installApp}
