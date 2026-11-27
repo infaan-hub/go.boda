@@ -4,12 +4,14 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  Bell,
   Compass,
   History,
   LogOut,
   Menu,
   Navigation,
   ShieldCheck,
+  UserRound,
   X,
 } from "lucide-react";
 import { BrandLogo, LanguageSwitchLink, cn } from "@goboda/ui";
@@ -73,6 +75,13 @@ export function CustomerPortalShell({
       isBook: false,
     },
     {
+      href: "/notification/",
+      matchPath: cleanPath === "/notification",
+      label: sw ? "Taarifa" : "Notifications",
+      icon: Bell,
+      isBook: false,
+    },
+    {
       href: "/safety",
       matchPath: cleanPath === "/safety",
       label: sw ? "Usalama" : "Safety",
@@ -84,6 +93,13 @@ export function CustomerPortalShell({
       matchPath: cleanPath === "/track" || cleanPath.startsWith("/track/"),
       label: sw ? "Fuatilia" : "Track",
       icon: Navigation,
+      isBook: false,
+    },
+    {
+      href: "/profile/",
+      matchPath: cleanPath === "/profile",
+      label: sw ? "Wasifu" : "Profile",
+      icon: UserRound,
       isBook: false,
     },
   ];

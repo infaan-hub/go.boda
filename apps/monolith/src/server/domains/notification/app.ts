@@ -213,7 +213,7 @@ app.post("/api/v1/notifications/subscriptions", async (request, reply) => {
   }
 
   const d = parsed.data;
-  const sql = getSql();
+  const sql = getSql(process.env.NOTIF_DATABASE_URL ?? process.env.DATABASE_URL);
   const rows = await sql`
     INSERT INTO notif.push_subscriptions (
       user_id, role, endpoint, p256dh, auth_key, user_agent, active, updated_at
@@ -242,7 +242,7 @@ app.delete("/api/v1/notifications/subscriptions", async (request, reply) => {
   if (!caller) return reply.code(401).send({ error: "UNAUTHORIZED" });
 
   const body = (request.body ?? {}) as { endpoint?: string };
-  const sql = getSql();
+  const sql = getSql(process.env.NOTIF_DATABASE_URL ?? process.env.DATABASE_URL);
   if (body.endpoint) {
     await sql`
       UPDATE notif.push_subscriptions
@@ -274,7 +274,7 @@ app.post("/api/v1/notifications/internal/send", async (request, reply) => {
   }
 
   const d = parsed.data;
-  const sql = getSql();
+  const sql = getSql(process.env.NOTIF_DATABASE_URL ?? process.env.DATABASE_URL);
 
   let status: "SENT" | "SIMULATED" | "FAILED" = "SIMULATED";
   let providerRef = `sim-${randomUUID().slice(0, 8)}`;
@@ -373,7 +373,7 @@ app.get("/api/v1/notifications/me", async (request, reply) => {
   const caller = await resolveCaller(request.headers.authorization);
   if (!caller) return reply.code(401).send({ error: "UNAUTHORIZED" });
 
-  const sql = getSql();
+  const sql = getSql(process.env.NOTIF_DATABASE_URL ?? process.env.DATABASE_URL);
   const rows = await sql`
     SELECT
       id, channel, event_subject AS "eventSubject", locale,
@@ -402,7 +402,7 @@ app.get("/api/v1/notifications/chat/:tripId", async (request, reply) => {
   if (!caller) return reply.code(401).send({ error: "UNAUTHORIZED" });
 
   const { tripId } = request.params as { tripId: string };
-  const sql = getSql();
+  const sql = getSql(process.env.NOTIF_DATABASE_URL ?? process.env.DATABASE_URL);
   const rows = await sql`
     SELECT
       id, trip_id AS "tripId", sender_id AS "senderId", sender_role AS "senderRole",
@@ -446,7 +446,7 @@ app.post("/api/v1/notifications/chat/:tripId", async (request, reply) => {
   const bodyEn = preset ? preset.en : (d.text ?? "");
   const bodyText = preset ? `${preset.sw} / ${preset.en}` : (d.text ?? "");
 
-  const sql = getSql();
+  const sql = getSql(process.env.NOTIF_DATABASE_URL ?? process.env.DATABASE_URL);
   const inserted = await sql`
     INSERT INTO notif.trip_chat_messages (
       trip_id, sender_id, sender_role, preset_key, body_sw, body_en, body_text
