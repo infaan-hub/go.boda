@@ -48,7 +48,7 @@ const DEFAULT_MAP_STYLE =
 // Strictly locked to Unguja Island, Zanzibar
 const UNGUJA_MAX_BOUNDS: [[number, number], [number, number]] = [
   [39.08, -6.55],
-  [39.64, -5.66],
+  [39.66, -5.60],
 ];
 
 const ROUTE_SOURCE_ID = "goboda-route-source";

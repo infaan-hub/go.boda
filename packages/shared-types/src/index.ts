@@ -141,8 +141,8 @@ export const UNGUJA_GEO = {
   CENTER: { lat: -6.1659, lng: 39.2026 } as Coordinates,
   STONE_TOWN: { lat: -6.1622, lng: 39.1875 } as Coordinates,
   BOUNDS: {
-    southWest: { lat: -6.49, lng: 39.15 } as Coordinates,
-    northEast: { lat: -5.71, lng: 39.58 } as Coordinates,
+    southWest: { lat: -6.52, lng: 39.12 } as Coordinates,
+    northEast: { lat: -5.64, lng: 39.62 } as Coordinates,
   },
 } as const;
 

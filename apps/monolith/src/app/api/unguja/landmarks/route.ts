@@ -11,6 +11,7 @@ export async function GET(request: Request) {
   try {
     const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const pattern = q ? `%${q}%` : "%";
+    const prefix = q ? `${q}%` : "%";
     const rows = await sql`
       SELECT
         id,
@@ -23,7 +24,11 @@ export async function GET(request: Request) {
         lng
       FROM geo.landmarks
       WHERE name_sw ILIKE ${pattern} OR name_en ILIKE ${pattern} OR area ILIKE ${pattern}
-      ORDER BY is_kituo DESC, name_en ASC
+      ORDER BY
+        CASE WHEN name_en ILIKE ${prefix} OR name_sw ILIKE ${prefix} THEN 0 ELSE 1 END,
+        is_kituo DESC,
+        category ASC,
+        name_en ASC
       LIMIT ${limit}
     `;
 

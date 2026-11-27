@@ -81,6 +81,33 @@ interface LandmarkItem {
   lng: number;
 }
 
+async function resolveUngujaPointName(
+  point: { lat: number; lng: number },
+  locale: "sw" | "en",
+  fallback: string
+) {
+  try {
+    const params = new URLSearchParams({ lat: String(point.lat), lng: String(point.lng) });
+    const response = await fetch(`/api/unguja/reverse-geocode?${params}`, { cache: "no-store" });
+    if (!response.ok) return fallback;
+    const data = (await response.json()) as {
+      location?: { nameSw: string; nameEn: string; area: string; distanceMeters: number };
+    };
+    const location = data.location;
+    if (!location) return fallback;
+    const name = locale === "sw" ? location.nameSw : location.nameEn;
+    const nearbyPrefix = location.distanceMeters > 250
+      ? locale === "sw" ? "Karibu na " : "Near "
+      : "";
+    const area = location.area && location.area !== "Unguja" && !name.toLowerCase().includes(location.area.toLowerCase())
+      ? ` · ${location.area}`
+      : "";
+    return `${nearbyPrefix}${name}${area}`;
+  } catch {
+    return fallback;
+  }
+}
+
 interface ResolvedPoint {
   inUnguja: boolean;
   inStoneTownPedestrian: boolean;
@@ -290,6 +317,8 @@ export function CustomerHomeView({
   const [dropoffQuery, setDropoffQuery] = React.useState(dropoff.label);
   const [searchResults, setSearchResults] = React.useState<LandmarkItem[]>([]);
   const [searching, setSearching] = React.useState(false);
+  const gpsLookupId = React.useRef(0);
+  const mapLookupId = React.useRef(0);
 
   // Live nearby fleet state
   const [vehicles, setVehicles] = React.useState<MapVehicle[]>([]);
@@ -469,7 +498,7 @@ export function CustomerHomeView({
       setSearching(true);
       try {
         const res = await fetch(
-          `/api/unguja/landmarks?q=${encodeURIComponent(query)}&limit=8`
+          `/api/unguja/landmarks?q=${encodeURIComponent(query)}&limit=12`
         );
         if (res.ok) {
           const data = (await res.json()) as { landmarks?: LandmarkItem[] };
@@ -485,6 +514,8 @@ export function CustomerHomeView({
   }, [activeField, pickupQuery, dropoffQuery]);
 
   const handleSelectLandmark = (item: LandmarkItem) => {
+    gpsLookupId.current += 1;
+    mapLookupId.current += 1;
     const label = locale === "sw" ? item.nameSw : item.nameEn;
     if (activeField === "pickup") {
       setPickup({ lat: item.lat, lng: item.lng, label });
@@ -499,9 +530,9 @@ export function CustomerHomeView({
 
   const handleMapSelect = React.useCallback(
     (coords: { lat: number; lng: number }) => {
-      const label = `${
-        locale === "sw" ? "Pini ya Ramani" : "Map Pin"
-      } (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`;
+      gpsLookupId.current += 1;
+      const requestId = ++mapLookupId.current;
+      const label = locale === "sw" ? "Eneo lililochaguliwa kwenye ramani" : "Selected map location";
       if (pinMode === "pickup") {
         setPickup({ ...coords, label });
         setPickupQuery(label);
@@ -510,11 +541,23 @@ export function CustomerHomeView({
         setDropoffQuery(label);
       }
       setActiveField(null);
+      void resolveUngujaPointName(coords, locale, label).then((resolvedLabel) => {
+        if (requestId !== mapLookupId.current) return;
+        if (pinMode === "pickup") {
+          setPickup((point) => point.lat === coords.lat && point.lng === coords.lng ? { ...point, label: resolvedLabel } : point);
+          setPickupQuery((value) => value === label ? resolvedLabel : value);
+        } else {
+          setDropoff((point) => point.lat === coords.lat && point.lng === coords.lng ? { ...point, label: resolvedLabel } : point);
+          setDropoffQuery((value) => value === label ? resolvedLabel : value);
+        }
+      });
     },
     [pinMode, locale]
   );
 
   const handlePresetClick = (spot: PresetSpot) => {
+    gpsLookupId.current += 1;
+    mapLookupId.current += 1;
     const label = locale === "sw" ? spot.labelSw : spot.labelEn;
     if (spot.target === "pickup") {
       setPickup({ lat: spot.lat, lng: spot.lng, label });
@@ -535,18 +578,24 @@ export function CustomerHomeView({
       );
       return;
     }
+    const requestId = ++gpsLookupId.current;
+    mapLookupId.current += 1;
     setGpsStatus(locale === "sw" ? "Inatafuta GPS yako..." : "Locating GPS...");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = Number(pos.coords.latitude.toFixed(6));
         const lng = Number(pos.coords.longitude.toFixed(6));
-        const label =
-          locale === "sw"
-            ? `GPS Yangu (${lat.toFixed(4)}, ${lng.toFixed(4)})`
-            : `My GPS (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-        setPickup({ lat, lng, label });
-        setPickupQuery(label);
-        setGpsStatus(null);
+        const fallbackLabel = locale === "sw" ? "Eneo langu la sasa" : "My current location";
+        setPickup({ lat, lng, label: fallbackLabel });
+        setPickupQuery(fallbackLabel);
+        setActiveField(null);
+        setGpsStatus(locale === "sw" ? "Inatafuta jina la eneo..." : "Finding the place name...");
+        void resolveUngujaPointName({ lat, lng }, locale, fallbackLabel).then((label) => {
+          if (requestId !== gpsLookupId.current) return;
+          setPickup((point) => point.lat === lat && point.lng === lng ? { ...point, label } : point);
+          setPickupQuery((value) => value === fallbackLabel ? label : value);
+          setGpsStatus(null);
+        });
       },
       () => {
         setGpsStatus(
@@ -1360,7 +1409,11 @@ export function CustomerHomeView({
                             setActiveField("pickup");
                             setPinMode("pickup");
                           }}
-                          onChange={(e) => setPickupQuery(e.target.value)}
+                          onChange={(e) => {
+                            gpsLookupId.current += 1;
+                            mapLookupId.current += 1;
+                            setPickupQuery(e.target.value);
+                          }}
                           placeholder={t("customer.pickupPlaceholder")}
                           className="w-full bg-transparent text-sm font-medium text-[#122927] placeholder:text-[#17645F]/40 focus:outline-none"
                         />
@@ -1381,7 +1434,10 @@ export function CustomerHomeView({
                             setActiveField("dropoff");
                             setPinMode("dropoff");
                           }}
-                          onChange={(e) => setDropoffQuery(e.target.value)}
+                          onChange={(e) => {
+                            mapLookupId.current += 1;
+                            setDropoffQuery(e.target.value);
+                          }}
                           placeholder={t("customer.whereToPlaceholder")}
                           className="w-full bg-transparent text-sm font-medium text-[#122927] placeholder:text-[#17645F]/40 focus:outline-none"
                         />
@@ -1395,11 +1451,11 @@ export function CustomerHomeView({
                           <span>
                             {searching
                               ? locale === "sw"
-                                ? "Inatafuta vituo Unguja..."
-                                : "Searching Unguja landmarks..."
+                                ? "Inatafuta mitaa na maeneo Unguja..."
+                                : "Searching Unguja streets and places..."
                               : locale === "sw"
-                                ? "Vituo na Maeneo ya Unguja"
-                                : "Unguja Landmarks & Vituo"}
+                                ? "Mitaa, shehia na maeneo ya Unguja"
+                                : "Unguja streets, wards & places"}
                           </span>
                           <button
                             type="button"
@@ -1412,8 +1468,8 @@ export function CustomerHomeView({
                         {searchResults.length === 0 && !searching ? (
                           <p className="px-2.5 py-2 text-xs text-[#17645F]/75">
                             {locale === "sw"
-                              ? "Hakuna kituo kilichopatikana. Gusa ramani kuweka pini."
-                              : "No landmark matched. Tap directly on the Unguja map to drop a pin."}
+                              ? "Hakuna jina linalolingana. Chagua eneo lolote kwenye ramani kuweka pini."
+                              : "No named place matched. Choose any point on the Unguja map to set a pin."}
                           </p>
                         ) : (
                           <ul className="max-h-48 divide-y divide-[#17645F]/10 overflow-y-auto">
@@ -1442,6 +1498,16 @@ export function CustomerHomeView({
                             ))}
                           </ul>
                         )}
+                      <p className="px-2.5 pt-2 text-[10px] text-[#17645F]/60">
+                        {locale === "sw" ? "Data ya ramani: " : "Map data: "}
+                        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="underline">
+                          © OpenStreetMap contributors
+                        </a>
+                        {" · "}
+                        <a href="https://www.nbs.go.tz/index.php/statistics/topic/gis" target="_blank" rel="noreferrer" className="underline">
+                          2022 NBS
+                        </a>
+                      </p>
                       </div>
                     )}
 
@@ -1778,7 +1844,9 @@ export function CustomerHomeView({
                       size="lg"
                       variant="primary"
                       disabled={
-                        Boolean(outsideError) || loadingQuote || !activeQuote
+                        Boolean(outsideError) || loadingQuote || !activeQuote ||
+                        pickupQuery.trim() !== pickup.label ||
+                        dropoffQuery.trim() !== dropoff.label
                       }
                       onClick={handleRequestTransport}
                       className="w-full uppercase tracking-[0.14em]"

@@ -19,7 +19,7 @@ function haversineMeters(a: Coordinates, b: Coordinates): number {
   return 2 * R * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
 
-async function resolvePointPostgis(point: Coordinates) {
+async function resolvePointPostgis(point: Coordinates, snapPickupInStoneTown = false) {
   const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
   const checkRows = await sql`
     SELECT
@@ -36,7 +36,7 @@ async function resolvePointPostgis(point: Coordinates) {
   const inUnguja = Boolean(row?.in_unguja);
   const inStoneTownPedestrian = Boolean(row?.in_stone_town);
 
-  if (!inUnguja || !inStoneTownPedestrian) {
+  if (!inUnguja || !inStoneTownPedestrian || !snapPickupInStoneTown) {
     return {
       inUnguja,
       inStoneTownPedestrian,
@@ -164,7 +164,7 @@ export async function POST(request: Request) {
 
   try {
     const [pickup, dropoff] = await Promise.all([
-      resolvePointPostgis(body.pickup),
+      resolvePointPostgis(body.pickup, true),
       resolvePointPostgis(body.dropoff),
     ]);
 
