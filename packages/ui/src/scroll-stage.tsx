@@ -161,10 +161,14 @@ export function EditorialScrollHero({
           <h1
             aria-label={`${displayWordLeft} ${displayWordRight}`}
             className={cn(
-              "pointer-events-none relative z-10 flex w-full select-none items-center justify-center gap-3 text-center font-display uppercase leading-[0.86] text-[#17645F] sm:gap-5",
-              compact
-                ? "text-[clamp(3.4rem,10.5vw,7.4rem)]"
-                : "text-[clamp(3.8rem,13.2vw,10.2rem)]"
+              "pointer-events-none relative z-10 flex w-full select-none flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center font-display uppercase leading-[0.88] text-[#17645F] sm:gap-x-5",
+              (displayWordLeft + displayWordRight).length > 13
+                ? compact
+                  ? "text-[clamp(2.5rem,7.2vw,5.8rem)]"
+                  : "text-[clamp(2.9rem,9.2vw,7.8rem)]"
+                : compact
+                  ? "text-[clamp(3.4rem,10.5vw,7.4rem)]"
+                  : "text-[clamp(3.8rem,13.2vw,10.2rem)]"
             )}
             style={{
               transform: `translate3d(0, ${(-p * 54).toFixed(1)}px, 0) scale(${(1 + p * 0.04).toFixed(4)})`,

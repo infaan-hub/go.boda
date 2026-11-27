@@ -180,6 +180,8 @@ async function runTests() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         name: "Asha Salum",
+        username: `phase9_cust_${Date.now().toString(36)}`,
+        email: `phase9_cust_${Date.now().toString(36)}@goboda.tz`,
         phone: TEST_CUST_PHONE,
         password: "UngujaPassword123!",
       }),

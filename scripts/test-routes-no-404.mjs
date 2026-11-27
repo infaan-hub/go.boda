@@ -132,6 +132,8 @@ async function run() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         name: "Route Audit Customer",
+        username: `route_cust_${Date.now().toString(36)}`,
+        email: `route_cust_${Date.now().toString(36)}@goboda.tz`,
         phone: TEST_CUST_PHONE,
         password: "UngujaPassword123!",
       }),

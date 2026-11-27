@@ -74,7 +74,7 @@ export function AdminLoginGate() {
           ZANZIBAR OPERATIONS CONSOLE
         </p>
         <h1 className="mt-1 font-display text-5xl uppercase leading-none text-[#17645F]">
-          {isSw ? "ONGOZA UNGUJA" : "RUN UNGUJA"}
+          Every Ride Go.Boda
         </h1>
       </div>
 

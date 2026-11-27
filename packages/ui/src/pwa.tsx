@@ -101,28 +101,42 @@ export function LanguageSwitchLink({
   currentLocale,
   hrefSw,
   hrefEn,
+  dark = false,
   className,
 }: {
   currentLocale: "sw" | "en";
   hrefSw: string;
   hrefEn: string;
+  dark?: boolean;
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border border-[#17645F]/25 bg-[#FAF7F2] p-1 text-[11px] font-bold tracking-wider",
+        "inline-flex items-center gap-1 rounded-full border p-1 text-[11px] font-bold tracking-wider",
+        dark
+          ? "border-[#F3EEE8]/25 bg-[#114E4A]"
+          : "border-[#17645F]/25 bg-[#FAF7F2]",
         className
       )}
     >
-      <Globe className="ml-1.5 h-3.5 w-3.5 text-[#17645F]/70" />
+      <Globe
+        className={cn(
+          "ml-1.5 h-3.5 w-3.5",
+          dark ? "text-[#F3EEE8]/70" : "text-[#17645F]/70"
+        )}
+      />
       <a
         href={hrefSw}
         className={cn(
           "rounded-full px-2.5 py-1 transition-colors",
           currentLocale === "sw"
-            ? "bg-[#17645F] text-[#F3EEE8]"
-            : "text-[#17645F]/75 hover:text-[#17645F]"
+            ? dark
+              ? "bg-[#F3EEE8] text-[#17645F]"
+              : "bg-[#17645F] text-[#F3EEE8]"
+            : dark
+              ? "text-[#F3EEE8]/75 hover:text-[#F3EEE8]"
+              : "text-[#17645F]/75 hover:text-[#17645F]"
         )}
       >
         SW
@@ -132,8 +146,12 @@ export function LanguageSwitchLink({
         className={cn(
           "rounded-full px-2.5 py-1 transition-colors",
           currentLocale === "en"
-            ? "bg-[#17645F] text-[#F3EEE8]"
-            : "text-[#17645F]/75 hover:text-[#17645F]"
+            ? dark
+              ? "bg-[#F3EEE8] text-[#17645F]"
+              : "bg-[#17645F] text-[#F3EEE8]"
+            : dark
+              ? "text-[#F3EEE8]/75 hover:text-[#F3EEE8]"
+              : "text-[#17645F]/75 hover:text-[#17645F]"
         )}
       >
         EN

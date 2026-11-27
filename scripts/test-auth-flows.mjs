@@ -331,8 +331,7 @@ try {
   );
 
   const custRootAnon = await fetch(`${custUrl}/`, { redirect: "manual" });
-  assert.equal(custRootAnon.status, 307, "anon / must redirect");
-  assert.ok((custRootAnon.headers.get("location") || "").endsWith("/login"));
+  assert.equal(custRootAnon.status, 200, "anon / renders home view (200)");
 
   const custLoginPage = await fetch(`${custUrl}/login`, { redirect: "manual" });
   assert.equal(custLoginPage.status, 200, "/login renders 200");

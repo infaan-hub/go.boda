@@ -38,8 +38,8 @@ export default function AdminDashboardOverviewPage() {
         <EditorialScrollHero
           compact
           eyebrowItems={["FLEET CONTROL", "DISPATCH RADAR", "KYC & SAFETY", "UNGUJA"]}
-          displayWordLeft={locale === "sw" ? "ONGOZA" : "RUN"}
-          displayWordRight="UNGUJA"
+          displayWordLeft="Every Ride"
+          displayWordRight="Go.Boda"
           taglineLines={
             locale === "sw"
               ? ["USIMAMIZI WA BODABODA,", "BAJAJI, NAULI NA", "USALAMA UNGUJA."]
