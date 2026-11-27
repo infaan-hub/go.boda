@@ -165,10 +165,10 @@ export function EditorialScrollHero({
               (displayWordLeft + displayWordRight).length > 13
                 ? compact
                   ? "text-[clamp(2.6rem,11vw,5.8rem)] sm:text-[clamp(2.5rem,7.2vw,5.8rem)]"
-                  : "text-[clamp(4.2rem,14vw,7.8rem)] sm:text-[clamp(2.9rem,9.2vw,7.8rem)]"
+                  : "text-[clamp(5.5rem,18vw,7.8rem)] sm:text-[clamp(2.9rem,9.2vw,7.8rem)]"
                 : compact
                   ? "text-[clamp(3.3rem,14vw,7.4rem)] sm:text-[clamp(3.4rem,10.5vw,7.4rem)]"
-                  : "text-[clamp(5rem,17vw,10.2rem)] sm:text-[clamp(3.8rem,13.2vw,10.2rem)]"
+                  : "text-[clamp(6.5rem,20vw,10.2rem)] sm:text-[clamp(3.8rem,13.2vw,10.2rem)]"
             )}
             style={{
               transform: `translate3d(0, ${(-p * 54).toFixed(1)}px, 0) scale(${(1 + p * 0.04).toFixed(4)})`,
@@ -197,8 +197,8 @@ export function EditorialScrollHero({
             className={cn(
               "pointer-events-none relative z-20 flex items-end justify-center",
               compact
-                ? "-mt-12 sm:-mt-24 lg:-mt-28"
-                : "-mt-16 sm:-mt-28 lg:-mt-36"
+                ? "-mt-20 sm:-mt-24 lg:-mt-28"
+                : "-mt-28 sm:-mt-28 lg:-mt-36"
             )}
             style={{
               transform: `translate3d(${(p * 16).toFixed(1)}px, ${(-p * 18).toFixed(1)}px, 0) scale(${(1 + p * 0.1).toFixed(4)}) rotate(${(-p * 1.4).toFixed(2)}deg)`,
