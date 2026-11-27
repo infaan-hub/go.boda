@@ -95,20 +95,20 @@ export function AdminPortalShell({
     tone: "emerald" | "rose";
     msg: string;
   } | null>(null);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = React.useState(true);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   React.useEffect(() => {
-    setMobileSidebarOpen(false);
+    setSidebarOpen(false);
   }, [pathname]);
 
-  function handleToggleSidebar() {
-    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
-      setDesktopSidebarOpen((prev) => !prev);
-    } else {
-      setMobileSidebarOpen((prev) => !prev);
+  React.useEffect(() => {
+    if (!sidebarOpen) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setSidebarOpen(false);
     }
-  }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [sidebarOpen]);
 
   const notify = React.useCallback((tone: "emerald" | "rose", msg: string) => {
     setToast({ tone, msg });
@@ -285,25 +285,23 @@ export function AdminPortalShell({
     [data, loading, loadError, adminUser, locale, refreshOverview, notify, playSosChime]
   );
 
-  const renderSidebarBody = (showCloseButton: boolean) => (
+  const renderSidebarBody = () => (
     <>
       <div className="flex items-center justify-between gap-2 px-1.5">
-        <Link href="/admin/dashboard" onClick={() => setMobileSidebarOpen(false)}>
-          <BrandLogo dark subtitle="Unguja Admin" />
+        <Link href="/admin/dashboard" onClick={() => setSidebarOpen(false)}>
+          <BrandLogo dark />
         </Link>
-        {showCloseButton ? (
-          <button
-            type="button"
-            onClick={() => setMobileSidebarOpen(false)}
-            aria-label="Close sidebar"
-            className="rounded-full p-1.5 text-[#F3EEE8]/80 transition hover:bg-[#114E4A] hover:text-[#F3EEE8]"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close sidebar"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#F3EEE8]/25 bg-[#114E4A]/70 text-[#F3EEE8] transition hover:bg-[#F3EEE8] hover:text-[#17645F]"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
-      <nav className="mt-7 flex-1 space-y-5 overflow-y-auto pr-1">
+      <nav className="mt-7 flex-1 space-y-5 overflow-y-auto">
         {navGroups.map((group) => (
           <div key={group.heading}>
             <p className="px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#F3EEE8]/55">
@@ -316,7 +314,7 @@ export function AdminPortalShell({
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setMobileSidebarOpen(false)}
+                    onClick={() => setSidebarOpen(false)}
                     className={`flex w-full items-center justify-between gap-2 rounded-full px-3.5 py-2 text-left text-xs transition ${
                       active
                         ? "bg-[#F3EEE8] font-bold text-[#17645F] shadow-sm"
@@ -386,27 +384,30 @@ export function AdminPortalShell({
   return (
     <AdminPortalContext.Provider value={ctxValue}>
       <div className="flex min-h-screen bg-[#F3EEE8] text-[#122927]">
-        {/* Desktop Collapsible Sidebar — Deep Zanzibar Forest Teal */}
-        {desktopSidebarOpen ? (
-          <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-[#114E4A] bg-[#17645F] p-4 text-[#F3EEE8] lg:flex lg:flex-col">
-            {renderSidebarBody(false)}
+        {/* Slide-Over Sidebar Drawer (Closed by Default until 3-line toggle is tapped) */}
+        <div
+          aria-hidden={!sidebarOpen}
+          className={`fixed inset-0 z-50 flex transition-opacity duration-300 ${
+            sidebarOpen
+              ? "visible pointer-events-auto opacity-100"
+              : "invisible pointer-events-none opacity-0"
+          }`}
+        >
+          <button
+            type="button"
+            tabIndex={sidebarOpen ? 0 : -1}
+            aria-label="Close sidebar overlay"
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 bg-[#122927]/50 backdrop-blur-sm"
+          />
+          <aside
+            className={`relative z-10 flex h-full w-72 max-w-[85vw] flex-col border-r border-[#114E4A] bg-[#17645F] p-4 text-[#F3EEE8] shadow-2xl transition-transform duration-300 ease-out ${
+              sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+          >
+            {renderSidebarBody()}
           </aside>
-        ) : null}
-
-        {/* Mobile Slide-Over Sidebar Drawer */}
-        {mobileSidebarOpen ? (
-          <div className="fixed inset-0 z-50 flex lg:hidden">
-            <button
-              type="button"
-              aria-label="Close sidebar overlay"
-              onClick={() => setMobileSidebarOpen(false)}
-              className="fixed inset-0 bg-[#122927]/55 backdrop-blur-sm"
-            />
-            <aside className="relative z-10 flex h-full w-72 max-w-[85vw] flex-col border-r border-[#114E4A] bg-[#17645F] p-4 text-[#F3EEE8] shadow-2xl">
-              {renderSidebarBody(true)}
-            </aside>
-          </div>
-        ) : null}
+        </div>
 
         {/* Main Column */}
         <div className="flex min-w-0 flex-1 flex-col">
@@ -438,14 +439,14 @@ export function AdminPortalShell({
             </div>
           ) : null}
 
-          {/* Sticky Minimal Top Header with Three-Line Sidebar Toggle */}
+          {/* Sticky Minimal Top Header with Three-Line Sidebar Open Button */}
           <header className="sticky top-0 z-20 border-b border-[#17645F]/15 bg-[#FAF7F2]/95 px-5 py-3 backdrop-blur">
             <div className="flex items-center justify-between">
               <button
                 type="button"
-                onClick={handleToggleSidebar}
-                aria-label="Toggle sidebar"
-                aria-expanded={desktopSidebarOpen || mobileSidebarOpen}
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open sidebar"
+                aria-expanded={sidebarOpen}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#17645F]/20 bg-[#F3EEE8] text-[#17645F] transition hover:bg-[#17645F] hover:text-[#F3EEE8]"
               >
                 <Menu className="h-5 w-5" />

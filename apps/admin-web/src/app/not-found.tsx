@@ -5,7 +5,7 @@ export default function AdminNotFoundPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#F3EEE8] px-4 py-10 text-[#122927]">
       <div className="mb-6">
-        <BrandLogo subtitle="Unguja Admin" />
+        <BrandLogo />
       </div>
       <Card className="w-full max-w-md space-y-4 border-[#17645F]/15 bg-[#FAF7F2] p-7 text-center">
         <p className="font-display text-6xl leading-none text-[#17645F]">404</p>
