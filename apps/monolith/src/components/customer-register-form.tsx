@@ -4,8 +4,16 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { AtSign, KeyRound, Mail, Smartphone, UserRound } from "lucide-react";
 import {
+  AtSign,
+  KeyRound,
+  Mail,
+  ShieldCheck,
+  Smartphone,
+  UserRound,
+} from "lucide-react";
+import {
+  LanguageSwitchLink,
   VerticalAuthInput,
   VerticalAuthShell,
   VerticalAuthSubmit,
@@ -13,7 +21,8 @@ import {
 
 export function CustomerRegisterForm() {
   const router = useRouter();
-  const isSw = useLocale() === "sw";
+  const locale: "sw" | "en" = useLocale() === "sw" ? "sw" : "en";
+  const isSw = locale === "sw";
 
   const [name, setName] = React.useState("");
   const [username, setUsername] = React.useState("");
@@ -79,43 +88,52 @@ export function CustomerRegisterForm() {
 
   return (
     <VerticalAuthShell
-      compactCanopy
-      eyebrow="STONE TOWN • PAJE • NUNGWI"
-      headlineTop={isSw ? "FUNGUA" : "JOIN"}
-      headlineBottom={isSw ? "AKAUNTI" : "GO.BODA"}
+      eyebrow={isSw ? "USAFIRI WA UNGUJA" : "BODABODA • BAJAJI • UNGUJA"}
+      headlineTop={isSw ? "Anza Safari." : "Find Your Ride."}
+      headlineBottom="Go.Boda"
       canopySubtitle={
         isSw
-          ? "Sajili akaunti yako ya mteja uanze safari za Unguja."
-          : "Book verified Bodaboda & Bajaji rides across Unguja."
+          ? "Fungua akaunti uagize Bodaboda na Bajaji salama Unguja."
+          : "Create your account to book verified rides across Unguja."
       }
       topRight={
-        <Link
-          href="/login"
-          className="inline-flex items-center rounded-full border border-[#F3EEE8]/30 bg-[#0D3C38]/55 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-[#F3EEE8] backdrop-blur-sm transition hover:bg-[#F3EEE8] hover:text-[#17645F]"
-        >
-          {isSw ? "Ingia" : "Sign In"}
-        </Link>
+        <LanguageSwitchLink
+          dark
+          currentLocale={locale}
+          hrefSw="/register?lang=sw"
+          hrefEn="/register?lang=en"
+        />
       }
       formTitle={isSw ? "Usajili wa Mteja" : "Create Account"}
       formSubtitle={
         isSw
-          ? "Jaza taarifa zako chache hapa chini."
-          : "Fill in your details below to get moving."
+          ? "Jaza taarifa zako hapa chini kuendelea."
+          : "Enter your details below to get moving."
       }
       error={error}
       footer={
-        <p className="text-xs font-medium text-[#17645F]/75">
-          {isSw ? "Tayari una akaunti?" : "Already have an account?"}{" "}
-          <Link
-            href="/login"
-            className="font-bold text-[#17645F] underline underline-offset-4 hover:text-[#114E4A]"
-          >
-            {isSw ? "Ingia hapa" : "Sign in"}
-          </Link>
-        </p>
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-[#17645F]/75">
+            {isSw ? "Tayari una akaunti?" : "Already have an account?"}{" "}
+            <Link
+              href="/login"
+              className="font-bold text-[#17645F] underline underline-offset-4 hover:text-[#114E4A]"
+            >
+              {isSw ? "Ingia hapa" : "Sign in"}
+            </Link>
+          </p>
+          <p className="inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#17645F]/65">
+            <ShieldCheck className="h-3.5 w-3.5 text-[#17645F]" />
+            <span>
+              {isSw
+                ? "Usajili salama wa abiria Go.boda"
+                : "Protected Go.boda Rider Registration"}
+            </span>
+          </p>
+        </div>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-3.5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <VerticalAuthInput
           label={isSw ? "Jina Kamili" : "Full Name"}
           icon={<UserRound className="h-4 w-4" />}
@@ -198,7 +216,7 @@ export function CustomerRegisterForm() {
         <div className="pt-2">
           <VerticalAuthSubmit
             busy={busy}
-            label={isSw ? "Sajili na Ingia" : "Create Account"}
+            label={isSw ? "Fungua Akaunti" : "Create Account"}
             busyLabel={isSw ? "Inasajili..." : "Creating account..."}
           />
         </div>

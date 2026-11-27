@@ -1,29 +1,20 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
   AlertTriangle,
   CheckCircle2,
-  Compass,
-  History,
   Loader2,
   MessageCircle,
   PhoneCall,
   Plus,
   Share2,
   ShieldAlert,
-  ShieldCheck,
   Trash2,
   UserCheck,
 } from "lucide-react";
-import {
-  Badge,
-  BrandLogo,
-  Button,
-  Card,
-  LanguageSwitchLink,
-} from "@goboda/ui";
+import { Badge, Button, Card } from "@goboda/ui";
+import { CustomerPortalShell } from "./customer-portal-shell";
 
 interface TrustedContactRow {
   id: string;
@@ -184,43 +175,11 @@ export function CustomerSafetyView({
   const atLimit = contacts.length >= 3;
 
   return (
-    <div className="min-h-screen bg-[#F3EEE8] pb-24 text-[#122927]">
-      <header className="sticky top-0 z-30 border-b border-[#17645F]/15 bg-[#F3EEE8]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3.5 sm:px-6">
-          <BrandLogo subtitle={sw ? "Usalama" : "Safety"} />
-          <nav className="hidden items-center gap-6 text-[11px] font-bold uppercase tracking-[0.2em] text-[#17645F]/75 md:flex">
-            <Link href="/dashboard" className="hover:text-[#17645F]">
-              {sw ? "Agiza" : "Book"}
-            </Link>
-            <Link href="/trips" className="hover:text-[#17645F]">
-              {sw ? "Safari" : "Trips"}
-            </Link>
-            <Link href="/safety" className="text-[#17645F] underline underline-offset-4">
-              {sw ? "Usalama" : "Safety"}
-            </Link>
-          </nav>
-          <div className="flex items-center gap-2">
-            <LanguageSwitchLink
-              currentLocale={locale}
-              hrefSw="/safety?lang=sw"
-              hrefEn="/safety?lang=en"
-            />
-            <Link
-              href={customerId ? "/dashboard" : "/login"}
-              className="rounded-full bg-[#17645F] px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#F3EEE8] transition hover:bg-[#114E4A]"
-            >
-              {customerId
-                ? sw
-                  ? "Ramani"
-                  : "Map"
-                : sw
-                  ? "Ingia"
-                  : "Sign In"}
-            </Link>
-          </div>
-        </div>
-      </header>
-
+    <CustomerPortalShell
+      locale={locale}
+      customerName={customerName}
+      showSignOut={Boolean(customerId)}
+    >
       <main className="mx-auto max-w-3xl space-y-5 px-4 pt-6 sm:px-6">
         <div className="border-b border-[#17645F]/15 pb-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#17645F]/75">
@@ -441,33 +400,6 @@ export function CustomerSafetyView({
           </form>
         </Card>
       </main>
-
-      {/* Bottom Mobile Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#17645F]/15 bg-[#FAF7F2]/95 backdrop-blur">
-        <div className="mx-auto grid max-w-2xl grid-cols-3 py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.16em]">
-          <Link
-            href="/dashboard"
-            className="flex flex-col items-center gap-1 text-[#17645F]/60 hover:text-[#17645F]"
-          >
-            <Compass className="h-5 w-5" />
-            {sw ? "Agiza" : "Book"}
-          </Link>
-          <Link
-            href="/trips"
-            className="flex flex-col items-center gap-1 text-[#17645F]/60 hover:text-[#17645F]"
-          >
-            <History className="h-5 w-5" />
-            {sw ? "Safari" : "Trips"}
-          </Link>
-          <Link
-            href="/safety"
-            className="flex flex-col items-center gap-1 text-[#17645F]"
-          >
-            <ShieldCheck className="h-5 w-5" />
-            {sw ? "Usalama" : "Safety"}
-          </Link>
-        </div>
-      </nav>
-    </div>
+    </CustomerPortalShell>
   );
 }

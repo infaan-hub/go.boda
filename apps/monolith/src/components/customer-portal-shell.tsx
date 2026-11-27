@@ -1,0 +1,250 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Compass,
+  History,
+  LogOut,
+  Menu,
+  Navigation,
+  ShieldCheck,
+  X,
+} from "lucide-react";
+import { BrandLogo, LanguageSwitchLink, cn } from "@goboda/ui";
+
+export function CustomerPortalShell({
+  locale,
+  customerName,
+  showSignOut = true,
+  onBookClick,
+  children,
+}: {
+  locale: "sw" | "en";
+  customerName?: string;
+  showSignOut?: boolean;
+  onBookClick?: () => void;
+  children: React.ReactNode;
+}) {
+  const sw = locale === "sw";
+  const pathname = usePathname();
+  const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+
+  const cleanPath = (pathname || "/dashboard").replace(/\/$/, "") || "/";
+
+  React.useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
+  React.useEffect(() => {
+    if (!sidebarOpen) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setSidebarOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [sidebarOpen]);
+
+  const handleSignOut = async () => {
+    setSidebarOpen(false);
+    await fetch("/api/customer/auth/logout", { method: "POST" }).catch(() => null);
+    router.replace("/login");
+    router.refresh();
+  };
+
+  const bookHref = showSignOut ? "/dashboard#workspace" : "/#workspace";
+  const isBookRoute = cleanPath === "/" || cleanPath === "/dashboard";
+
+  const navItems = [
+    {
+      href: bookHref,
+      matchPath: isBookRoute,
+      label: sw ? "Agiza" : "Book",
+      icon: Compass,
+      isBook: true,
+    },
+    {
+      href: "/trips",
+      matchPath: cleanPath === "/trips",
+      label: sw ? "Safari" : "Trips",
+      icon: History,
+      isBook: false,
+    },
+    {
+      href: "/safety",
+      matchPath: cleanPath === "/safety",
+      label: sw ? "Usalama" : "Safety",
+      icon: ShieldCheck,
+      isBook: false,
+    },
+    {
+      href: "/track",
+      matchPath: cleanPath === "/track" || cleanPath.startsWith("/track/"),
+      label: sw ? "Fuatilia" : "Track",
+      icon: Navigation,
+      isBook: false,
+    },
+  ];
+
+  const langBasePath = cleanPath === "/" ? "/dashboard" : cleanPath;
+
+  return (
+    <div className="min-h-screen bg-[#F3EEE8] pb-12 text-[#122927]">
+      {/* Slide-Over Deep Zanzibar Teal Sidebar Drawer (Closed by Default until 3-line toggle is tapped) */}
+      <div
+        aria-hidden={!sidebarOpen}
+        className={cn(
+          "fixed inset-0 z-50 flex transition-opacity duration-300",
+          sidebarOpen
+            ? "visible pointer-events-auto opacity-100"
+            : "invisible pointer-events-none opacity-0"
+        )}
+      >
+        <button
+          type="button"
+          tabIndex={sidebarOpen ? 0 : -1}
+          aria-label="Close sidebar overlay"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-[#122927]/50 backdrop-blur-sm"
+        />
+        <aside
+          className={cn(
+            "relative z-10 flex h-full w-72 max-w-[85vw] flex-col border-r border-[#114E4A] bg-[#17645F] p-4 text-[#F3EEE8] shadow-2xl transition-transform duration-300 ease-out",
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          {/* Sidebar Header with Close Button Inside Sidebar */}
+          <div className="flex items-center justify-between gap-2 px-1.5">
+            <Link
+              href={showSignOut ? "/dashboard" : "/"}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <BrandLogo dark />
+            </Link>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close sidebar"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#F3EEE8]/25 bg-[#114E4A]/70 text-[#F3EEE8] transition hover:bg-[#F3EEE8] hover:text-[#17645F]"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Navigation Links: Book, Trips, Safety, Track */}
+          <nav className="mt-7 flex-1 space-y-1.5 overflow-y-auto">
+            {customerName ? (
+              <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#F3EEE8]/65">
+                {sw ? "Habari" : "Hi"}, {customerName}
+              </p>
+            ) : (
+              <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#F3EEE8]/55">
+                Go.Boda • Unguja
+              </p>
+            )}
+
+            {navItems.map((item) => {
+              const classes = cn(
+                "flex w-full items-center gap-3 rounded-full px-3.5 py-2.5 text-left text-xs transition",
+                item.matchPath
+                  ? "bg-[#F3EEE8] font-bold text-[#17645F] shadow-sm"
+                  : "font-medium text-[#F3EEE8]/85 hover:bg-[#114E4A] hover:text-[#F3EEE8]"
+              );
+
+              if (item.isBook && isBookRoute && onBookClick) {
+                return (
+                  <a
+                    key={item.label}
+                    href="#workspace"
+                    onClick={() => {
+                      onBookClick();
+                      setSidebarOpen(false);
+                    }}
+                    className={classes}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                  </a>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={classes}
+                >
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Sidebar Footer Actions: SW / EN + Sign Out */}
+          <div className="mt-4 space-y-2.5 border-t border-[#F3EEE8]/15 pt-4">
+            <div className="flex items-center justify-between gap-2 px-1">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#F3EEE8]/65">
+                {sw ? "Lugha" : "Language"}
+              </span>
+              <LanguageSwitchLink
+                dark
+                currentLocale={locale}
+                hrefSw={`${langBasePath}?lang=sw`}
+                hrefEn={`${langBasePath}?lang=en`}
+              />
+            </div>
+
+            {showSignOut ? (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-[#F3EEE8]/25 bg-transparent px-3.5 py-2 text-xs font-bold text-[#F3EEE8] transition hover:border-[#A93232] hover:bg-[#A93232] hover:text-white"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>{sw ? "Toka" : "Sign Out"}</span>
+              </button>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href="/login"
+                  onClick={() => setSidebarOpen(false)}
+                  className="flex items-center justify-center rounded-full border border-[#F3EEE8]/30 bg-transparent px-3 py-2 text-xs font-bold text-[#F3EEE8] transition hover:bg-[#F3EEE8] hover:text-[#17645F]"
+                >
+                  {sw ? "Ingia" : "Sign In"}
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setSidebarOpen(false)}
+                  className="flex items-center justify-center rounded-full bg-[#F3EEE8] px-3 py-2 text-xs font-bold text-[#17645F] transition hover:bg-[#E9DFD3]"
+                >
+                  {sw ? "Sajili" : "Sign Up"}
+                </Link>
+              </div>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      {/* Sticky Minimal Top Header with Three-Line Sidebar Toggle Button Only */}
+      <header className="sticky top-0 z-20 border-b border-[#17645F]/15 bg-[#FAF7F2]/95 px-5 py-3 backdrop-blur">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open sidebar"
+            aria-expanded={sidebarOpen}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#17645F]/20 bg-[#F3EEE8] text-[#17645F] transition hover:bg-[#17645F] hover:text-[#F3EEE8]"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
+      </header>
+
+      {children}
+    </div>
+  );
+}

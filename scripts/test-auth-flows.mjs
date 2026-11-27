@@ -518,6 +518,15 @@ try {
     custDashHtml.includes(TEST_CUSTOMER.name),
     "customer dashboard renders the registered customer name"
   );
+  assert.ok(
+    custDashHtml.includes("Find Your Ride.") &&
+      custDashHtml.includes('aria-label="Open sidebar"') &&
+      custDashHtml.includes('aria-label="Close sidebar"') &&
+      custDashHtml.includes('href="/trips"') &&
+      custDashHtml.includes('href="/safety"') &&
+      custDashHtml.includes('href="/track"'),
+    "customer dashboard renders Find Your Ride. Go. hero and collapsible sidebar links"
+  );
 
   const custRows = await sql`
     SELECT phone, username, role, password_hash AS "passwordHash"

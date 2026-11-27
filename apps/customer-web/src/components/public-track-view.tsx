@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
+import { useLocale } from "next-intl";
 import {
   AlertTriangle,
   Bike,
@@ -13,7 +14,8 @@ import {
   RefreshCw,
   ShieldCheck,
 } from "lucide-react";
-import { Badge, BrandLogo, Card } from "@goboda/ui";
+import { Badge, Card } from "@goboda/ui";
+import { CustomerPortalShell } from "./customer-portal-shell";
 import type { MapVehicle } from "./unguja-map";
 
 const UngujaMap = dynamic(
@@ -59,8 +61,19 @@ interface TrackPayload {
   } | null;
 }
 
-export function PublicTrackView({ shareToken }: { shareToken: string }) {
-  const [locale, setLocale] = React.useState<"sw" | "en">("en");
+export function PublicTrackView({
+  shareToken,
+  locale: initialLocale,
+  customerName,
+  isAuthenticated = false,
+}: {
+  shareToken: string;
+  locale?: "sw" | "en";
+  customerName?: string;
+  isAuthenticated?: boolean;
+}) {
+  const hookLocale: "sw" | "en" = useLocale() === "sw" ? "sw" : "en";
+  const locale = initialLocale ?? hookLocale;
   const [data, setData] = React.useState<TrackPayload | null>(null);
   const [errorCode, setErrorCode] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -116,39 +129,32 @@ export function PublicTrackView({ shareToken }: { shareToken: string }) {
       : [];
 
   return (
-    <div className="min-h-screen bg-[#F3EEE8] pb-12 text-[#122927]">
-      <header className="sticky top-0 z-30 border-b border-[#17645F]/15 bg-[#F3EEE8]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3.5 sm:px-6">
-          <BrandLogo
-            subtitle={
-              locale === "sw"
-                ? "Ufuatiliaji wa Safari • Unguja"
-                : "Live Public Trip Tracker • Unguja"
-            }
-          />
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setLocale((l) => (l === "en" ? "sw" : "en"))}
-              className="rounded-full border border-[#17645F]/30 bg-[#FAF7F2] px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
-            >
-              {locale === "en" ? "Kiswahili" : "English"}
-            </button>
-            <button
-              type="button"
-              onClick={() => void fetchSnapshot()}
-              aria-label="Refresh live location"
-              className="rounded-full border border-[#17645F]/30 bg-[#FAF7F2] p-2 text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-              />
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <CustomerPortalShell
+      locale={locale}
+      customerName={customerName}
+      showSignOut={isAuthenticated}
+    >
       <main className="mx-auto max-w-3xl space-y-4 px-4 pt-6 sm:px-6">
+        <div className="flex items-center justify-between gap-2 border-b border-[#17645F]/15 pb-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#17645F]/75">
+              {locale === "sw"
+                ? "UFUATILIAJI WA SAFARI • UNGUJA"
+                : "LIVE PUBLIC TRIP TRACKER • UNGUJA"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void fetchSnapshot()}
+            aria-label="Refresh live location"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#17645F]/30 bg-[#FAF7F2] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
+          >
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+            />
+            {locale === "sw" ? "Sasisha" : "Refresh"}
+          </button>
+        </div>
         {errorCode ? (
           <Card className="p-7 text-center">
             <AlertTriangle className="mx-auto h-8 w-8 text-[#B86B2B]" />
@@ -292,6 +298,6 @@ export function PublicTrackView({ shareToken }: { shareToken: string }) {
           </>
         )}
       </main>
-    </div>
+    </CustomerPortalShell>
   );
 }

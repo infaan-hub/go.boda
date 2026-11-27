@@ -3,7 +3,6 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
@@ -16,11 +15,9 @@ import {
   CreditCard,
   ExternalLink,
   Footprints,
-  History,
   KeyRound,
   Loader2,
   LocateFixed,
-  LogOut,
   MapPin,
   MessageSquare,
   Navigation,
@@ -38,11 +35,9 @@ import {
 } from "lucide-react";
 import {
   Badge,
-  BrandLogo,
   Button,
   Card,
   EditorialScrollHero,
-  LanguageSwitchLink,
   ScrollReveal,
 } from "@goboda/ui";
 import {
@@ -52,6 +47,7 @@ import {
   TripStatus,
   formatTzs,
 } from "@goboda/shared-types";
+import { CustomerPortalShell } from "./customer-portal-shell";
 import type { MapPoint, MapVehicle, RouteGeoJson } from "./unguja-map";
 
 const UngujaMap = dynamic(
@@ -257,7 +253,6 @@ export function CustomerHomeView({
   customerName?: string;
 }) {
   const t = useTranslations();
-  const router = useRouter();
 
   const [activeTab, setActiveTab] = React.useState<"book" | "history">("book");
   const [selectedType, setSelectedType] = React.useState<TransportType>(
@@ -677,18 +672,10 @@ export function CustomerHomeView({
     setActiveTab("history");
   };
 
-  const handleSignOut = async () => {
-    await fetch("/api/customer/auth/logout", { method: "POST" }).catch(
-      () => null
-    );
-    router.replace("/login");
-    router.refresh();
-  };
-
   const shareOrigin =
     typeof window !== "undefined"
       ? window.location.origin
-      : "https://go-boda-customer-web.vercel.app";
+      : "https://zan-goboda.vercel.app";
   const liveTrackPath = activeTrip ? `/track/${activeTrip.shareToken}` : "/track/demo-unguja";
   const whatsappShareHref = activeTrip
     ? `https://wa.me/?text=${encodeURIComponent(
@@ -699,68 +686,18 @@ export function CustomerHomeView({
     : "#";
 
   return (
-    <div className="min-h-screen bg-[#F3EEE8] pb-24 text-[#122927]">
-      {/* Editorial Minimal Navigation Bar */}
-      <header className="sticky top-0 z-40 border-b border-[#17645F]/15 bg-[#F3EEE8]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-8">
-          <BrandLogo subtitle={t("common.ungujaOnly")} />
-
-          <nav className="hidden items-center gap-7 text-[11px] font-bold uppercase tracking-[0.2em] text-[#17645F]/75 md:flex">
-            <a
-              href="#workspace"
-              onClick={() => setActiveTab("book")}
-              className={`transition hover:text-[#17645F] ${
-                activeTab === "book"
-                  ? "text-[#17645F] underline underline-offset-4"
-                  : ""
-              }`}
-            >
-              {locale === "sw" ? "Agiza" : "Book"}
-            </a>
-            <Link href="/trips" className="transition hover:text-[#17645F]">
-              {locale === "sw" ? "Safari" : "Trips"}
-            </Link>
-            <Link href="/safety" className="transition hover:text-[#17645F]">
-              {locale === "sw" ? "Usalama" : "Safety"}
-            </Link>
-            <Link href="/track" className="transition hover:text-[#17645F]">
-              {locale === "sw" ? "Fuatilia" : "Track"}
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-2">
-            {customerName ? (
-              <span className="hidden text-[11px] font-bold uppercase tracking-[0.14em] text-[#17645F]/75 lg:inline">
-                {locale === "sw" ? "Habari" : "Hi"}, {customerName}
-              </span>
-            ) : null}
-            <LanguageSwitchLink
-              currentLocale={locale}
-              hrefSw="/dashboard?lang=sw"
-              hrefEn="/dashboard?lang=en"
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={handleSignOut}
-              className="uppercase tracking-[0.14em]"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">
-                {locale === "sw" ? "Toka" : "Sign Out"}
-              </span>
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <CustomerPortalShell
+      locale={locale}
+      customerName={customerName}
+      showSignOut={Boolean(customerName)}
+      onBookClick={() => setActiveTab("book")}
+    >
       {/* Editorial Bodaboda Scroll-Transition Hero */}
       {activeTab === "book" ? (
         <EditorialScrollHero
           eyebrowItems={["BODABODA", "BAJAJI", "STONE TOWN", "UNGUJA"]}
-          displayWordLeft={locale === "sw" ? "SAFIRI" : "RIDE"}
-          displayWordRight="UNGUJA"
+          displayWordLeft={locale === "sw" ? "Pata Usafiri." : "Find Your Ride."}
+          displayWordRight="Go."
           taglineLines={
             locale === "sw"
               ? ["SAFARI ZA HARAKA", "NA SALAMA KWA", "KILA MTAA UNGUJA."]
@@ -1861,36 +1798,6 @@ export function CustomerHomeView({
           </>
         )}
       </main>
-
-      {/* Bottom Mobile Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#17645F]/15 bg-[#FAF7F2]/95 backdrop-blur">
-        <div className="mx-auto grid max-w-2xl grid-cols-3 py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.16em]">
-          <button
-            type="button"
-            onClick={() => setActiveTab("book")}
-            className={`flex flex-col items-center gap-1 ${
-              activeTab === "book" ? "text-[#17645F]" : "text-[#17645F]/55"
-            }`}
-          >
-            <Compass className="h-5 w-5" />
-            {t("customer.navHome")}
-          </button>
-          <Link
-            href="/trips"
-            className="flex flex-col items-center gap-1 text-[#17645F]/55 hover:text-[#17645F]"
-          >
-            <History className="h-5 w-5" />
-            {locale === "sw" ? "Safari" : "Trips"}
-          </Link>
-          <Link
-            href="/safety"
-            className="flex flex-col items-center gap-1 text-[#17645F]/55 hover:text-[#17645F]"
-          >
-            <ShieldCheck className="h-5 w-5" />
-            {locale === "sw" ? "Usalama" : "Safety"}
-          </Link>
-        </div>
-      </nav>
-    </div>
+    </CustomerPortalShell>
   );
 }
