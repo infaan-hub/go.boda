@@ -37,7 +37,7 @@ export async function GET(request: Request) {
 
   // 2. Direct Neon PostGIS fallback (keeps preview/SSO deployments seamlessly functional)
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const radiusMeters = radiusKm * 1000;
     const rows = await sql`
       SELECT

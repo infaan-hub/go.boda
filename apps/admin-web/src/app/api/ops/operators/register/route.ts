@@ -141,7 +141,7 @@ export async function POST(request: Request) {
   const operatorTitle = getOperatorTitle(d.transportType);
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
 
     const existingUsers = (await sql`
       SELECT id, role

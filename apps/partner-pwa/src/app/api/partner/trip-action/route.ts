@@ -45,7 +45,7 @@ export async function POST(request: Request) {
   const operatorId = auth.partner.id;
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
 
     if (d.action === "ACCEPT_OFFER") {
       const offerRows = (await sql`

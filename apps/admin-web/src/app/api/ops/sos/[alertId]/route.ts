@@ -29,7 +29,7 @@ export async function PATCH(
 
   const d = parsed.data;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       UPDATE safety.sos_alerts
       SET

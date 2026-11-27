@@ -75,7 +75,7 @@ export async function GET(
 
   // 2. Direct Neon fallback
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const linkRows = (await sql`
       SELECT id, trip_id, expires_at, revoked_at, views_count
       FROM safety.share_links

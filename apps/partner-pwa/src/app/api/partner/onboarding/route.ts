@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   const payoutPhone = d.payoutMobileNumber || auth.partner.phone;
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = await sql`
       INSERT INTO operator.profiles (
         user_id, transport_type, operator_title, full_name, phone, home_kituo,

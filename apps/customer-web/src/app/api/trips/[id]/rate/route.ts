@@ -26,7 +26,7 @@ export async function POST(
 
   const d = parsed.data;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       SELECT id, customer_id, operator_id, transport_type
       FROM trip.trips

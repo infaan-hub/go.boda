@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const pattern = q ? `%${q}%` : "%";
     const rows = await sql`
       SELECT

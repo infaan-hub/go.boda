@@ -27,7 +27,7 @@ export default async function PartnerSafetyPage({
   let plateNumber: string | undefined;
   if (partner) {
     try {
-      const sql = getSql();
+      const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
       const rows = (await sql`
         SELECT plate_number AS "plateNumber"
         FROM operator.profiles

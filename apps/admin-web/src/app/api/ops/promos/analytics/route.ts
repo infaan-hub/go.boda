@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   if (!auth.ok) return auth.response;
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       SELECT
         p.code,
@@ -100,7 +100,7 @@ export async function PATCH(request: Request) {
 
   const d = parsed.data;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = await sql`
       UPDATE pricing.promo_codes
       SET

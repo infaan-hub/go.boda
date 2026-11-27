@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   if (!auth.ok) return auth.response;
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       SELECT
         pr.id AS "profileId",
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
 
   const d = parsed.data;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     if (d.action === "AWARD_SAFE_BADGE") {
       const updated = await sql`
         UPDATE operator.profiles

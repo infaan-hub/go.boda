@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   const phone = phoneLike ? normalizeTzPhone(identifier) : null;
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       SELECT id, phone, name, role, status, password_hash AS "passwordHash"
       FROM auth.users

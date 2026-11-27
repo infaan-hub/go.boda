@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       SELECT id, phone, name, role, password_hash AS "passwordHash"
       FROM auth.users

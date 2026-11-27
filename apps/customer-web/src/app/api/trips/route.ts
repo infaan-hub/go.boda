@@ -48,7 +48,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId");
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = customerId
       ? await sql`
           SELECT
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
 
   const d = parsed.data;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
 
     // 1. Strict Unguja PostGIS polygon check + Stone Town Smart Snap
     const geoCheck = (await sql`

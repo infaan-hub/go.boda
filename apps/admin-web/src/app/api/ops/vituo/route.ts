@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   if (!auth.ok) return auth.response;
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       SELECT
         l.id,
@@ -101,7 +101,7 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = await sql`
       UPDATE geo.landmarks
       SET target_supply = ${parsed.data.targetSupply}

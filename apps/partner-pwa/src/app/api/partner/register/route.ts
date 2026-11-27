@@ -76,7 +76,7 @@ export async function POST(request: Request) {
   const operatorTitle = getOperatorTitle(d.transportType);
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
 
     // Only a verified Go.boda ADMIN can register a Rider or Driver.
     const adminRows = (await sql`

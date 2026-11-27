@@ -20,7 +20,7 @@ function haversineMeters(a: Coordinates, b: Coordinates): number {
 }
 
 async function resolvePointPostgis(point: Coordinates) {
-  const sql = getSql();
+  const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
   const checkRows = await sql`
     SELECT
       ST_Contains(
@@ -188,7 +188,7 @@ export async function POST(request: Request) {
     const mins = route.durationSeconds / 60;
     const step = PLATFORM_FINANCE.FARE_ROUNDING_STEP_TZS;
 
-    const sql = getSql();
+    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     interface PromoRecord {
       code: string;
       discount_type: "PERCENT" | "FLAT_TZS";

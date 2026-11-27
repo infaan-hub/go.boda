@@ -61,7 +61,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
     const contacts = await sql`
       SELECT
         id, owner_key AS "ownerKey", owner_role AS "ownerRole",
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
     const existing = (await sql`
       SELECT COUNT(*)::int AS cnt
       FROM safety.trusted_contacts
@@ -189,7 +189,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
     const deleted = (await sql`
       DELETE FROM safety.trusted_contacts
       WHERE id = ${id}::uuid

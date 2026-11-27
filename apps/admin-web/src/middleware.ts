@@ -17,7 +17,9 @@ const SECTION_REDIRECTS: Record<string, string> = {
 
 function getJwtSecretBytes(): Uint8Array {
   const secret =
-    process.env["JWT_SECRET"] || "dev-only-insecure-goboda-jwt-secret";
+    process.env["ADMIN_JWT_SECRET"] ||
+    process.env["JWT_SECRET"] ||
+    "dev-only-insecure-goboda-jwt-secret";
   return new TextEncoder().encode(secret);
 }
 

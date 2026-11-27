@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const operatorId = auth.partner.id;
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
     const [profileRows, walletRows, ledgerRows, payoutRows, offerRows, activeTripRows] =
       await Promise.all([
         sql`

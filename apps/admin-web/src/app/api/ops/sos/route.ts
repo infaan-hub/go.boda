@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     "OPS DRILL: Test SOS incident near Michenzani Roundabout";
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = await sql`
       INSERT INTO safety.sos_alerts (
         alert_code, trip_id, triggered_by_user_id, triggered_by_role,

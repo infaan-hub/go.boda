@@ -26,7 +26,7 @@ export async function GET(request: Request) {
   if (!auth.ok) return auth.response;
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = await sql`
       SELECT
         id, channel, event_subject AS "eventSubject", locale,
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
   const d = parsed.data;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
 
     // Count live target audience size in Neon
     let recipientCount = 0;

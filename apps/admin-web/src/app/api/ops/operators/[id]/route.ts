@@ -22,7 +22,7 @@ export async function GET(
 
   const { id } = await context.params;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const profileRows = (await sql`
       SELECT
         id, user_id AS "userId", transport_type AS "transportType",

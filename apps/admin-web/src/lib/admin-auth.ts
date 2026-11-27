@@ -14,7 +14,8 @@ export interface AdminSessionUser {
 }
 
 function getJwtSecretBytes(): Uint8Array {
-  const secret = process.env["JWT_SECRET"];
+  const secret =
+    process.env["ADMIN_JWT_SECRET"] ?? process.env["JWT_SECRET"];
   if (!secret) {
     if (process.env.NODE_ENV === "production") {
       throw new Error("JWT_SECRET is required in production");

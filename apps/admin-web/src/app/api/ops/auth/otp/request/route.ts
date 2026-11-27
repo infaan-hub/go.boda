@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   const phone = normalizeTzPhone(parsed.data.phone);
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     // Strictly require an existing ADMIN user in auth.users
     const adminRows = (await sql`
       SELECT id, phone, name, role

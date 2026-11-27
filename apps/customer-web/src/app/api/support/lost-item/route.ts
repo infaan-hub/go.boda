@@ -34,7 +34,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const tickets = await sql`
       SELECT
         id, trip_id AS "tripId", trip_code AS "tripCode",
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
   const phone = normalizeTzPhone(rawPhone);
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       INSERT INTO notif.support_tickets (
         trip_id, trip_code, reporter_role, reporter_phone,

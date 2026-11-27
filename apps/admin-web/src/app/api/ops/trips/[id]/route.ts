@@ -14,7 +14,7 @@ export async function GET(
 
   const { id } = await context.params;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const tripRows = (await sql`
       SELECT
         id, trip_code AS "tripCode", customer_id AS "customerId",
@@ -139,7 +139,7 @@ export async function POST(
 
   const d = parsed.data;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const existing = (await sql`
       SELECT id, status, final_fare_tzs AS "finalFareTzs", estimated_fare_tzs AS "estimatedFareTzs"
       FROM trip.trips WHERE id = ${id}::uuid LIMIT 1

@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   if (!auth.ok) return auth.response;
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const [tickets, recentChats, disputedTrips] = await Promise.all([
       sql`
         SELECT
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
 
   const d = parsed.data;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       UPDATE notif.support_tickets
       SET status = ${d.status},

@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
   const d = parsed.data;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
 
     // 1. Strict Unguja PostGIS polygon check + Stone Town Smart Snap
     const geoRows = (await sql`

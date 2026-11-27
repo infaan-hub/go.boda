@@ -131,7 +131,7 @@ app.post("/api/v1/auth/otp/request", async (request, reply) => {
     });
   }
 
-  const sql = getSql();
+  const sql = getSql(process.env.AUTH_DATABASE_URL ?? process.env.DATABASE_URL);
   const phone = normalizePhone(parsed.data.phone);
 
   // Cooldown check (prevent spam within 30s unless in test override)
@@ -191,7 +191,7 @@ app.post("/api/v1/auth/otp/verify", async (request, reply) => {
     });
   }
 
-  const sql = getSql();
+  const sql = getSql(process.env.AUTH_DATABASE_URL ?? process.env.DATABASE_URL);
   const phone = normalizePhone(parsed.data.phone);
 
   const otpRows = await sql`
@@ -334,7 +334,7 @@ app.post("/api/v1/auth/refresh", async (request, reply) => {
     return reply.code(400).send({ error: "VALIDATION_ERROR" });
   }
 
-  const sql = getSql();
+  const sql = getSql(process.env.AUTH_DATABASE_URL ?? process.env.DATABASE_URL);
   const tokenHash = hashSecret(parsed.data.refreshToken);
 
   const rows = await sql`
@@ -406,7 +406,7 @@ app.post("/api/v1/auth/logout", async (request, reply) => {
   if (!parsed.success) {
     return reply.code(400).send({ error: "VALIDATION_ERROR" });
   }
-  const sql = getSql();
+  const sql = getSql(process.env.AUTH_DATABASE_URL ?? process.env.DATABASE_URL);
   const tokenHash = hashSecret(parsed.data.refreshToken);
   await sql`
     UPDATE auth.refresh_tokens
@@ -423,7 +423,7 @@ app.get("/api/v1/auth/me", async (request, reply) => {
     return reply.code(401).send({ error: "UNAUTHORIZED" });
   }
 
-  const sql = getSql();
+  const sql = getSql(process.env.AUTH_DATABASE_URL ?? process.env.DATABASE_URL);
   const rows = await sql`
     SELECT id, phone, email, name, role, language, status, rating_avg, created_at
     FROM auth.users
@@ -453,7 +453,7 @@ app.patch("/api/v1/auth/me", async (request, reply) => {
     });
   }
 
-  const sql = getSql();
+  const sql = getSql(process.env.AUTH_DATABASE_URL ?? process.env.DATABASE_URL);
   const rows = await sql`
     UPDATE auth.users
     SET
@@ -484,7 +484,7 @@ app.post("/api/v1/auth/internal/promote-admin", async (request, reply) => {
     return reply.code(400).send({ error: "VALIDATION_ERROR" });
   }
 
-  const sql = getSql();
+  const sql = getSql(process.env.AUTH_DATABASE_URL ?? process.env.DATABASE_URL);
   const phone = normalizePhone(parsed.data.phone);
   const rows = await sql`
     INSERT INTO auth.users (phone, name, role, language)

@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   }
   const d = parsed.data;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = await sql`
       INSERT INTO pricing.promo_codes (
         code, discount_type, discount_value, max_discount_tzs, min_fare_tzs, active

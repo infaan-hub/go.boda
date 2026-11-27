@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   if (!auth.ok) return auth.response;
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const [fleetStatsRows, operatorRows] = await Promise.all([
       sql`
         SELECT

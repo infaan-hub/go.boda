@@ -36,7 +36,7 @@ export default async function PartnerDashboardPage({
 
   let profile: PartnerProfileRow | null = null;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       SELECT plate_number AS "plateNumber",
              home_kituo AS "homeKituo",

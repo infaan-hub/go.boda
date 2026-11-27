@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   const phone = phoneLike ? normalizeTzPhone(identifier) : null;
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       SELECT
         u.id,

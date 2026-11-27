@@ -26,7 +26,7 @@ export async function GET(request: Request) {
   if (!auth.ok) return auth.response;
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       SELECT
         id, user_id AS "userId", transport_type AS "transportType",
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
     if (parsed.data.action === "AUTO_PAUSE_EXPIRED") {
       const paused = (await sql`
         UPDATE operator.profiles

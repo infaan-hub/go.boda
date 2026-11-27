@@ -9,7 +9,7 @@ export async function GET(
 ) {
   const { id } = await context.params;
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
       SELECT
         id, trip_code AS "tripCode", customer_id AS "customerId",

@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   const passwordHash = hashPassword(d.password);
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const existing = (await sql`
       SELECT id
       FROM auth.users

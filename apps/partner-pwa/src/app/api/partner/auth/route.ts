@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     d.transportType === "BAJAJI" ? "BAJAJI_DRIVER" : "BODABODA_RIDER";
 
   try {
-    const sql = getSql();
+    const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
     const userRows = (await sql`
       INSERT INTO auth.users (phone, role, name, language)
       VALUES (${phone}, ${role}, ${d.name}, 'sw')
