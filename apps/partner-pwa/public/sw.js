@@ -1,4 +1,4 @@
-const CACHE_NAME = "goboda-partner-v2";
+const CACHE_NAME = "goboda-partner-v3";
 const OFFLINE_URL = "/partner/offline";
 const PRECACHE_URLS = [OFFLINE_URL, "/partner/manifest.webmanifest", "/partner/icons/icon.svg"];
 
@@ -57,23 +57,58 @@ self.addEventListener("fetch", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  const data = event.data ? event.data.json() : {};
-  const title = data.title || "Go.boda — New Nearby Request";
-  const body = data.body || "Tap within 20 seconds to accept.";
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : "" };
+  }
+  const title = data.title || "Go.Boda — Live Update";
+  const body = data.body || "Open Go.Boda Rider-Driver for live details.";
+  const targetUrl = data.url || "/partner/notifications";
+  const tag = data.tag || data.eventSubject || "goboda-partner";
+
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon: "/partner/icons/icon.svg",
-      badge: "/partner/icons/icon.svg",
-      vibrate: [250, 120, 250, 120, 400],
-      requireInteraction: true,
-      data: { url: data.url || "/partner/shift" },
-    })
+    Promise.all([
+      self.registration.showNotification(title, {
+        body,
+        icon: "/partner/icons/icon.svg",
+        badge: "/partner/icons/icon.svg",
+        tag,
+        renotify: true,
+        vibrate: [220, 100, 220, 100, 320],
+        requireInteraction: data.eventSubject === "dispatch.offer_sent",
+        data: { url: targetUrl, eventSubject: data.eventSubject || "partner.push" },
+      }),
+      self.clients
+        .matchAll({ type: "window", includeUncontrolled: true })
+        .then((clientList) => {
+          for (const client of clientList) {
+            client.postMessage({
+              type: "GOBODA_PUSH_RECEIVED",
+              payload: { title, body, url: targetUrl, eventSubject: data.eventSubject },
+            });
+          }
+        }),
+    ])
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || "/";
-  event.waitUntil(self.clients.openWindow(targetUrl));
+  const targetUrl =
+    (event.notification.data && event.notification.data.url) || "/partner/shift";
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.includes("/partner/") && "focus" in client) {
+            client.navigate(targetUrl).catch(() => null);
+            return client.focus();
+          }
+        }
+        return self.clients.openWindow(targetUrl);
+      })
+  );
 });

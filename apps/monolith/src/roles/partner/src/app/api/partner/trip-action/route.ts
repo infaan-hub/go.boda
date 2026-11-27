@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSql } from "@goboda/db";
-import { verifyPartnerRequest } from "@partner/lib/partner-auth";
+import { verifyPartnerRequest } from "../../../../lib/partner-auth";
+import { emitPartnerRealtimeEvent } from "../../../../lib/partner-realtime";
+import { deliverWebPushToUser } from "../../../../lib/partner-webpush";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +13,10 @@ const PLATFORM_OWNER_ID = "00000000-0000-4000-8000-000000000000";
 const actionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("ACCEPT_OFFER"),
+    offerId: z.string().uuid(),
+  }),
+  z.object({
+    action: z.literal("DECLINE_OFFER"),
     offerId: z.string().uuid(),
   }),
   z.object({
@@ -126,7 +132,27 @@ export async function POST(request: Request) {
         `,
       ]);
 
+      emitPartnerRealtimeEvent({
+        operatorId,
+        reason: "offer_accepted",
+      });
+
       return NextResponse.json({ accepted: true, tripId: offer.tripId });
+    }
+
+    if (d.action === "DECLINE_OFFER") {
+      await sql`
+        UPDATE dispatch.offers
+        SET status = 'DECLINED', responded_at = NOW()
+        WHERE id = ${d.offerId}::uuid
+          AND operator_id = ${operatorId}::uuid
+          AND status = 'PENDING'
+      `;
+      emitPartnerRealtimeEvent({
+        operatorId,
+        reason: "offer_declined",
+      });
+      return NextResponse.json({ declined: true, offerId: d.offerId });
     }
 
     if (d.action === "ARRIVE") {
@@ -139,6 +165,7 @@ export async function POST(request: Request) {
       if (!updated[0]) {
         return NextResponse.json({ error: "INVALID_STATE_TRANSITION" }, { status: 409 });
       }
+      emitPartnerRealtimeEvent({ operatorId, reason: "trip_arrived" });
       return NextResponse.json({ arrived: true, trip: updated[0] });
     }
 
@@ -162,6 +189,7 @@ export async function POST(request: Request) {
         WHERE id = ${d.tripId}::uuid
         RETURNING id, status
       `;
+      emitPartnerRealtimeEvent({ operatorId, reason: "trip_started" });
       return NextResponse.json({ started: true, trip: updated[0] });
     }
 
@@ -274,6 +302,50 @@ export async function POST(request: Request) {
         )
       `;
     }
+
+    const titleEn = `Trip ${trip.tripCode} Completed`;
+    const bodyEn = `Net earnings +TZS ${Number(trip.operatorNetTzs).toLocaleString()} recorded.`;
+    const titleSw = `Safari ${trip.tripCode} Imekamilika`;
+    const bodySw = `Mapato halisi +TZS ${Number(trip.operatorNetTzs).toLocaleString()} yamerekodiwa.`;
+
+    await sql`
+      INSERT INTO notif.messages (
+        user_id, phone, channel, event_subject, locale, title, body, payload, status, provider_ref
+      )
+      VALUES (
+        ${operatorId}::uuid,
+        ${auth.partner.phone},
+        'WEB_PUSH',
+        'trip.completed',
+        'en',
+        ${titleEn},
+        ${bodyEn},
+        ${JSON.stringify({
+          titleSw,
+          bodySw,
+          titleEn,
+          bodyEn,
+          tripId: trip.id,
+          tripCode: trip.tripCode,
+          operatorNetTzs: trip.operatorNetTzs,
+          url: "/partner/trips",
+        })}::jsonb,
+        'SENT',
+        'trip-completed'
+      )
+    `.catch(() => null);
+
+    emitPartnerRealtimeEvent({
+      operatorId,
+      reason: "trip_completed",
+    });
+
+    void deliverWebPushToUser(operatorId, {
+      title: titleEn,
+      body: bodyEn,
+      url: "/partner/trips",
+      eventSubject: "trip.completed",
+    }).catch(() => null);
 
     return NextResponse.json({
       completed: true,

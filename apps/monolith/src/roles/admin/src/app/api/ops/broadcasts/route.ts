@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSql } from "@goboda/db";
 import { verifyAdminRequest } from "@admin/lib/admin-auth";
+import { emitPartnerRealtimeEvent } from "@partner/lib/partner-realtime";
+import { deliverWebPushToSegment } from "@partner/lib/partner-webpush";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +112,32 @@ export async function POST(request: Request) {
       )
       RETURNING id, channel, event_subject AS "eventSubject", title, body, payload, status, created_at AS "createdAt"
     `;
+
+    if (
+      d.segment === "ALL_OPERATORS" ||
+      d.segment === "BODABODA_RIDERS" ||
+      d.segment === "BAJAJI_DRIVERS" ||
+      d.segment === "STONE_TOWN_RIDERS"
+    ) {
+      const targetTransport: "ALL" | "BODABODA" | "BAJAJI" =
+        d.segment === "BAJAJI_DRIVERS"
+          ? "BAJAJI"
+          : d.segment === "BODABODA_RIDERS" || d.segment === "STONE_TOWN_RIDERS"
+            ? "BODABODA"
+            : "ALL";
+
+      emitPartnerRealtimeEvent({
+        transportType: targetTransport,
+        reason: "ops_broadcast",
+      });
+
+      void deliverWebPushToSegment(d.segment, {
+        title: d.titleEn,
+        body: d.bodyEn,
+        url: "/partner/notifications",
+        eventSubject: `ops.broadcast.${d.segment.toLowerCase()}`,
+      }).catch(() => null);
+    }
 
     return NextResponse.json(
       { sent: true, recipientCount, broadcast: inserted[0] },

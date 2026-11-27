@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSql } from "@goboda/db";
 import { getOperatorTitle, transportTypeSchema } from "@goboda/shared-types";
-import { verifyPartnerRequest } from "@/lib/partner-auth";
+import { verifyPartnerRequest } from "../../../../lib/partner-auth";
+import { emitPartnerRealtimeEvent } from "../../../../lib/partner-realtime";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,12 @@ export async function POST(request: Request) {
         plate_number AS "plateNumber", home_kituo AS "homeKituo",
         kyc_status AS "kycStatus", helmet_verified AS "helmetVerified"
     `;
+
+    emitPartnerRealtimeEvent({
+      operatorId: auth.partner.id,
+      transportType: d.transportType,
+      reason: "kyc_submitted",
+    });
 
     return NextResponse.json({ submitted: true, profile: rows[0] }, { status: 201 });
   } catch (err) {

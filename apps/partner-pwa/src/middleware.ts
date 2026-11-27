@@ -6,8 +6,11 @@ import {
 
 const PROTECTED_PARTNER_PAGES = new Set([
   "/partner/shift",
+  "/partner/hotspots",
+  "/partner/trips",
   "/partner/earnings",
   "/partner/kyc",
+  "/partner/notifications",
 ]);
 
 function applyLocale(response: NextResponse, lang: string | null): NextResponse {

@@ -7,15 +7,20 @@ import {
   AlertTriangle,
   BellRing,
   Bike,
+  CalendarClock,
   Camera,
   CarFront,
   CheckCircle2,
   Clock,
+  Compass,
   ExternalLink,
   FileCheck2,
+  Flame,
+  History,
   KeyRound,
   MapPin,
   MessageSquare,
+  Navigation,
   PhoneCall,
   Power,
   ShieldAlert,
@@ -39,16 +44,27 @@ import {
   formatTzs,
 } from "@goboda/shared-types";
 import { PartnerPortalShell } from "./partner-portal-shell";
+import { PartnerCompliancePanel } from "./partner-compliance-panel";
 import {
   PartnerEarningsPanel,
   type EarningsLedgerRow,
 } from "./partner-earnings-panel";
+import { usePartnerRealtime } from "./partner-realtime-provider";
+import {
+  buildAppleMapsDirectionsUrl,
+  buildGoogleMapsDirectionsUrl,
+} from "../lib/partner-navigation";
 
 interface DemoOffer {
+  offerId?: string;
+  tripId?: string;
+  isLiveDb?: boolean;
   tripCode: string;
   transportType: TransportType;
   customerName: string;
   pickupLabel: string;
+  pickupSnapped?: boolean;
+  pickupSnapGateName?: string | null;
   dropoffLabel: string;
   pickupCoords: { lat: number; lng: number };
   dropoffCoords: { lat: number; lng: number };
@@ -120,9 +136,10 @@ function playOfferChime() {
   }
 }
 
-export function PartnerHomeView({
+function PartnerHomeContent({
   page = "shift",
   locale,
+  nightMode,
   partnerName,
   partnerTransportType,
   partnerPlateNumber,
@@ -130,39 +147,26 @@ export function PartnerHomeView({
 }: {
   page?: "shift" | "earnings" | "kyc";
   locale: "sw" | "en";
+  nightMode: boolean;
   partnerName?: string;
   partnerTransportType?: TransportType;
   partnerPlateNumber?: string;
   partnerKituo?: string;
 }) {
   const t = useTranslations();
+  const { snapshot, refreshNow } = usePartnerRealtime();
   const [operatorType, setOperatorType] = React.useState<TransportType>(
     partnerTransportType ?? TransportType.BODABODA
   );
   const [isOnline, setIsOnline] = React.useState(false);
-  const [sunlightMode, setSunlightMode] = React.useState(false);
+  const [availabilityBusy, setAvailabilityBusy] = React.useState(false);
 
-  // Shift & Earnings Counters
-  const [todayNetTzs, setTodayNetTzs] = React.useState(24500);
-  const [tripsToday, setTripsToday] = React.useState(7);
+  // Shift & Earnings Counters (hydrated live via WebSocket / SSE snapshot)
+  const [todayNetTzs, setTodayNetTzs] = React.useState(0);
+  const [tripsToday, setTripsToday] = React.useState(0);
   const [earningsLedger, setEarningsLedger] = React.useState<
     EarningsLedgerRow[]
-  >([
-    {
-      id: "l-1",
-      label: "Trip GB-76640 • Darajani → ZNZ Airport (Net 88%)",
-      channel: "MOBILE_MONEY",
-      deltaTzs: 9240,
-      time: "14:22",
-    },
-    {
-      id: "l-2",
-      label: "Trip GB-76511 • Forodhani → Mwanakwerekwe (Net 88%)",
-      channel: "CASH",
-      deltaTzs: 3960,
-      time: "13:05",
-    },
-  ]);
+  >([]);
 
   // Phase 3 & 4 Dispatch, Trip Lifecycle, SOS & Customer Rating state
   const [incomingOffer, setIncomingOffer] = React.useState<DemoOffer | null>(
@@ -242,6 +246,98 @@ export function PartnerHomeView({
     return () => clearInterval(interval);
   }, [tripStatus]);
 
+  // Live WebSocket / SSE hydration (zero refresh needed for offers, active trips, shift status & earnings)
+  const lastLiveOfferIdRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (!snapshot) return;
+
+    if (snapshot.profile) {
+      setIsOnline(snapshot.profile.isOnline);
+    }
+
+    setTodayNetTzs(snapshot.todayStats.todayNetTzs);
+    setTripsToday(snapshot.todayStats.tripsToday);
+    setEarningsLedger(snapshot.todayStats.recentEarnings);
+
+    // Sync live active trip from Neon Postgres
+    if (snapshot.activeTrip) {
+      const live = snapshot.activeTrip;
+      setActiveTrip({
+        tripId: live.id,
+        isLiveDb: true,
+        tripCode: live.tripCode,
+        transportType:
+          live.transportType === "BAJAJI"
+            ? TransportType.BAJAJI
+            : TransportType.BODABODA,
+        customerName: locale === "sw" ? "Abiria wa Go.Boda" : "Go.Boda Passenger",
+        pickupLabel: live.pickupLabel,
+        pickupSnapped: live.pickupSnapped,
+        pickupSnapGateName: live.pickupSnapGateName,
+        dropoffLabel: live.dropoffLabel,
+        pickupCoords: {
+          lat: live.pickupEffectiveLat,
+          lng: live.pickupEffectiveLng,
+        },
+        dropoffCoords: {
+          lat: live.dropoffLat,
+          lng: live.dropoffLng,
+        },
+        distanceKm: Number((live.distanceMeters / 1000).toFixed(1)),
+        etaMinutes: 2,
+        fareTzs: live.finalFareTzs ?? live.estimatedFareTzs,
+        paymentMethod: live.paymentMethod,
+        startPin: live.startPin,
+      });
+      setTripStatus(live.status as TripStatus);
+      setIncomingOffer(null);
+      return;
+    }
+
+    // If a live DB trip just completed remotely, clear local live trip
+    setActiveTrip((prev) => (prev?.isLiveDb ? null : prev));
+
+    // Sync incoming live pending offer from dispatch.offers (category-isolated)
+    const liveOffer = snapshot.pendingOffers[0];
+    if (liveOffer && lastLiveOfferIdRef.current !== liveOffer.offerId) {
+      lastLiveOfferIdRef.current = liveOffer.offerId;
+      const secsLeft = Math.max(
+        3,
+        Math.min(
+          PLATFORM_FINANCE.DISPATCH_OFFER_TTL_SECONDS,
+          Math.ceil((new Date(liveOffer.expiresAt).getTime() - Date.now()) / 1000)
+        )
+      );
+      setIncomingOffer({
+        offerId: liveOffer.offerId,
+        tripId: liveOffer.tripId,
+        isLiveDb: true,
+        tripCode: liveOffer.tripCode,
+        transportType:
+          liveOffer.transportType === "BAJAJI"
+            ? TransportType.BAJAJI
+            : TransportType.BODABODA,
+        customerName: locale === "sw" ? "Abiria wa Karibu" : "Nearby Passenger",
+        pickupLabel: liveOffer.pickupLabel,
+        pickupSnapped: liveOffer.pickupSnapped,
+        pickupSnapGateName: liveOffer.pickupSnapGateName,
+        dropoffLabel: liveOffer.dropoffLabel,
+        pickupCoords: { lat: liveOffer.pickupLat, lng: liveOffer.pickupLng },
+        dropoffCoords: { lat: liveOffer.dropoffLat, lng: liveOffer.dropoffLng },
+        distanceKm: Number((liveOffer.distanceMeters / 1000).toFixed(1)),
+        etaMinutes: liveOffer.etaMinutes,
+        fareTzs: liveOffer.estimatedFareTzs,
+        paymentMethod: liveOffer.paymentMethod,
+        startPin: liveOffer.startPin,
+      });
+      setOfferSecondsLeft(secsLeft);
+      playOfferChime();
+    } else if (!liveOffer) {
+      lastLiveOfferIdRef.current = null;
+      setIncomingOffer((prev) => (prev?.isLiveDb ? null : prev));
+    }
+  }, [snapshot, locale]);
+
   const hasAssignedCategory = Boolean(partnerTransportType);
   const activeOperatorType = partnerTransportType ?? operatorType;
   const isBodabodaRider = activeOperatorType === TransportType.BODABODA;
@@ -310,8 +406,90 @@ export function PartnerHomeView({
     playOfferChime();
   };
 
-  const handleAcceptOffer = () => {
+  const handleToggleOnline = async () => {
+    const nextOnline = !isOnline;
+    setAvailabilityBusy(true);
+    setStatusNotice(null);
+    setIncomingOffer(null);
+    try {
+      let lat = -6.1649;
+      let lng = 39.1936;
+      if (nextOnline && typeof navigator !== "undefined" && "geolocation" in navigator) {
+        const pos = await new Promise<GeolocationPosition | null>((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (p) => resolve(p),
+            () => resolve(null),
+            { timeout: 2500, maximumAge: 30000 }
+          );
+        });
+        if (pos) {
+          const candLat = pos.coords.latitude;
+          const candLng = pos.coords.longitude;
+          if (candLat >= -6.5 && candLat <= -5.7 && candLng >= 39.1 && candLng <= 39.6) {
+            lat = candLat;
+            lng = candLng;
+          }
+        }
+      }
+
+      const res = await fetch("/api/partner/availability", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ isOnline: nextOnline, lat, lng }),
+      });
+
+      if (res.ok) {
+        setIsOnline(nextOnline);
+        await refreshNow();
+      } else {
+        const errJson = (await res.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+        if (res.status === 401) {
+          setIsOnline(nextOnline);
+        } else {
+          setStatusNotice(
+            errJson?.message ||
+              (locale === "sw"
+                ? "Haiwezekani kubadili hali ya mtandaoni sasa."
+                : "Could not update online availability.")
+          );
+        }
+      }
+    } catch {
+      setIsOnline(nextOnline);
+    } finally {
+      setAvailabilityBusy(false);
+    }
+  };
+
+  const handleAcceptOffer = async () => {
     if (!incomingOffer) return;
+    if (incomingOffer.isLiveDb && incomingOffer.offerId) {
+      const res = await fetch("/api/partner/trip-action", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "ACCEPT_OFFER",
+          offerId: incomingOffer.offerId,
+        }),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+        setStatusNotice(
+          err?.message ||
+            (locale === "sw"
+              ? "Ombi hili limechukuliwa tayari."
+              : "This offer is no longer available.")
+        );
+        setIncomingOffer(null);
+        await refreshNow();
+        return;
+      }
+      await refreshNow();
+    }
     setActiveTrip(incomingOffer);
     setTripStatus(TripStatus.ASSIGNED);
     setIncomingOffer(null);
@@ -324,8 +502,20 @@ export function PartnerHomeView({
     setCustomerRating(5);
   };
 
-  const handleDeclineOffer = () => {
+  const handleDeclineOffer = async () => {
+    const current = incomingOffer;
     setIncomingOffer(null);
+    if (current?.isLiveDb && current.offerId) {
+      await fetch("/api/partner/trip-action", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "DECLINE_OFFER",
+          offerId: current.offerId,
+        }),
+      }).catch(() => null);
+      await refreshNow();
+    }
     setStatusNotice(
       locale === "sw"
         ? "Ombi limekataliwa — limeelekezwa kwa mwendeshaji anayefuata."
@@ -333,14 +523,41 @@ export function PartnerHomeView({
     );
   };
 
-  const handleMarkArrived = () => {
+  const handleMarkArrived = async () => {
+    if (activeTrip?.isLiveDb && activeTrip.tripId) {
+      await fetch("/api/partner/trip-action", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "ARRIVE", tripId: activeTrip.tripId }),
+      }).catch(() => null);
+      await refreshNow();
+    }
     setTripStatus(TripStatus.ARRIVED_AT_PICKUP);
     setWaitSeconds(0);
   };
 
-  const handleVerifyPinAndStart = (e: React.FormEvent) => {
+  const handleVerifyPinAndStart = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeTrip) return;
+    if (activeTrip.isLiveDb && activeTrip.tripId) {
+      const res = await fetch("/api/partner/trip-action", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "START",
+          tripId: activeTrip.tripId,
+          startPin: pinInput.trim(),
+        }),
+      });
+      if (!res.ok) {
+        setPinError(t("partner.pinInvalid"));
+        return;
+      }
+      setPinError(null);
+      setTripStatus(TripStatus.IN_PROGRESS);
+      await refreshNow();
+      return;
+    }
     if (pinInput.trim() !== activeTrip.startPin) {
       setPinError(t("partner.pinInvalid"));
       return;
@@ -360,8 +577,19 @@ export function PartnerHomeView({
     setTripStatus(TripStatus.COMPLETED_UNPAID);
   };
 
-  const handleConfirmPaymentAndFinish = () => {
+  const handleConfirmPaymentAndFinish = async () => {
     if (!activeTrip) return;
+    if (activeTrip.isLiveDb && activeTrip.tripId) {
+      await fetch("/api/partner/trip-action", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "COMPLETE_CASH",
+          tripId: activeTrip.tripId,
+        }),
+      }).catch(() => null);
+      await refreshNow();
+    }
     const commission = Math.round(
       (activeTrip.fareTzs * PLATFORM_FINANCE.DEFAULT_COMMISSION_PCT) / 100
     );
@@ -431,18 +659,8 @@ export function PartnerHomeView({
     : 0;
   const operatorNetTzs = activeTrip ? activeTrip.fareTzs - commissionTzs : 0;
 
-  const nightMode = sunlightMode;
-  const categoryLabel = isBodabodaRider
-    ? t("roles.bodabodaRider")
-    : t("roles.bajajiDriver");
-
   return (
-    <PartnerPortalShell
-      locale={locale}
-      categoryLabel={categoryLabel}
-      nightMode={nightMode}
-      onToggleNightMode={() => setSunlightMode((v) => !v)}
-    >
+    <>
       {/* Editorial Bodaboda Scroll-Transition Hero on Shift Page */}
       {page === "shift" ? (
         <EditorialScrollHero
@@ -625,15 +843,17 @@ export function PartnerHomeView({
             ledger={earningsLedger}
           />
         ) : page === "kyc" ? (
-          <form
-            onSubmit={handleSubmitKyc}
-            className={cn(
-              "space-y-4 rounded-3xl border p-6 shadow-sm",
-              nightMode
-                ? "border-[#F3EEE8]/15 bg-[#123D3A] text-[#F3EEE8]"
-                : "border-[#17645F]/15 bg-[#FAF7F2] text-[#122927]"
-            )}
-          >
+          <div className="space-y-5">
+            <PartnerCompliancePanel locale={locale} nightMode={nightMode} />
+            <form
+              onSubmit={handleSubmitKyc}
+              className={cn(
+                "space-y-4 rounded-3xl border p-6 shadow-sm",
+                nightMode
+                  ? "border-[#F3EEE8]/15 bg-[#123D3A] text-[#F3EEE8]"
+                  : "border-[#17645F]/15 bg-[#FAF7F2] text-[#122927]"
+              )}
+            >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#B86B2B]">
@@ -796,9 +1016,36 @@ export function PartnerHomeView({
                 </Button>
               </>
             )}
-          </form>
+            </form>
+          </div>
         ) : (
           <>
+            {/* Urgent License / Insurance Expiry Banner on Shift */}
+            {snapshot && snapshot.compliance.urgentCount > 0 ? (
+              <Link
+                href="/partner/kyc"
+                className={cn(
+                  "flex items-center justify-between gap-3 rounded-3xl border px-4 py-3 text-xs font-bold transition hover:opacity-95",
+                  snapshot.compliance.licenseBucket === "EXPIRED" ||
+                    snapshot.compliance.insuranceBucket === "EXPIRED" ||
+                    snapshot.compliance.licenseBucket === "7D" ||
+                    snapshot.compliance.insuranceBucket === "7D"
+                    ? "border-[#A93232]/50 bg-[#A93232] text-white"
+                    : "border-[#B86B2B]/50 bg-[#B86B2B]/15 text-[#703C12]"
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <CalendarClock className="h-4 w-4 shrink-0" />
+                  <span>
+                    {locale === "sw"
+                      ? `Tahadhari: Nyaraka ${snapshot.compliance.urgentCount} zinakaribia au zimeisha muda. Sasisha kwenye KYC.`
+                      : `Compliance Alert: ${snapshot.compliance.urgentCount} document(s) expired or renewing soon. Tap to update KYC.`}
+                  </span>
+                </span>
+                <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+              </Link>
+            ) : null}
+
             {/* Status Toast */}
             {statusNotice && (
               <div
@@ -946,34 +1193,87 @@ export function PartnerHomeView({
 
                 <div
                   className={cn(
-                    "space-y-2 rounded-2xl p-3.5 text-sm",
+                    "space-y-3 rounded-2xl p-3.5 text-sm",
                     nightMode ? "bg-[#0D302E]" : "bg-[#F3EEE8]"
                   )}
                 >
-                  <p className="font-semibold">
-                    <span className="mr-2 font-black text-[#17645F]">A</span>
-                    {activeTrip.pickupLabel}
-                  </p>
-                  <p className="font-semibold">
-                    <span className="mr-2 font-black text-[#B86B2B]">B</span>
-                    {activeTrip.dropoffLabel}
-                  </p>
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${
+                  <div className="space-y-1.5">
+                    <p className="font-semibold">
+                      <span className="mr-2 font-black text-[#17645F]">A</span>
+                      {activeTrip.pickupLabel}
+                      {activeTrip.pickupSnapped ? (
+                        <span className="ml-2 rounded-full bg-[#B86B2B]/15 px-2 py-0.5 text-[10px] font-bold uppercase text-[#B86B2B]">
+                          Smart-Snap
+                          {activeTrip.pickupSnapGateName
+                            ? ` • ${activeTrip.pickupSnapGateName}`
+                            : ""}
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="font-semibold">
+                      <span className="mr-2 font-black text-[#B86B2B]">B</span>
+                      {activeTrip.dropoffLabel}
+                    </p>
+                  </div>
+
+                  {/* One-Tap Turn-by-Turn Navigation (Google Maps + Apple Maps) */}
+                  {(() => {
+                    const headingToDropoff =
                       tripStatus === TripStatus.IN_PROGRESS ||
-                      tripStatus === TripStatus.SOS_ACTIVE
-                        ? `${activeTrip.dropoffCoords.lat},${activeTrip.dropoffCoords.lng}`
-                        : `${activeTrip.pickupCoords.lat},${activeTrip.pickupCoords.lng}`
-                    }`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 pt-1 text-xs font-bold text-[#17645F] underline"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    {locale === "sw"
-                      ? "Fungua Ramani (Google Maps)"
-                      : "Open Turn-by-Turn Navigation"}
-                  </a>
+                      tripStatus === TripStatus.SOS_ACTIVE;
+                    const navCoords = headingToDropoff
+                      ? activeTrip.dropoffCoords
+                      : activeTrip.pickupCoords;
+                    const navLabel = headingToDropoff
+                      ? activeTrip.dropoffLabel
+                      : activeTrip.pickupLabel;
+                    return (
+                      <div className="space-y-2 border-t border-current/10 pt-2.5">
+                        <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] opacity-70">
+                          {headingToDropoff
+                            ? locale === "sw"
+                              ? "ELEKEO LA KUSHUSHA (DROPOFF)"
+                              : "TURN-BY-TURN TO DROPOFF"
+                            : locale === "sw"
+                              ? "ELEKEO LA KUCHUKUA ABIRIA (PICKUP)"
+                              : "TURN-BY-TURN TO PICKUP"}
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <a
+                            href={buildGoogleMapsDirectionsUrl(
+                              navCoords.lat,
+                              navCoords.lng
+                            )}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#17645F] px-3.5 py-2 text-xs font-bold uppercase tracking-[0.1em] text-[#F3EEE8] transition hover:bg-[#114E4A]"
+                          >
+                            <Navigation className="h-3.5 w-3.5" />
+                            Google Maps
+                            <ExternalLink className="h-3 w-3 opacity-80" />
+                          </a>
+                          <a
+                            href={buildAppleMapsDirectionsUrl(
+                              navCoords.lat,
+                              navCoords.lng,
+                              navLabel
+                            )}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={cn(
+                              "inline-flex items-center justify-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-bold uppercase tracking-[0.1em] transition",
+                              nightMode
+                                ? "border-[#F3EEE8]/35 text-[#F3EEE8] hover:bg-[#F3EEE8] hover:text-[#17645F]"
+                                : "border-[#17645F]/35 bg-[#FAF7F2] text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
+                            )}
+                          >
+                            <Compass className="h-3.5 w-3.5" />
+                            Apple Maps
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Step 1: ASSIGNED -> Mark Arrived */}
@@ -1259,10 +1559,8 @@ export function PartnerHomeView({
                     <Button
                       size="lg"
                       variant={isOnline ? "danger" : "primary"}
-                      onClick={() => {
-                        setIsOnline((v) => !v);
-                        setIncomingOffer(null);
-                      }}
+                      disabled={availabilityBusy}
+                      onClick={() => void handleToggleOnline()}
                       className="w-full max-w-xs text-base font-extrabold uppercase tracking-[0.14em]"
                     >
                       <Power className="h-5 w-5" />
@@ -1344,7 +1642,7 @@ export function PartnerHomeView({
                 </Link>
 
                 <Link
-                  href="/partner/earnings"
+                  href="/partner/trips"
                   className={cn(
                     "block rounded-3xl border p-5 shadow-sm transition hover:-translate-y-0.5",
                     nightMode
@@ -1359,14 +1657,92 @@ export function PartnerHomeView({
                     {tripsToday}
                   </p>
                   <p className="mt-1.5 text-[11px] opacity-70">
-                    {locale === "sw" ? "Safari za leo" : "Completed today"}
+                    {locale === "sw" ? "Tazama historia ya safari" : "View trip history"}
                   </p>
+                </Link>
+              </div>
+            </ScrollReveal>
+
+            {/* Quick Shortcuts: Live Unguja Hotspots & Trip History */}
+            <ScrollReveal delayMs={190}>
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/partner/hotspots"
+                  className={cn(
+                    "flex items-center gap-3 rounded-3xl border p-4 shadow-sm transition hover:-translate-y-0.5",
+                    nightMode
+                      ? "border-[#F3EEE8]/15 bg-[#123D3A] hover:border-[#F3EEE8]/40"
+                      : "border-[#17645F]/15 bg-[#FAF7F2] hover:border-[#17645F]/45"
+                  )}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#B86B2B]/15 text-[#B86B2B]">
+                    <Flame className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-extrabold uppercase tracking-[0.1em]">
+                      {locale === "sw" ? "Vituo Moto" : "Demand Hotspots"}
+                    </p>
+                    <p className="truncate text-[11px] opacity-70">
+                      {locale === "sw" ? "Foleni ya Unguja" : "Live kituo queue"}
+                    </p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/partner/trips"
+                  className={cn(
+                    "flex items-center gap-3 rounded-3xl border p-4 shadow-sm transition hover:-translate-y-0.5",
+                    nightMode
+                      ? "border-[#F3EEE8]/15 bg-[#123D3A] hover:border-[#F3EEE8]/40"
+                      : "border-[#17645F]/15 bg-[#FAF7F2] hover:border-[#17645F]/45"
+                  )}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#17645F]/15 text-[#17645F]">
+                    <History className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-extrabold uppercase tracking-[0.1em]">
+                      {locale === "sw" ? "Historia Safari" : "Trip History"}
+                    </p>
+                    <p className="truncate text-[11px] opacity-70">
+                      {locale === "sw" ? "Risiti na viwango" : "Receipts & stars"}
+                    </p>
+                  </div>
                 </Link>
               </div>
             </ScrollReveal>
           </>
         )}
       </main>
+    </>
+  );
+}
+
+export function PartnerHomeView(props: {
+  page?: "shift" | "earnings" | "kyc";
+  locale: "sw" | "en";
+  partnerName?: string;
+  partnerTransportType?: TransportType;
+  partnerPlateNumber?: string;
+  partnerKituo?: string;
+}) {
+  const t = useTranslations();
+  const [sunlightMode, setSunlightMode] = React.useState(false);
+  const isBodabodaRider =
+    (props.partnerTransportType ?? TransportType.BODABODA) ===
+    TransportType.BODABODA;
+  const categoryLabel = isBodabodaRider
+    ? t("roles.bodabodaRider")
+    : t("roles.bajajiDriver");
+
+  return (
+    <PartnerPortalShell
+      locale={props.locale}
+      categoryLabel={categoryLabel}
+      nightMode={sunlightMode}
+      onToggleNightMode={() => setSunlightMode((v) => !v)}
+    >
+      <PartnerHomeContent {...props} nightMode={sunlightMode} />
     </PartnerPortalShell>
   );
 }

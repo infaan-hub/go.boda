@@ -15,6 +15,8 @@ import {
   TripStatus,
   UserRole,
 } from "@goboda/shared-types";
+import { emitPartnerRealtimeEvent } from "@partner/lib/partner-realtime";
+import { deliverWebPushToUser } from "@partner/lib/partner-webpush";
 
 export const SERVICE_NAME = "dispatch-service";
 export const SERVICE_VERSION = "0.1.0";
@@ -374,6 +376,20 @@ async function dispatchNextWave(params: {
       },
       params.correlationId
     );
+
+    emitPartnerRealtimeEvent({
+      operatorId: c.operatorId,
+      transportType: trip.transport_type === TransportType.BAJAJI ? "BAJAJI" : "BODABODA",
+      reason: "dispatch_offer_sent",
+    });
+
+    void deliverWebPushToUser(c.operatorId, {
+      title: `Go.Boda — New ${trip.transport_type === TransportType.BAJAJI ? "Bajaji" : "Bodaboda"} Request`,
+      body: `${trip.pickup_label} → ${trip.dropoff_label} • TZS ${Number(trip.estimated_fare_tzs).toLocaleString()}`,
+      url: "/partner/shift",
+      tag: `offer-${String(offer.id)}`,
+      eventSubject: "dispatch.offer_sent",
+    }).catch(() => null);
   }
 
   if (trip.status !== TripStatus.OFFERED_TO_OPERATOR) {

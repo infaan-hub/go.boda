@@ -21,7 +21,7 @@ const cspReportOnly = [
   "style-src 'self' 'unsafe-inline' https://tiles.openfreemap.org https://vercel.live",
   "img-src 'self' data: blob: https://tiles.openfreemap.org https://vercel.live https://vercel.com",
   "font-src 'self' data: https://tiles.openfreemap.org https://assets.vercel.com",
-  "connect-src 'self' https://tiles.openfreemap.org https://router.project-osrm.org https://*.vercel.app https://vercel.live wss://ws-us3.pusher.com",
+  "connect-src 'self' https://tiles.openfreemap.org https://router.project-osrm.org https://*.vercel.app https://vercel.live wss://*.vercel.app ws://localhost:* ws://127.0.0.1:* wss://ws-us3.pusher.com",
   "worker-src 'self' blob:",
   `frame-ancestors ${frameAncestors}`,
   "base-uri 'self'",
@@ -54,6 +54,7 @@ const useStandalone = process.env.NEXT_OUTPUT_STANDALONE === "1";
 const nextConfig = {
   ...(useStandalone ? { output: "standalone" } : {}),
   outputFileTracingRoot: path.resolve(import.meta.dirname, "../../"),
+  serverExternalPackages: ["ws", "web-push"],
   poweredByHeader: false,
   compress: true,
   transpilePackages: [
@@ -72,6 +73,13 @@ const nextConfig = {
       },
       {
         source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
+      {
+        source: "/partner/sw.js",
         headers: [
           { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
           { key: "Content-Type", value: "application/javascript; charset=utf-8" },

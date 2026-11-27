@@ -20,7 +20,7 @@ const cspReportOnly = [
   "style-src 'self' 'unsafe-inline' https://vercel.live",
   "img-src 'self' data: blob: https://vercel.live https://vercel.com",
   "font-src 'self' data: https://assets.vercel.com",
-  "connect-src 'self' https://*.vercel.app https://vercel.live wss://ws-us3.pusher.com",
+  "connect-src 'self' https://*.vercel.app https://vercel.live wss://*.vercel.app ws://localhost:* ws://127.0.0.1:* wss://ws-us3.pusher.com",
   "worker-src 'self' blob:",
   `frame-ancestors ${frameAncestors}`,
   "base-uri 'self'",
@@ -50,6 +50,7 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   assetPrefix: process.env.VERCEL === "1" ? "/partner-static" : undefined,
+  serverExternalPackages: ["ws", "web-push"],
   poweredByHeader: false,
   compress: true,
   transpilePackages: [

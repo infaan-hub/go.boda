@@ -157,34 +157,42 @@ export function PartnerEarningsPanel({
             ? "Muhtasari wa Safari za Hivi Karibuni"
             : "Recent Per-Trip Earnings"}
         </h2>
-        <div className="divide-y divide-current/10">
-          {ledger.map((row) => (
-            <div
-              key={row.id}
-              className="flex items-center justify-between py-2.5 text-xs"
-            >
-              <div>
-                <p className="font-bold">{row.label}</p>
-                <p className="text-[11px] opacity-65">
-                  {row.channel} • {row.time}
-                </p>
-              </div>
-              <span
-                className={cn(
-                  "font-mono text-sm font-extrabold",
-                  row.deltaTzs >= 0
-                    ? nightMode
-                      ? "text-[#A7DBD7]"
-                      : "text-[#17645F]"
-                    : "text-[#B86B2B]"
-                )}
+        {ledger.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-current/20 p-4 text-center text-xs opacity-75">
+            {locale === "sw"
+              ? "Hakuna safari zilizokamilika bado. Mapato ya kila safari yataonekana hapa papo hapo."
+              : "No completed trips yet. Earnings from every completed trip appear here live."}
+          </p>
+        ) : (
+          <div className="divide-y divide-current/10">
+            {ledger.map((row) => (
+              <div
+                key={row.id}
+                className="flex items-center justify-between py-2.5 text-xs"
               >
-                {row.deltaTzs >= 0 ? "+" : ""}
-                {formatTzs(row.deltaTzs)}
-              </span>
-            </div>
-          ))}
-        </div>
+                <div>
+                  <p className="font-bold">{row.label}</p>
+                  <p className="text-[11px] opacity-65">
+                    {row.channel} • {row.time}
+                  </p>
+                </div>
+                <span
+                  className={cn(
+                    "font-mono text-sm font-extrabold",
+                    row.deltaTzs >= 0
+                      ? nightMode
+                        ? "text-[#A7DBD7]"
+                        : "text-[#17645F]"
+                      : "text-[#B86B2B]"
+                  )}
+                >
+                  {row.deltaTzs >= 0 ? "+" : ""}
+                  {formatTzs(row.deltaTzs)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

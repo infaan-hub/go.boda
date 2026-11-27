@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSql } from "@goboda/db";
-import { verifyPartnerRequest } from "@partner/lib/partner-auth";
+import { verifyPartnerRequest } from "../../../../lib/partner-auth";
+import { emitPartnerRealtimeEvent } from "../../../../lib/partner-realtime";
 
 export const dynamic = "force-dynamic";
 
@@ -129,6 +130,12 @@ export async function POST(request: Request) {
         geom = EXCLUDED.geom,
         last_seen_at = NOW()
     `;
+
+    emitPartnerRealtimeEvent({
+      operatorId,
+      transportType: profile.transportType,
+      reason: "availability_changed",
+    });
 
     return NextResponse.json({
       updated: true,

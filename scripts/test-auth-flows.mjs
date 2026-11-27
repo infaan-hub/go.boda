@@ -89,6 +89,8 @@ function extractCookie(res, name) {
 async function cleanup() {
   const sql = getSql();
   if (partnerUserId) {
+    await sql`DELETE FROM notif.push_subscriptions WHERE user_id = ${partnerUserId}::uuid`.catch(() => null);
+    await sql`DELETE FROM notif.messages WHERE user_id = ${partnerUserId}::uuid`.catch(() => null);
     await sql`DELETE FROM finance.wallet_accounts WHERE owner_id = ${partnerUserId}::uuid`.catch(() => null);
     await sql`DELETE FROM operator.profiles WHERE user_id = ${partnerUserId}::uuid`.catch(() => null);
     await sql`DELETE FROM auth.users WHERE id = ${partnerUserId}::uuid`.catch(() => null);
@@ -169,8 +171,11 @@ try {
   console.log("\n5. Partner: unauthenticated gating");
   for (const protectedRoute of [
     "/partner/shift",
+    "/partner/hotspots",
+    "/partner/trips",
     "/partner/earnings",
     "/partner/kyc",
+    "/partner/notifications",
     "/partner/dashboard",
   ]) {
     const anonRes = await fetch(`${partUrl}${protectedRoute}`, { redirect: "manual" });
@@ -284,7 +289,15 @@ try {
   const partCookie = extractCookie(partLogin, "goboda_partner_session");
   assert.ok(partCookie, "partner session cookie set");
 
-  for (const subPage of ["/partner/shift", "/partner/earnings", "/partner/kyc", "/partner/safety"]) {
+  for (const subPage of [
+    "/partner/shift",
+    "/partner/hotspots",
+    "/partner/trips",
+    "/partner/earnings",
+    "/partner/kyc",
+    "/partner/notifications",
+    "/partner/safety",
+  ]) {
     const subRes = await fetch(`${partUrl}${subPage}`, {
       redirect: "manual",
       headers: { cookie: partCookie },
@@ -293,10 +306,13 @@ try {
     const subHtml = await subRes.text();
     assert.ok(
       subHtml.includes('href="/partner/shift"') &&
+        subHtml.includes('href="/partner/hotspots"') &&
+        subHtml.includes('href="/partner/trips"') &&
         subHtml.includes('href="/partner/earnings"') &&
         subHtml.includes('href="/partner/kyc"') &&
+        subHtml.includes('href="/partner/notifications"') &&
         subHtml.includes('href="/partner/safety"'),
-      `${subPage} renders all 4 dedicated sidebar links`
+      `${subPage} renders all 7 dedicated sidebar links`
     );
     assert.ok(
       !subHtml.includes("Commission Float") && !subHtml.includes(">Wallet<"),
@@ -309,6 +325,113 @@ try {
       );
     }
   }
+
+  console.log("9b. Partner: live APIs (hotspots, trips, compliance renewal, Web Push, notifications, realtime WS/SSE)");
+  const hotspotsRes = await fetch(`${partUrl}/api/partner/hotspots`, {
+    headers: { cookie: partCookie },
+  });
+  assert.equal(hotspotsRes.status, 200, "/api/partner/hotspots -> 200");
+  const hotspotsJson = await hotspotsRes.json();
+  assert.equal(hotspotsJson.transportType, "BODABODA");
+  assert.ok(Array.isArray(hotspotsJson.hotspots) && hotspotsJson.hotspots.length > 0, "returns live Unguja vituo");
+
+  const tripsRes = await fetch(`${partUrl}/api/partner/trips?range=all&status=ALL`, {
+    headers: { cookie: partCookie },
+  });
+  assert.equal(tripsRes.status, 200, "/api/partner/trips -> 200");
+  const tripsJson = await tripsRes.json();
+  assert.equal(tripsJson.transportType, "BODABODA");
+  assert.ok(Array.isArray(tripsJson.trips), "returns trips array");
+
+  const nextYear = new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const compPost = await fetch(`${partUrl}/api/partner/compliance`, {
+    method: "POST",
+    headers: { "content-type": "application/json", cookie: partCookie },
+    body: JSON.stringify({
+      licenseExpiry: nextYear,
+      insuranceExpiry: nextYear,
+      renewedDocType: "DRIVING_LICENSE",
+      renewedFileName: "renewed-license.jpg",
+    }),
+  });
+  assert.equal(compPost.status, 200, "POST /api/partner/compliance -> 200");
+  const compJson = await compPost.json();
+  assert.equal(compJson.updated, true);
+  assert.equal(compJson.expiries.license.bucket, "30D");
+
+  const pushSubRes = await fetch(`${partUrl}/api/partner/push/subscribe`, {
+    method: "POST",
+    headers: { "content-type": "application/json", cookie: partCookie },
+    body: JSON.stringify({
+      endpoint: `https://fcm.googleapis.com/fcm/send/test-${stamp}`,
+      keys: {
+        p256dh: "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U",
+        auth: "tBHItJI5svbpez7KI4CCXg",
+      },
+      userAgent: "auth-flow-test",
+    }),
+  });
+  assert.equal(pushSubRes.status, 201, "POST /api/partner/push/subscribe -> 201");
+  assert.equal((await pushSubRes.json()).subscribed, true);
+
+  const testPushRes = await fetch(`${partUrl}/api/partner/notifications`, {
+    method: "POST",
+    headers: { "content-type": "application/json", cookie: partCookie },
+    body: JSON.stringify({ action: "SEND_TEST_PUSH", locale: "en" }),
+  });
+  assert.equal(testPushRes.status, 201, "POST /api/partner/notifications SEND_TEST_PUSH -> 201");
+
+  const notifsRes = await fetch(`${partUrl}/api/partner/notifications`, {
+    headers: { cookie: partCookie },
+  });
+  assert.equal(notifsRes.status, 200);
+  const notifsJson = await notifsRes.json();
+  assert.ok(notifsJson.unreadCount >= 1, "new test push notification shows unread");
+
+  const markAllRes = await fetch(`${partUrl}/api/partner/notifications`, {
+    method: "POST",
+    headers: { "content-type": "application/json", cookie: partCookie },
+    body: JSON.stringify({ action: "MARK_READ", all: true }),
+  });
+  assert.equal(markAllRes.status, 200);
+  const notifsAfter = await (await fetch(`${partUrl}/api/partner/notifications`, {
+    headers: { cookie: partCookie },
+  })).json();
+  assert.equal(notifsAfter.unreadCount, 0, "mark all read clears unread count");
+
+  const pushDelRes = await fetch(`${partUrl}/api/partner/push/subscribe`, {
+    method: "DELETE",
+    headers: { "content-type": "application/json", cookie: partCookie },
+    body: JSON.stringify({ endpoint: `https://fcm.googleapis.com/fcm/send/test-${stamp}` }),
+  });
+  assert.equal(pushDelRes.status, 200);
+
+  // Realtime WebSocket non-upgrade local fallback returns clean 426 with SSE fallback URL
+  const wsCheck = await fetch(`${partUrl}/api/partner/realtime/ws`, {
+    headers: { cookie: partCookie },
+  });
+  assert.equal(wsCheck.status, 426, "plain HTTP /api/partner/realtime/ws returns 426 fallback");
+  assert.equal((await wsCheck.json()).fallback, "/api/partner/realtime/stream");
+
+  // Realtime SSE stream immediately emits initial snapshot event
+  const sseAbort = new AbortController();
+  const sseRes = await fetch(`${partUrl}/api/partner/realtime/stream`, {
+    headers: { cookie: partCookie },
+    signal: sseAbort.signal,
+  });
+  assert.equal(sseRes.status, 200, "GET /api/partner/realtime/stream -> 200");
+  assert.ok(
+    (sseRes.headers.get("content-type") || "").includes("text/event-stream"),
+    "SSE content-type is text/event-stream"
+  );
+  const reader = sseRes.body.getReader();
+  const firstChunk = await reader.read();
+  const decoded = new TextDecoder().decode(firstChunk.value || new Uint8Array());
+  sseAbort.abort();
+  assert.ok(
+    decoded.includes("event: snapshot") && decoded.includes(TEST_PARTNER.plate),
+    "SSE stream emits initial live partner snapshot"
+  );
 
   const partDashRedirect = await fetch(`${partUrl}/partner/dashboard`, {
     redirect: "manual",

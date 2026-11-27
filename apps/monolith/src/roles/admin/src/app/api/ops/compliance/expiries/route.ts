@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSql } from "@goboda/db";
 import { verifyAdminRequest } from "@admin/lib/admin-auth";
+import { emitPartnerRealtimeEvent } from "@partner/lib/partner-realtime";
+import { deliverWebPushToUser } from "@partner/lib/partner-webpush";
 
 export const dynamic = "force-dynamic";
 
@@ -139,23 +141,78 @@ export async function POST(request: Request) {
           SET is_online = FALSE
           WHERE operator_id = ${p.userId}::uuid
         `;
+        await sql`
+          INSERT INTO notif.messages (
+            user_id, channel, event_subject, locale, title, body, payload, status, provider_ref
+          )
+          VALUES (
+            ${p.userId}::uuid, 'WEB_PUSH', 'compliance.account_paused', 'en',
+            'Account Paused — Document Expired',
+            'Your driving license or insurance has expired. Renew it on the KYC page to go back online.',
+            ${JSON.stringify({
+              titleSw: "Akaunti Imesitishwa — Nyaraka Zimeisha Muda",
+              bodySw: "Leseni au bima yako imeisha muda. Sasisha kwenye ukurasa wa KYC ili kurudi mtandaoni.",
+              titleEn: "Account Paused — Document Expired",
+              bodyEn: "Your driving license or insurance has expired. Renew it on the KYC page to go back online.",
+              url: "/partner/kyc",
+            })}::jsonb,
+            'SENT', 'ops-auto-pause'
+          )
+        `.catch(() => null);
+        emitPartnerRealtimeEvent({
+          operatorId: p.userId,
+          reason: "compliance_auto_paused",
+        });
+        void deliverWebPushToUser(p.userId, {
+          title: "Account Paused — Document Expired",
+          body: "Renew your driving license or insurance on KYC to resume shifts.",
+          url: "/partner/kyc",
+          eventSubject: "compliance.account_paused",
+        }).catch(() => null);
       }
       return NextResponse.json({ pausedCount: paused.length, paused });
     }
 
     const d = parsed.data;
+    const opRows = (await sql`
+      SELECT user_id AS "userId" FROM operator.profiles
+      WHERE id = ${d.operatorId}::uuid OR user_id = ${d.operatorId}::uuid
+      LIMIT 1
+    `) as Array<{ userId: string }>;
+    const targetUserId = opRows[0]?.userId ?? null;
+
     await sql`
       INSERT INTO notif.messages (
-        phone, channel, event_subject, locale, title, body, payload, status, provider_ref
+        user_id, phone, channel, event_subject, locale, title, body, payload, status, provider_ref
       )
       VALUES (
-        ${d.phone}, 'WHATSAPP', 'compliance.expiry_reminder', 'sw',
+        ${targetUserId}::uuid, ${d.phone}, 'WHATSAPP', 'compliance.expiry_reminder', 'sw',
         'Sasisha Leseni / Bima — Go.boda Unguja',
         ${`Habari ${d.fullName} (${d.plateNumber}), tafadhali sasisha leseni au bima yako kabla ya muda kuisha.`},
-        ${JSON.stringify({ operatorId: d.operatorId, sentByAdmin: auth.admin.id })}::jsonb,
+        ${JSON.stringify({
+          operatorId: d.operatorId,
+          sentByAdmin: auth.admin.id,
+          titleSw: "Sasisha Leseni / Bima — Go.boda Unguja",
+          bodySw: `Habari ${d.fullName} (${d.plateNumber}), tafadhali sasisha leseni au bima yako kabla ya muda kuisha.`,
+          titleEn: "Renew License / Insurance — Go.boda Unguja",
+          bodyEn: `Hi ${d.fullName} (${d.plateNumber}), please renew your driving license or insurance before it expires.`,
+          url: "/partner/kyc",
+        })}::jsonb,
         'SENT', 'ops-whatsapp-reminder'
       )
     `;
+    if (targetUserId) {
+      emitPartnerRealtimeEvent({
+        operatorId: targetUserId,
+        reason: "compliance_expiry_reminder",
+      });
+      void deliverWebPushToUser(targetUserId, {
+        title: "Renew License / Insurance — Go.boda Unguja",
+        body: `Hi ${d.fullName} (${d.plateNumber}), please renew your documents on KYC before expiry.`,
+        url: "/partner/kyc",
+        eventSubject: "compliance.expiry_reminder",
+      }).catch(() => null);
+    }
     return NextResponse.json({ logged: true });
   } catch (err) {
     return NextResponse.json(
