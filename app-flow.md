@@ -1,8 +1,10 @@
-# Go.boda — App Flow & Microservice Interaction Blueprint
+# Go.boda — Role Flows & In-Process Domain Interactions
 
 > **Document Version:** 2.0 (Microservices Edition)  
 > **Companion Documents:** [prd.md](file:///E:/Go.boda/prd.md) | [architecture.md](file:///E:/Go.boda/architecture.md) | [implementation.md](file:///E:/Go.boda/implementation.md)  
-> **Scope:** Cross-service sequence choreography, Trip State Machine, UX flowcharts for `customer-web`, `partner-pwa`, and `admin-web`, per-trip payment settlement flows, and edge-case recovery for **Go.boda** (Unguja Island).
+> **Current architecture:** Customer (`/`), Admin (`/admin/*`), Partner (`/partner/*`), and all API domains run in one Next.js monolith and one Vercel project. References below to a “service” describe an in-process domain module, not a separately deployed app. See [architecture.md](./architecture.md) for the active deployment layout.
+>
+> **Scope:** Role flows, trip state machine, domain interactions, per-trip settlement, and recovery cases for **Go.boda** (Unguja Island).
 
 ---
 

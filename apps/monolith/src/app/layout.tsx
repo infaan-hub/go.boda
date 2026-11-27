@@ -1,0 +1,66 @@
+import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
+import { cookies } from "next/headers";
+import { NextIntlClientProvider } from "next-intl";
+import {
+  getMessages,
+  isSupportedLocale,
+  type SupportedLocale,
+} from "@goboda/i18n";
+import { PwaInstallBanner, PwaRegistrar } from "@goboda/ui";
+import "./globals.css";
+
+const anton = localFont({
+  src: "./fonts/anton.woff2",
+  variable: "--font-display",
+  display: "swap",
+});
+
+const jakarta = localFont({
+  src: "./fonts/plus-jakarta-sans.woff2",
+  weight: "400 800",
+  variable: "--font-sans",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Go.boda — Unguja Bodaboda & Bajaji",
+  description:
+    "Request nearby Bodaboda and Bajaji transport anywhere on Unguja Island, Zanzibar.",
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#17645F",
+  width: "device-width",
+  initialScale: 1,
+};
+
+export default async function CustomerRootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const cookieStore = await cookies();
+  const raw = cookieStore.get("NEXT_LOCALE")?.value;
+  const locale: SupportedLocale =
+    raw && isSupportedLocale(raw) ? raw : "en";
+  const messages = getMessages(locale);
+
+  return (
+    <html lang={locale} className={`${anton.variable} ${jakarta.variable}`}>
+      <body className="bg-[#F3EEE8] font-sans text-[#122927] antialiased">
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <PwaRegistrar />
+          {children}
+          <PwaInstallBanner
+            title={messages.common.installApp}
+            description={messages.common.installDesc}
+            installLabel={messages.common.installAction}
+            dismissLabel={messages.common.dismiss}
+          />
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  );
+}

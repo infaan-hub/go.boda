@@ -20,10 +20,10 @@ process.env.OTP_DEV_ECHO = "true";
 process.env.OTP_SKIP_COOLDOWN = "true";
 
 const { getSql } = await import("../packages/db/dist/index.js");
-const { default: authApp } = await import("../services/auth-service/dist/app.js");
-const { default: operatorApp } = await import("../services/operator-service/dist/app.js");
-const { default: geoApp } = await import("../services/geo-zone-service/dist/app.js");
-const { default: gatewayApp } = await import("../services/api-gateway/dist/app.js");
+const { default: authApp } = await import("../apps/monolith/src/server/domains/auth/app.ts");
+const { default: operatorApp } = await import("../apps/monolith/src/server/domains/operator/app.ts");
+const { default: geoApp } = await import("../apps/monolith/src/server/domains/geo-zone/app.ts");
+const { default: gatewayApp } = await import("../apps/monolith/src/server/gateway/app.ts");
 
 const TEST_CUSTOMER_PHONE = "+255779000101";
 const TEST_RIDER_PHONE = "+255779000102";

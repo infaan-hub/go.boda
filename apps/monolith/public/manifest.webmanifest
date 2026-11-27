@@ -1,0 +1,19 @@
+{
+  "name": "Go.boda — Unguja Transport",
+  "short_name": "Go.boda",
+  "description": "Request nearby Bodaboda and Bajaji transport across Unguja Island, Zanzibar.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3EEE8",
+  "theme_color": "#17645F",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

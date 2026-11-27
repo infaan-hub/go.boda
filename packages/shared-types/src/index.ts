@@ -179,94 +179,72 @@ export const PLATFORM_FINANCE = {
   FREE_WAIT_MINUTES: 5,
 } as const;
 
-/** Registry of the 10 Go.boda domain microservices */
-export interface MicroserviceDescriptor {
+/** In-process Go.boda domain modules exposed through the monolith API. */
+export interface DomainDescriptor {
   id: string;
   name: string;
-  port: number;
-  database: string;
   routePrefix: string;
   summary: string;
 }
 
-export const MICROSERVICES_REGISTRY: readonly MicroserviceDescriptor[] = [
+export const DOMAIN_REGISTRY: readonly DomainDescriptor[] = [
   {
-    id: "auth-service",
-    name: "Auth & Identity Service",
-    port: 4001,
-    database: "auth_db + Redis",
+    id: "auth",
+    name: "Auth & Identity",
     routePrefix: "/api/v1/auth",
     summary: "Phone OTP (WhatsApp/SMS), Google OAuth, JWT & RBAC",
   },
   {
-    id: "operator-service",
-    name: "Operator Service (Riders & Drivers)",
-    port: 4002,
-    database: "operator_db + R2/S3",
+    id: "operator",
+    name: "Riders & Drivers",
     routePrefix: "/api/v1/operators",
     summary: "Bodaboda Rider & Bajaji Driver KYC, Z-plates, Kituo & approval",
   },
   {
-    id: "geo-zone-service",
-    name: "Unguja Geo & Zone Service",
-    port: 4003,
-    database: "geo_db (PostGIS)",
+    id: "geo-zone",
+    name: "Unguja Geo & Zones",
     routePrefix: "/api/v1/geo",
     summary: "Unguja polygon geofence, Stone Town perimeter snapping & routing",
   },
   {
-    id: "location-service",
-    name: "Live Location & Nearby Service",
-    port: 4004,
-    database: "Redis Geospatial + WS",
+    id: "location",
+    name: "Live Location & Nearby",
     routePrefix: "/api/v1/nearby",
     summary: "Real-time GPS telemetry & live nearby Bodaboda/Bajaji discovery",
   },
   {
-    id: "pricing-service",
-    name: "Pricing & Tariff Service",
-    port: 4005,
-    database: "pricing_db + Redis",
+    id: "pricing",
+    name: "Pricing & Tariffs",
     routePrefix: "/api/v1/pricing",
     summary: "Upfront TZS fare quotes, Bodaboda/Bajaji tariffs & capped surge",
   },
   {
-    id: "dispatch-service",
-    name: "Dispatch & Matching Service",
-    port: 4006,
-    database: "dispatch_db + Redis Locks",
+    id: "dispatch",
+    name: "Dispatch & Matching",
     routePrefix: "/api/v1/dispatch",
     summary: "Expanding-radius Rider/Driver matching, 20s TTL & atomic locks",
   },
   {
-    id: "trip-service",
-    name: "Trip Lifecycle Service",
-    port: 4007,
-    database: "trip_db",
+    id: "trip",
+    name: "Trip Lifecycle",
     routePrefix: "/api/v1/trips",
     summary: "Trip State Machine, 4-digit Start PIN, receipts & ratings",
   },
   {
-    id: "payment-wallet-service",
-    name: "Payment & Wallet Service",
-    port: 4008,
-    database: "finance_db (ACID Ledger)",
+    id: "payment-wallet",
+    name: "Payments & Wallets",
     routePrefix: "/api/v1/payments",
     summary: "Cash TZS, Mobile Money STK Push, Cards, Float & Earnings payouts",
   },
   {
-    id: "notification-service",
-    name: "Notification & Chat Service",
-    port: 4009,
-    database: "notif_db + BullMQ",
+    id: "notification",
+    name: "Notifications & Chat",
     routePrefix: "/api/v1/notifications",
     summary: "Web Push (VAPID), WhatsApp/SMS alerts & bilingual quick-chat",
   },
   {
-    id: "safety-service",
-    name: "Safety & SOS Service",
-    port: 4010,
-    database: "safety_db",
+    id: "safety",
+    name: "Safety & SOS",
     routePrefix: "/api/v1/safety",
     summary: "In-trip SOS console, WhatsApp live share links & helmet flags",
   },

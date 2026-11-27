@@ -24,8 +24,8 @@ const TEST_PARTNER_PHONE = "+255779000952";
 
 const PORTS = {
   customer: 3130,
-  partner: 3131,
-  admin: 3132,
+  partner: 3130,
+  admin: 3130,
 };
 
 const children = [];
@@ -96,10 +96,8 @@ async function cleanup() {
 
 async function run() {
   await cleanup();
-  console.log("Booting customer-web, partner-pwa, and admin-web for full 404 route audit...");
-  startNextApp("apps/customer-web", PORTS.customer);
-  startNextApp("apps/partner-pwa", PORTS.partner);
-  startNextApp("apps/admin-web", PORTS.admin);
+  console.log("Booting the Go.boda monolith for a full route audit...");
+  startNextApp("apps/monolith", PORTS.customer);
 
   const custUrl = `http://127.0.0.1:${PORTS.customer}`;
   const partUrl = `http://127.0.0.1:${PORTS.partner}`;

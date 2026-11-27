@@ -21,8 +21,8 @@ const { getSql, verifyPassword } = await import("../packages/db/dist/index.js");
 
 const PORTS = {
   customer: 3110,
-  partner: 3111,
-  admin: 3112,
+  partner: 3110,
+  admin: 3110,
 };
 
 const stamp = String(Date.now()).slice(-7);
@@ -99,10 +99,8 @@ async function cleanup() {
 }
 
 try {
-  console.log("0. Booting built Next.js production servers (customer, partner, admin)...");
-  startNextApp("apps/customer-web", PORTS.customer);
-  startNextApp("apps/partner-pwa", PORTS.partner);
-  startNextApp("apps/admin-web", PORTS.admin);
+  console.log("0. Booting the Go.boda monolith production server...");
+  startNextApp("apps/monolith", PORTS.customer);
 
   const custUrl = `http://127.0.0.1:${PORTS.customer}`;
   const partUrl = `http://127.0.0.1:${PORTS.partner}`;
@@ -125,8 +123,7 @@ try {
   );
 
   const admRootAnon = await fetch(`${admUrl}/`, { redirect: "manual" });
-  assert.equal(admRootAnon.status, 307, "anon / must redirect");
-  assert.ok((admRootAnon.headers.get("location") || "").endsWith("/admin/login"));
+  assert.equal(admRootAnon.status, 200, "monolith / remains the customer homepage");
 
   console.log("2. Admin: wrong credentials rejected");
   const admBad = await fetch(`${admUrl}/api/ops/auth/login`, {

@@ -1,0 +1,21 @@
+FROM node:22-alpine AS build
+WORKDIR /app
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_OUTPUT_STANDALONE=1
+RUN corepack enable && corepack prepare pnpm@10.34.9 --activate
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @goboda/monolith... build
+
+FROM node:22-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=80
+COPY --from=build /app/apps/monolith/.next/standalone ./
+COPY --from=build /app/apps/monolith/.next/static ./apps/monolith/.next/static
+COPY --from=build /app/apps/monolith/public ./apps/monolith/public
+EXPOSE 80
+CMD ["node", "apps/monolith/server.js"]

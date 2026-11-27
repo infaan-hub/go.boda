@@ -8,27 +8,45 @@ importers:
 
   .:
     devDependencies:
-      turbo:
-        specifier: ^2.5.4
-        version: 2.11.13
+      tsx:
+        specifier: ^4.19.3
+        version: 4.23.15
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
 
-  apps/admin-web:
+  apps/monolith:
     dependencies:
+      '@fastify/cors':
+        specifier: ^11.0.1
+        version: 11.4.3
+      '@fastify/helmet':
+        specifier: ^13.0.1
+        version: 13.2.0
+      '@fastify/rate-limit':
+        specifier: ^10.2.2
+        version: 10.3.0
       '@goboda/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@goboda/events':
+        specifier: workspace:*
+        version: link:../../packages/events
       '@goboda/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@goboda/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       '@goboda/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
       '@goboda/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      fastify:
+        specifier: ^5.2.2
+        version: 5.12.8
       jose:
         specifier: ^6.0.10
         version: 6.2.18
@@ -72,125 +90,9 @@ importers:
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.19(tsx@4.23.15)
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  apps/customer-web:
-    dependencies:
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/i18n':
-        specifier: workspace:*
-        version: link:../../packages/i18n
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      '@goboda/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-      lucide-react:
-        specifier: ^0.475.0
-        version: 0.475.0(react@19.3.1)
-      maplibre-gl:
-        specifier: ^5.1.0
-        version: 5.24.1
-      next:
-        specifier: ^15.2.4
-        version: 15.5.29(@types/node@22.20.7)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      next-intl:
-        specifier: ^3.26.5
-        version: 3.26.5(next@15.5.29(@types/node@22.20.7)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
-      react:
-        specifier: ^19.0.0
-        version: 19.3.1
-      react-dom:
-        specifier: ^19.0.0
-        version: 19.3.1(react@19.3.1)
-      zod:
-        specifier: ^3.24.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      '@types/react':
-        specifier: ^19.0.8
-        version: 19.3.3
-      '@types/react-dom':
-        specifier: ^19.0.3
-        version: 19.3.0(@types/react@19.3.3)
-      autoprefixer:
-        specifier: ^10.4.20
-        version: 10.7.0(postcss@8.5.33)
-      postcss:
-        specifier: ^8.5.3
-        version: 8.5.33
-      tailwindcss:
-        specifier: ^3.4.17
-        version: 3.4.19(tsx@4.23.15)
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  apps/partner-pwa:
-    dependencies:
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/i18n':
-        specifier: workspace:*
-        version: link:../../packages/i18n
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      '@goboda/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-      lucide-react:
-        specifier: ^0.475.0
-        version: 0.475.0(react@19.3.1)
-      next:
-        specifier: ^15.2.4
-        version: 15.5.29(@types/node@22.20.7)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      next-intl:
-        specifier: ^3.26.5
-        version: 3.26.5(next@15.5.29(@types/node@22.20.7)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
-      react:
-        specifier: ^19.0.0
-        version: 19.3.1
-      react-dom:
-        specifier: ^19.0.0
-        version: 19.3.1(react@19.3.1)
-      zod:
-        specifier: ^3.24.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      '@types/react':
-        specifier: ^19.0.8
-        version: 19.3.3
-      '@types/react-dom':
-        specifier: ^19.0.3
-        version: 19.3.0(@types/react@19.3.3)
-      autoprefixer:
-        specifier: ^10.4.20
-        version: 10.7.0(postcss@8.5.33)
-      postcss:
-        specifier: ^8.5.3
-        version: 8.5.33
-      tailwindcss:
-        specifier: ^3.4.17
-        version: 3.4.19(tsx@4.23.15)
+      tsx:
+        specifier: ^4.19.3
+        version: 4.23.15
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -280,464 +182,6 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.3.1(react@19.3.1)
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  services/api-gateway:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^11.0.1
-        version: 11.4.3
-      '@fastify/helmet':
-        specifier: ^13.0.1
-        version: 13.2.0
-      '@fastify/http-proxy':
-        specifier: ^11.2.1
-        version: 11.7.0
-      '@fastify/rate-limit':
-        specifier: ^10.2.2
-        version: 10.3.0
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      fastify:
-        specifier: ^5.2.2
-        version: 5.12.8
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      tsx:
-        specifier: ^4.19.3
-        version: 4.23.15
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  services/auth-service:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^11.0.1
-        version: 11.4.3
-      '@fastify/helmet':
-        specifier: ^13.0.1
-        version: 13.2.0
-      '@fastify/rate-limit':
-        specifier: ^10.2.2
-        version: 10.3.0
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/events':
-        specifier: workspace:*
-        version: link:../../packages/events
-      '@goboda/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      fastify:
-        specifier: ^5.2.2
-        version: 5.12.8
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-      zod:
-        specifier: ^3.24.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      tsx:
-        specifier: ^4.19.3
-        version: 4.23.15
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  services/dispatch-service:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^11.0.1
-        version: 11.4.3
-      '@fastify/helmet':
-        specifier: ^13.0.1
-        version: 13.2.0
-      '@fastify/rate-limit':
-        specifier: ^10.2.2
-        version: 10.3.0
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/events':
-        specifier: workspace:*
-        version: link:../../packages/events
-      '@goboda/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      fastify:
-        specifier: ^5.2.2
-        version: 5.12.8
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-      zod:
-        specifier: ^3.24.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      tsx:
-        specifier: ^4.19.3
-        version: 4.23.15
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  services/geo-zone-service:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^11.0.1
-        version: 11.4.3
-      '@fastify/helmet':
-        specifier: ^13.0.1
-        version: 13.2.0
-      '@fastify/rate-limit':
-        specifier: ^10.2.2
-        version: 10.3.0
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      fastify:
-        specifier: ^5.2.2
-        version: 5.12.8
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-      zod:
-        specifier: ^3.24.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      tsx:
-        specifier: ^4.19.3
-        version: 4.23.15
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  services/location-service:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^11.0.1
-        version: 11.4.3
-      '@fastify/helmet':
-        specifier: ^13.0.1
-        version: 13.2.0
-      '@fastify/rate-limit':
-        specifier: ^10.2.2
-        version: 10.3.0
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      fastify:
-        specifier: ^5.2.2
-        version: 5.12.8
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-      zod:
-        specifier: ^3.24.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      tsx:
-        specifier: ^4.19.3
-        version: 4.23.15
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  services/notification-service:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^11.0.1
-        version: 11.4.3
-      '@fastify/helmet':
-        specifier: ^13.0.1
-        version: 13.2.0
-      '@fastify/rate-limit':
-        specifier: ^10.2.2
-        version: 10.3.0
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      fastify:
-        specifier: ^5.2.2
-        version: 5.12.8
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-      zod:
-        specifier: ^3.24.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      tsx:
-        specifier: ^4.19.3
-        version: 4.23.15
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  services/operator-service:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^11.0.1
-        version: 11.4.3
-      '@fastify/helmet':
-        specifier: ^13.0.1
-        version: 13.2.0
-      '@fastify/rate-limit':
-        specifier: ^10.2.2
-        version: 10.3.0
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/events':
-        specifier: workspace:*
-        version: link:../../packages/events
-      '@goboda/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      fastify:
-        specifier: ^5.2.2
-        version: 5.12.8
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-      zod:
-        specifier: ^3.24.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      tsx:
-        specifier: ^4.19.3
-        version: 4.23.15
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  services/payment-wallet-service:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^11.0.1
-        version: 11.4.3
-      '@fastify/helmet':
-        specifier: ^13.0.1
-        version: 13.2.0
-      '@fastify/rate-limit':
-        specifier: ^10.2.2
-        version: 10.3.0
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/events':
-        specifier: workspace:*
-        version: link:../../packages/events
-      '@goboda/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      fastify:
-        specifier: ^5.2.2
-        version: 5.12.8
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-      zod:
-        specifier: ^3.24.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      tsx:
-        specifier: ^4.19.3
-        version: 4.23.15
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  services/pricing-service:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^11.0.1
-        version: 11.4.3
-      '@fastify/helmet':
-        specifier: ^13.0.1
-        version: 13.2.0
-      '@fastify/rate-limit':
-        specifier: ^10.2.2
-        version: 10.3.0
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      fastify:
-        specifier: ^5.2.2
-        version: 5.12.8
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-      zod:
-        specifier: ^3.24.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      tsx:
-        specifier: ^4.19.3
-        version: 4.23.15
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  services/safety-service:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^11.0.1
-        version: 11.4.3
-      '@fastify/helmet':
-        specifier: ^13.0.1
-        version: 13.2.0
-      '@fastify/rate-limit':
-        specifier: ^10.2.2
-        version: 10.3.0
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/events':
-        specifier: workspace:*
-        version: link:../../packages/events
-      '@goboda/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      fastify:
-        specifier: ^5.2.2
-        version: 5.12.8
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-      zod:
-        specifier: ^3.24.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      tsx:
-        specifier: ^4.19.3
-        version: 4.23.15
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
-  services/trip-service:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^11.0.1
-        version: 11.4.3
-      '@fastify/helmet':
-        specifier: ^13.0.1
-        version: 13.2.0
-      '@fastify/rate-limit':
-        specifier: ^10.2.2
-        version: 10.3.0
-      '@goboda/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@goboda/events':
-        specifier: workspace:*
-        version: link:../../packages/events
-      '@goboda/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@goboda/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      fastify:
-        specifier: ^5.2.2
-        version: 5.12.8
-      jose:
-        specifier: ^6.0.10
-        version: 6.2.18
-      zod:
-        specifier: ^3.24.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.7
-      tsx:
-        specifier: ^4.19.3
-        version: 4.23.15
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -928,9 +372,6 @@ packages:
   '@fastify/helmet@13.2.0':
     resolution: {integrity: sha512-2u41U5hR9o1u3HUHLT3Njp7vWuWw+XXw8qCBwVY17pRQAN179YYKiU9f7/qEn1ITabgNTkq/Yk6gmrYPSraagA==}
 
-  '@fastify/http-proxy@11.7.0':
-    resolution: {integrity: sha512-soSRBbS8givnVneJy0m8/jy3WXjXZf70sCOVlopaLZZLYC0KcINkSHzhr3WIWKa4c5O/thGmrU7YYYEfwUocUA==}
-
   '@fastify/merge-json-schemas@0.2.2':
     resolution: {integrity: sha512-d/gx9sRbUCVgGRGzma46wLcwiY8noTqO2Nmjg/vbTARxHRE5bdh5PIL8s97Lt1X7ScRWRW52eVYxwIoPwIdVUA==}
 
@@ -939,9 +380,6 @@ packages:
 
   '@fastify/rate-limit@10.3.0':
     resolution: {integrity: sha512-eIGkG9XKQs0nyynatApA3EVrojHOuq4l6fhB4eeCk4PIOeadvOJz9/4w3vGI44Go17uaXOWEcPkaD8kuKm7g6Q==}
-
-  '@fastify/reply-from@12.9.2':
-    resolution: {integrity: sha512-RlfpVfsjvCbOc2kKPgxflLYKl5SYeiKIoM8n936ufTW3dnQkCXBAF9nhQ98/PR8COmD8psmxEucv54EA6YYaGA==}
 
   '@formatjs/ecma402-abstract@2.3.6':
     resolution: {integrity: sha512-HJnTFeRM2kVFVr5gr5kH1XP6K0JcJtE7Lzvtr3FS/so5f1kpsqqqxy5JF+FRaO6H2qmcMfAUIox7AJteieRtVw==}
@@ -1253,36 +691,6 @@ packages:
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
 
-  '@turbo/darwin-64@2.11.13':
-    resolution: {integrity: sha512-5IT29i4j55E5O66+la7L8Y46ut7dFaNZqrgUIYYNtcpMt9Ql7aYnSQb/6tZ+prE2AfX1RBCAtRJE41txS2rG3w==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@turbo/darwin-arm64@2.11.13':
-    resolution: {integrity: sha512-YFJPayVNlhSPRIZSeERiZYGKKqPs6N6qGhim8J3GtBdv5ZjUNF1ixfnAAyCVTqFEnMSkn1W7F0Y07kca8EjWsg==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@turbo/linux-64@2.11.13':
-    resolution: {integrity: sha512-R5RIQflV4ffBDNuUwjmtmzIr6Y2UeyeeHTtultYF7cnFn3tG1RZ4GRBlpjUhHB6JxuR7l1B450hlbzdtlD3ghg==}
-    cpu: [x64]
-    os: [android, linux]
-
-  '@turbo/linux-arm64@2.11.13':
-    resolution: {integrity: sha512-AwV8pVO/cH/lwx1B7SGfzUA/3e6vmPaygFp9NOSRESs6t3Wr63zrBuXlluDogAOIxIMlHDB2ZbBueDsBnQxh2Q==}
-    cpu: [arm64]
-    os: [android, linux]
-
-  '@turbo/windows-64@2.11.13':
-    resolution: {integrity: sha512-PGXYTaFaN3FZloe4RffNGJmfB+TIWlqQgKK1PVyKwPN+PUzxGa+byxHBWFHredMaVbnUc6L/F6/QR4iHyM/wug==}
-    cpu: [x64]
-    os: [win32]
-
-  '@turbo/windows-arm64@2.11.13':
-    resolution: {integrity: sha512-YdRHWstBUHWt/eChOEM4f9LT0dPiWK5SNgtV77bLCr3JNke9M5E7metqelNYj+tXe36dH0BZrk2CMnFlWqHKng==}
-    cpu: [arm64]
-    os: [win32]
-
   '@types/geojson@7946.0.16':
     resolution: {integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==}
 
@@ -1409,9 +817,6 @@ packages:
   electron-to-chromium@1.5.494:
     resolution: {integrity: sha512-Tph7ohL4Xc0ft3DXElYEIVTmPI3H0MtPCTdgtz5AwWGZG6q+vMiT3IzJ3RJX/HJQ8pYzeimQyvi6SsBTOS0nyQ==}
 
-  end-of-stream@1.4.5:
-    resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
-
   es-errors@1.3.0:
     resolution: {integrity: sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==}
     engines: {node: '>= 0.4'}
@@ -1424,9 +829,6 @@ packages:
   escalade@3.2.0:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
     engines: {node: '>=6'}
-
-  fast-content-type-parse@4.0.1:
-    resolution: {integrity: sha512-AAu9Ey/t6KDFqqeCfbwdlASlv7rQBG57gXYf2YU+MXJx1OIJn2q3BEJKmtnZaeGm1y5AYxLzRMmq9VWWXrfRcA==}
 
   fast-decode-uri-component@1.0.1:
     resolution: {integrity: sha512-WKgKWg5eUxvRZGwW8FvfbaH7AXSh2cL+3j5fMGzUMCxWBJ3dV3a7Wz8y2f/uQ0e3B6WmodD3oS54jTQ9HVTIIg==}
@@ -1646,9 +1048,6 @@ packages:
   on-exit-leak-free@2.1.2:
     resolution: {integrity: sha512-0eJJY6hXLGf1udHwfNftBqH+g73EU4B504nZeKpz1sYRKafAghwxEJunB2O7rDZkL4PGfsMVnTXZ2EjibbqcsA==}
     engines: {node: '>=14.0.0'}
-
-  once@1.4.0:
-    resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
 
   path-parse@1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
@@ -1909,10 +1308,6 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  turbo@2.11.13:
-    resolution: {integrity: sha512-2EZ8StW6tqaj71HGF60oUOmJrPQHidmZ5dcwv2VORofya9JthVrfZhxbzRMx/QxjPwYi754i2h5RFsZSDzpnaQ==}
-    hasBin: true
-
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
@@ -1920,10 +1315,6 @@ packages:
 
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
-
-  undici@7.30.2:
-    resolution: {integrity: sha512-mLyPQnHwUxaM/rideoK/+KL8DaAJLRl4aBCfmX444aCSLnIaomqPLtNRe2jdCYcsk5wZzXrDIQC8ZeYNRAYyIA==}
-    engines: {node: '>=20.18.1'}
 
   update-browserslist-db@1.4.0:
     resolution: {integrity: sha512-WPJuOnjI9FWDct4fB+ej4Mz8opLaw5CDcZ2t44tFZ0vIQVYWzBhWR3mkixuUj/A7+vY4V9+ApOZ2YYLwdgq46w==}
@@ -1938,21 +1329,6 @@ packages:
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
-
-  wrappy@1.0.2:
-    resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
-
-  ws@8.23.0:
-    resolution: {integrity: sha512-wCkmX8QMOrKjgO8HW2WyDbTSGeqkocxgDzS9iR79rEAexty6/2qzilx3Ag8Tqf9ykop3irLKle0MtVn5qjVnoQ==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
 
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
@@ -2070,16 +1446,6 @@ snapshots:
       fastify-plugin: 6.0.1
       helmet: 8.3.0
 
-  '@fastify/http-proxy@11.7.0':
-    dependencies:
-      '@fastify/reply-from': 12.9.2
-      fast-querystring: 1.1.2
-      fastify-plugin: 6.0.1
-      ws: 8.23.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
   '@fastify/merge-json-schemas@0.2.2':
     dependencies:
       dequal: 2.0.3
@@ -2094,16 +1460,6 @@ snapshots:
       '@lukeed/ms': 2.0.2
       fastify-plugin: 5.1.0
       toad-cache: 3.7.4
-
-  '@fastify/reply-from@12.9.2':
-    dependencies:
-      '@fastify/error': 4.3.0
-      end-of-stream: 1.4.5
-      fast-content-type-parse: 4.0.1
-      fast-querystring: 1.1.2
-      fastify-plugin: 6.0.1
-      toad-cache: 3.7.4
-      undici: 7.30.2
 
   '@formatjs/ecma402-abstract@2.3.6':
     dependencies:
@@ -2345,24 +1701,6 @@ snapshots:
     dependencies:
       tslib: 2.9.1
 
-  '@turbo/darwin-64@2.11.13':
-    optional: true
-
-  '@turbo/darwin-arm64@2.11.13':
-    optional: true
-
-  '@turbo/linux-64@2.11.13':
-    optional: true
-
-  '@turbo/linux-arm64@2.11.13':
-    optional: true
-
-  '@turbo/windows-64@2.11.13':
-    optional: true
-
-  '@turbo/windows-arm64@2.11.13':
-    optional: true
-
   '@types/geojson@7946.0.16': {}
 
   '@types/node@22.20.7':
@@ -2474,10 +1812,6 @@ snapshots:
 
   electron-to-chromium@1.5.494: {}
 
-  end-of-stream@1.4.5:
-    dependencies:
-      once: 1.4.0
-
   es-errors@1.3.0: {}
 
   esbuild@0.28.2:
@@ -2510,8 +1844,6 @@ snapshots:
       '@esbuild/win32-x64': 0.28.2
 
   escalade@3.2.0: {}
-
-  fast-content-type-parse@4.0.1: {}
 
   fast-decode-uri-component@1.0.1: {}
 
@@ -2745,10 +2077,6 @@ snapshots:
   object-hash@3.0.0: {}
 
   on-exit-leak-free@2.1.2: {}
-
-  once@1.4.0:
-    dependencies:
-      wrappy: 1.0.2
 
   path-parse@1.0.7: {}
 
@@ -3019,20 +2347,9 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  turbo@2.11.13:
-    optionalDependencies:
-      '@turbo/darwin-64': 2.11.13
-      '@turbo/darwin-arm64': 2.11.13
-      '@turbo/linux-64': 2.11.13
-      '@turbo/linux-arm64': 2.11.13
-      '@turbo/windows-64': 2.11.13
-      '@turbo/windows-arm64': 2.11.13
-
   typescript@5.9.3: {}
 
   undici-types@6.21.0: {}
-
-  undici@7.30.2: {}
 
   update-browserslist-db@1.4.0(browserslist@4.29.6):
     dependencies:
@@ -3047,9 +2364,5 @@ snapshots:
       react: 19.3.1
 
   util-deprecate@1.0.2: {}
-
-  wrappy@1.0.2: {}
-
-  ws@8.23.0: {}
 
   zod@3.25.76: {}

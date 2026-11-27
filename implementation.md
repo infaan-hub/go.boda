@@ -1,4 +1,6 @@
-# Go.boda — Project Scope & Phased Microservices Implementation Plan
+# Go.boda — Historical Microservices Implementation Plan
+
+> This document records the original microservices plan. The current deployed architecture is the single Next.js modular monolith described in [architecture.md](./architecture.md); do not use the phases below as the active deployment layout.
 
 > **Document Version:** 2.0 (Microservices Edition)  
 > **Project Name:** **Go.boda**  

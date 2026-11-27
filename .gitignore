@@ -31,3 +31,6 @@ Thumbs.db
 coverage/
 playwright-report/
 test-results/
+
+# Local scratch / CLI cache
+work/

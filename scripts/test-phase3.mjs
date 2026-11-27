@@ -20,12 +20,12 @@ process.env.OTP_DEV_ECHO = "true";
 process.env.OTP_SKIP_COOLDOWN = "true";
 
 const { getSql } = await import("../packages/db/dist/index.js");
-const { default: authApp } = await import("../services/auth-service/dist/app.js");
-const { default: locationApp } = await import("../services/location-service/dist/app.js");
-const { default: tripApp } = await import("../services/trip-service/dist/app.js");
-const { default: dispatchApp } = await import("../services/dispatch-service/dist/app.js");
-const { default: notifApp } = await import("../services/notification-service/dist/app.js");
-const { default: gatewayApp } = await import("../services/api-gateway/dist/app.js");
+const { default: authApp } = await import("../apps/monolith/src/server/domains/auth/app.ts");
+const { default: locationApp } = await import("../apps/monolith/src/server/domains/location/app.ts");
+const { default: tripApp } = await import("../apps/monolith/src/server/domains/trip/app.ts");
+const { default: dispatchApp } = await import("../apps/monolith/src/server/domains/dispatch/app.ts");
+const { default: notifApp } = await import("../apps/monolith/src/server/domains/notification/app.ts");
+const { default: gatewayApp } = await import("../apps/monolith/src/server/gateway/app.ts");
 
 const TEST_CUSTOMER_PHONE = "+255779000301";
 const TEST_RIDER_A_PHONE = "+255779000302";

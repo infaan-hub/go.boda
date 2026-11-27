@@ -30,8 +30,8 @@ const TEST_TRUSTED_OWNER_PARTNER = "phase9-partner-owner-test";
 
 const PORTS = {
   customer: 3120,
-  partner: 3121,
-  admin: 3122,
+  partner: 3120,
+  admin: 3120,
 };
 
 const children = [];
@@ -135,10 +135,8 @@ async function cleanup() {
 async function runTests() {
   await cleanup();
 
-  console.log("0. Booting built Next.js servers for Phase 9 (customer-web, partner-pwa, admin-web)...");
-  startNextApp("apps/customer-web", PORTS.customer);
-  startNextApp("apps/partner-pwa", PORTS.partner);
-  startNextApp("apps/admin-web", PORTS.admin);
+  console.log("0. Booting the Go.boda monolith production server for Phase 9...");
+  startNextApp("apps/monolith", PORTS.customer);
 
   const custUrl = `http://127.0.0.1:${PORTS.customer}`;
   const partUrl = `http://127.0.0.1:${PORTS.partner}`;

@@ -20,22 +20,22 @@ process.env.OTP_DEV_ECHO = "true";
 process.env.OTP_SKIP_COOLDOWN = "true";
 
 const { getSql } = await import("../packages/db/dist/index.js");
-const { default: authApp } = await import("../services/auth-service/dist/app.js");
+const { default: authApp } = await import("../apps/monolith/src/server/domains/auth/app.ts");
 const { default: operatorApp } = await import(
-  "../services/operator-service/dist/app.js"
+  "../apps/monolith/src/server/domains/operator/app.ts"
 );
 const { default: locationApp } = await import(
-  "../services/location-service/dist/app.js"
+  "../apps/monolith/src/server/domains/location/app.ts"
 );
 const { default: pricingApp } = await import(
-  "../services/pricing-service/dist/app.js"
+  "../apps/monolith/src/server/domains/pricing/app.ts"
 );
-const { default: tripApp } = await import("../services/trip-service/dist/app.js");
+const { default: tripApp } = await import("../apps/monolith/src/server/domains/trip/app.ts");
 const { default: safetyApp } = await import(
-  "../services/safety-service/dist/app.js"
+  "../apps/monolith/src/server/domains/safety/app.ts"
 );
 const { default: payApp } = await import(
-  "../services/payment-wallet-service/dist/app.js"
+  "../apps/monolith/src/server/domains/payment-wallet/app.ts"
 );
 
 const TEST_CUSTOMER_PHONE = "+255779000601";

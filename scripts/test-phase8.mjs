@@ -18,7 +18,7 @@ if (existsSync(envPath)) {
 }
 
 const { getSql } = await import("../packages/db/dist/index.js");
-const { signAccessToken } = await import("../services/auth-service/dist/crypto.js");
+const { signAccessToken } = await import("../apps/monolith/src/server/domains/auth/crypto.ts");
 
 const PILOT_ADMIN_PHONE = "+255770000112";
 const TEST_RIDER_PHONE = "+255779000802";
@@ -26,8 +26,8 @@ const TEST_PLATE = "Z 802 P8X";
 
 const PORTS = {
   customer: 3110,
-  partner: 3111,
-  admin: 3112,
+  partner: 3110,
+  admin: 3110,
 };
 
 const children = [];
@@ -111,10 +111,8 @@ async function cleanup() {
 async function runTests() {
   await cleanup();
 
-  console.log("0. Booting built Next.js production servers (customer-web, partner-pwa, admin-web)...");
-  startNextApp("apps/customer-web", PORTS.customer);
-  startNextApp("apps/partner-pwa", PORTS.partner);
-  startNextApp("apps/admin-web", PORTS.admin);
+  console.log("0. Booting the Go.boda monolith production server...");
+  startNextApp("apps/monolith", PORTS.customer);
 
   const custUrl = `http://127.0.0.1:${PORTS.customer}`;
   const partUrl = `http://127.0.0.1:${PORTS.partner}`;
