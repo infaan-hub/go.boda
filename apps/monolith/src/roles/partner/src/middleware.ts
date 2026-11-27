@@ -11,6 +11,7 @@ const PROTECTED_PARTNER_PAGES = new Set([
   "/partner/earnings",
   "/partner/kyc",
   "/partner/notifications",
+  "/partner/profile",
 ]);
 
 function applyLocale(response: NextResponse, lang: string | null): NextResponse {

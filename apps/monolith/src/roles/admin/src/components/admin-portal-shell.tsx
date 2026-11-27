@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
   BarChart3,
+  Bell,
   Calculator,
   CalendarClock,
   CheckCircle2,
@@ -29,6 +30,7 @@ import {
   Users,
   Volume2,
   Wallet,
+  UserRound,
   X,
 } from "lucide-react";
 import {
@@ -260,12 +262,21 @@ export function AdminPortalShell({
         },
       ],
     },
+    {
+      heading: "Account",
+      items: [
+        { href: "/notification/", icon: Bell, label: "Notifications" },
+        { href: "/profile/", icon: UserRound, label: "Profile" },
+      ],
+    },
   ];
 
   const cleanPath = pathname.replace(/\/$/, "") || "/admin/dashboard";
 
   function isActiveHref(href: string) {
     if (cleanPath === href) return true;
+    if (href === "/notification/" && cleanPath === "/admin/notification") return true;
+    if (href === "/profile/" && cleanPath === "/admin/profile") return true;
     if (href === "/admin/operators" && cleanPath.startsWith("/admin/operators/")) return true;
     if (href === "/admin/trips" && cleanPath.startsWith("/admin/trips/")) return true;
     return false;

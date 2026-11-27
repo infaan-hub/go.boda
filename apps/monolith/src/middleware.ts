@@ -75,6 +75,24 @@ async function customerMiddleware(request: NextRequest) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const normalizedPath = pathname.replace(/\/+$/, "") || "/";
+
+  // Shared account shortcuts route each signed-in role to its protected page.
+  if (normalizedPath === "/notification" || normalizedPath === "/profile") {
+    const isAdmin = Boolean(request.cookies.get("goboda_admin_session")?.value);
+    const isPartner = Boolean(request.cookies.get("goboda_partner_session")?.value);
+    const destination = isAdmin
+      ? `/admin${normalizedPath}`
+      : normalizedPath === "/profile" && isPartner
+        ? "/partner/profile"
+        : null;
+    if (destination) {
+      const target = request.nextUrl.clone();
+      target.pathname = destination;
+      return NextResponse.redirect(target);
+    }
+  }
+
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     return adminMiddleware(request);
   }

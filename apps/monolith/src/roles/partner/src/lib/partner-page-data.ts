@@ -18,6 +18,7 @@ export interface PartnerPageData {
   locale: "sw" | "en";
   partnerId: string;
   partnerName: string;
+  partnerPhone: string;
   partnerRole: "BODABODA_RIDER" | "BAJAJI_DRIVER";
   partnerTransportType: TransportType;
   partnerPlateNumber?: string;
@@ -76,6 +77,7 @@ export async function requirePartnerPageData(
     locale,
     partnerId: partner.id,
     partnerName: partner.name,
+    partnerPhone: partner.phone,
     partnerRole: assignedRole,
     partnerTransportType: assignedTransportType,
     partnerPlateNumber: profile?.plateNumber ?? undefined,

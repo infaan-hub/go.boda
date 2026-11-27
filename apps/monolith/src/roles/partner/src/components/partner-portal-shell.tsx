@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Sun,
   TrendingUp,
+  UserRound,
   X,
 } from "lucide-react";
 import { BrandLogo, LanguageSwitchLink, cn } from "@goboda/ui";
@@ -123,6 +124,13 @@ function PartnerPortalShellInner({
       badge: 0,
       badgeTone: "teal" as const,
     },
+    {
+      href: "/profile/",
+      label: locale === "sw" ? "Wasifu" : "Profile",
+      icon: UserRound,
+      badge: 0,
+      badgeTone: "teal" as const,
+    },
   ];
 
   const isLive = transport === "websocket" || transport === "sse";
@@ -180,6 +188,7 @@ function PartnerPortalShellInner({
             {navItems.map((item) => {
               const active =
                 cleanPath === item.href ||
+                (item.href === "/profile/" && cleanPath === "/partner/profile") ||
                 (item.href === "/partner/safety" && cleanPath === "/safety");
               return (
                 <Link
