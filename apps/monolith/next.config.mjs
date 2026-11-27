@@ -48,8 +48,7 @@ const securityHeaders = [
   { key: "Content-Security-Policy-Report-Only", value: cspReportOnly },
 ];
 
-const useStandalone =
-  process.env.NEXT_OUTPUT_STANDALONE === "1" || process.platform !== "win32";
+const useStandalone = process.env.NEXT_OUTPUT_STANDALONE === "1";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

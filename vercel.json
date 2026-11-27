@@ -1,4 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "container"
+  "services": {
+    "web": {
+      "root": "apps/monolith/",
+      "framework": "nextjs",
+      "buildCommand": "pnpm --filter @goboda/monolith... build"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "web"
+      }
+    }
+  ]
 }
