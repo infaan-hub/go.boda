@@ -12,9 +12,7 @@ import {
   CheckCircle2,
   Clock,
   Compass,
-  CreditCard,
   ExternalLink,
-  Footprints,
   KeyRound,
   Loader2,
   LocateFixed,
@@ -28,7 +26,6 @@ import {
   Share2,
   ShieldAlert,
   ShieldCheck,
-  Smartphone,
   Star,
   Tag,
   User,
@@ -186,74 +183,6 @@ interface HistoryEntry {
   completedAt: string;
 }
 
-interface PresetSpot {
-  id: string;
-  target: "pickup" | "dropoff";
-  labelEn: string;
-  labelSw: string;
-  lat: number;
-  lng: number;
-  accent?: "teal" | "amber" | "red";
-}
-
-const PRESET_SPOTS: PresetSpot[] = [
-  {
-    id: "stone-town-alley",
-    target: "pickup",
-    labelEn: "Stone Town Alley (Smart Snap)",
-    labelSw: "Kichochoro Stone Town (Smart Snap)",
-    lat: -6.1622,
-    lng: 39.1895,
-    accent: "teal",
-  },
-  {
-    id: "znz-airport",
-    target: "dropoff",
-    labelEn: "ZNZ Airport",
-    labelSw: "Uwanja wa Ndege (ZNZ)",
-    lat: -6.222,
-    lng: 39.2249,
-  },
-  {
-    id: "ferry-terminal",
-    target: "dropoff",
-    labelEn: "Ferry Terminal",
-    labelSw: "Bandari ya Feri",
-    lat: -6.158,
-    lng: 39.1885,
-  },
-  {
-    id: "mwanakwerekwe",
-    target: "dropoff",
-    labelEn: "Mwanakwerekwe",
-    labelSw: "Mwanakwerekwe",
-    lat: -6.1912,
-    lng: 39.2216,
-  },
-  {
-    id: "paje-beach",
-    target: "dropoff",
-    labelEn: "Paje Beach",
-    labelSw: "Pwani ya Paje",
-    lat: -6.269,
-    lng: 39.532,
-  },
-  {
-    id: "nungwi",
-    target: "dropoff",
-    labelEn: "Nungwi",
-    labelSw: "Nungwi",
-    lat: -5.7265,
-    lng: 39.2987,
-  },
-];
-
-const PICKUP_NOTE_CHIPS = [
-  { sw: "Niko getini kuu", en: "At main gate" },
-  { sw: "Nimevaa shati jeupe", en: "Wearing white shirt" },
-  { sw: "Nina begi dogo", en: "Have small luggage" },
-] as const;
-
 const CUSTOMER_CHAT_PRESETS = [
   {
     key: "WAIT_2_MIN",
@@ -285,9 +214,7 @@ export function CustomerHomeView({
   const [selectedType, setSelectedType] = React.useState<TransportType>(
     TransportType.BODABODA
   );
-  const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>(
-    PaymentMethod.CASH
-  );
+  const paymentMethod = PaymentMethod.CASH;
   const [cashChangeNote, setCashChangeNote] = React.useState("Exact TZS");
   const [pickupNote, setPickupNote] = React.useState("");
   const [pinMode, setPinMode] = React.useState<"pickup" | "dropoff">("dropoff");
@@ -319,6 +246,7 @@ export function CustomerHomeView({
   const [searching, setSearching] = React.useState(false);
   const gpsLookupId = React.useRef(0);
   const mapLookupId = React.useRef(0);
+  const nearbyLookupId = React.useRef(0);
 
   // Live nearby fleet state
   const [vehicles, setVehicles] = React.useState<MapVehicle[]>([]);
@@ -365,12 +293,13 @@ export function CustomerHomeView({
 
   // Fetch nearby Bodabodas & Bajajis from BFF -> location-service / Neon PostGIS
   const loadNearby = React.useCallback(async (lat: number, lng: number) => {
-    setLoadingNearby(true);
+    const requestId = ++nearbyLookupId.current;
     try {
       const res = await fetch(
         `/api/unguja/nearby?lat=${lat}&lng=${lng}&radiusKm=8`,
         { cache: "no-store" }
       );
+      if (requestId !== nearbyLookupId.current) return;
       if (res.ok) {
         const json = (await res.json()) as {
           summary: NearbySummary;
@@ -378,16 +307,52 @@ export function CustomerHomeView({
         };
         setVehicles(json.vehicles ?? []);
         setNearbySummary(json.summary);
+      } else {
+        setVehicles([]);
+        setNearbySummary({
+          totalNearby: 0,
+          bodabodaCount: 0,
+          bajajiCount: 0,
+          nearestBodabodaEtaMin: null,
+          nearestBajajiEtaMin: null,
+        });
       }
     } catch {
-      // Keep last known vehicles if transiently offline
+      if (requestId !== nearbyLookupId.current) return;
+      setVehicles([]);
+      setNearbySummary({
+        totalNearby: 0,
+        bodabodaCount: 0,
+        bajajiCount: 0,
+        nearestBodabodaEtaMin: null,
+        nearestBajajiEtaMin: null,
+      });
     } finally {
-      setLoadingNearby(false);
+      if (requestId === nearbyLookupId.current) setLoadingNearby(false);
     }
   }, []);
 
   React.useEffect(() => {
+    setLoadingNearby(true);
+    setVehicles([]);
+    setNearbySummary({
+      totalNearby: 0,
+      bodabodaCount: 0,
+      bajajiCount: 0,
+      nearestBodabodaEtaMin: null,
+      nearestBajajiEtaMin: null,
+    });
     void loadNearby(pickup.lat, pickup.lng);
+  }, [pickup.lat, pickup.lng, loadNearby]);
+
+  React.useEffect(() => {
+    const refresh = () => void loadNearby(pickup.lat, pickup.lng);
+    const interval = window.setInterval(refresh, 20_000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+    };
   }, [pickup.lat, pickup.lng, loadNearby]);
 
   // Support 1-tap "Book Return Trip" query parameters from /trips
@@ -427,7 +392,7 @@ export function CustomerHomeView({
     }
   }, []);
 
-  // Fetch upfront TZS quote & Stone Town Smart Snap whenever points or promo change
+  // Fetch an upfront TZS quote for the exact selected points.
   React.useEffect(() => {
     const controller = new AbortController();
     setLoadingQuote(true);
@@ -555,20 +520,6 @@ export function CustomerHomeView({
     [pinMode, locale]
   );
 
-  const handlePresetClick = (spot: PresetSpot) => {
-    gpsLookupId.current += 1;
-    mapLookupId.current += 1;
-    const label = locale === "sw" ? spot.labelSw : spot.labelEn;
-    if (spot.target === "pickup") {
-      setPickup({ lat: spot.lat, lng: spot.lng, label });
-      setPickupQuery(label);
-    } else {
-      setDropoff({ lat: spot.lat, lng: spot.lng, label });
-      setDropoffQuery(label);
-    }
-    setActiveField(null);
-  };
-
   const handleUseMyGps = () => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setGpsStatus(
@@ -613,18 +564,6 @@ export function CustomerHomeView({
     setAppliedPromoCode(promoInput.trim().toUpperCase());
   };
 
-  const snappedPickupPoint: MapPoint | null =
-    quoteData?.pickup.snapped && quoteData.pickup.snapGate
-      ? {
-          lat: quoteData.pickup.effective.lat,
-          lng: quoteData.pickup.effective.lng,
-          label:
-            locale === "sw"
-              ? quoteData.pickup.snapGate.nameSw
-              : quoteData.pickup.snapGate.nameEn,
-        }
-      : null;
-
   const bodabodaQuote = quoteData?.quotes.BODABODA;
   const bajajiQuote = quoteData?.quotes.BAJAJI;
   const activeQuote =
@@ -656,7 +595,7 @@ export function CustomerHomeView({
       startPin: pin,
       fareTzs: activeQuote.finalFareTzs,
       paymentMethod,
-      pickupLabel: snappedPickupPoint ? snappedPickupPoint.label : pickup.label,
+      pickupLabel: pickup.label,
       dropoffLabel: dropoff.label,
       pickupNote,
       cashChangeNote:
@@ -768,7 +707,7 @@ export function CustomerHomeView({
             {
               icon: <Compass className="h-4 w-4" />,
               title: "STONE TOWN",
-              subtitle: "SMART SNAP",
+              subtitle: locale === "sw" ? "UNGUJA YOTE" : "ANY UNGUJA PICKUP",
             },
             {
               icon: <ShieldCheck className="h-4 w-4" />,
@@ -875,7 +814,7 @@ export function CustomerHomeView({
                     locale={locale}
                     vehicles={vehicles}
                     pickup={pickup}
-                    snappedPickup={snappedPickupPoint}
+                    snappedPickup={null}
                     dropoff={dropoff}
                     routeGeometry={quoteData?.route.geometry ?? null}
                     pinMode={pinMode}
@@ -1351,7 +1290,7 @@ export function CustomerHomeView({
               </ScrollReveal>
             ) : (
               <>
-                {/* Pickup & Dropoff Search + Map Pin Mode + Quick Unguja Chips */}
+                {/* Pickup and dropoff search with map pin selection */}
                 <ScrollReveal delayMs={80}>
                   <Card className="relative space-y-3.5 p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1511,7 +1450,7 @@ export function CustomerHomeView({
                       </div>
                     )}
 
-                    {/* Pickup Note & Quick Chips */}
+                    {/* Optional pickup note */}
                     <div className="space-y-1.5">
                       <input
                         type="text"
@@ -1519,87 +1458,12 @@ export function CustomerHomeView({
                         onChange={(e) => setPickupNote(e.target.value)}
                         placeholder={
                           locale === "sw"
-                            ? "Maelezo ya kukutana (mf. Niko mbele ya geti)..."
-                            : "Optional pickup note (e.g. At main gate)..."
+                            ? "Maelezo ya ziada ya kuchukuliwa (hiari)..."
+                            : "Optional pickup instructions..."
                         }
                         className="w-full rounded-2xl border border-[#17645F]/20 bg-[#F3EEE8]/70 px-3.5 py-2 text-xs text-[#122927] placeholder:text-[#17645F]/45 focus:border-[#17645F] focus:bg-[#FAF7F2] focus:outline-none"
                       />
-                      <div className="flex flex-wrap gap-1.5">
-                        {PICKUP_NOTE_CHIPS.map((chip) => {
-                          const text = locale === "sw" ? chip.sw : chip.en;
-                          return (
-                            <button
-                              key={chip.en}
-                              type="button"
-                              onClick={() => setPickupNote(text)}
-                              className="rounded-full border border-[#17645F]/20 bg-[#F3EEE8] px-3 py-0.5 text-[11px] font-semibold text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
-                            >
-                              + {text}
-                            </button>
-                          );
-                        })}
-                      </div>
                     </div>
-
-                    {/* Quick Unguja Destination & Smart Snap Preset Chips */}
-                    <div className="space-y-1.5 pt-1">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#17645F]/75">
-                        {t("customer.quickDestinations")}
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {PRESET_SPOTS.map((spot) => {
-                          const label =
-                            locale === "sw" ? spot.labelSw : spot.labelEn;
-                          const toneClass =
-                            spot.accent === "teal"
-                              ? "border-[#17645F]/35 bg-[#17645F]/10 text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
-                              : spot.accent === "red"
-                                ? "border-[#A93232]/30 bg-[#A93232]/10 text-[#A93232] hover:bg-[#A93232]/20"
-                                : "border-[#17645F]/20 bg-[#F3EEE8] text-[#122927] hover:border-[#17645F] hover:text-[#17645F]";
-                          return (
-                            <button
-                              key={spot.id}
-                              type="button"
-                              onClick={() => handlePresetClick(spot)}
-                              className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${toneClass}`}
-                            >
-                              {label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Stone Town Smart Snap Active Banner */}
-                    {quoteData?.pickup.snapped && quoteData.pickup.snapGate ? (
-                      <div className="flex items-start gap-2.5 rounded-2xl border border-[#B86B2B]/35 bg-[#B86B2B]/10 px-3.5 py-2.5 text-xs text-[#703C12]">
-                        <Footprints className="mt-0.5 h-4 w-4 shrink-0 text-[#B86B2B]" />
-                        <div>
-                          <p className="font-bold">
-                            {t("customer.snappedTitle")}
-                          </p>
-                          <p className="mt-0.5">
-                            {t("customer.snappedWalkPrefix")}{" "}
-                            <strong>
-                              {quoteData.pickup.snapGate.walkingDistanceMeters}m
-                              (~
-                              {quoteData.pickup.snapGate.walkingMinutes} min)
-                            </strong>{" "}
-                            {t("customer.snappedWalkSuffix")}:{" "}
-                            <strong>
-                              {locale === "sw"
-                                ? quoteData.pickup.snapGate.nameSw
-                                : quoteData.pickup.snapGate.nameEn}
-                            </strong>
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-start gap-2 rounded-2xl bg-[#F3EEE8] px-3.5 py-2.5 text-xs text-[#17645F]">
-                        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#17645F]" />
-                        <span>{t("customer.stoneTownNotice")}</span>
-                      </div>
-                    )}
 
                     {/* Unguja-Only Geofence Error Banner */}
                     {outsideError && (
@@ -1685,7 +1549,7 @@ export function CustomerHomeView({
                           <p className="text-xs text-[#17645F]/70">
                             {nearbySummary.nearestBodabodaEtaMin
                               ? `~${nearbySummary.nearestBodabodaEtaMin} min`
-                              : "2–4 min"}
+                              : locale === "sw" ? "Hakuna aliye karibu" : "No nearby rider"}
                           </p>
                         </div>
                       </button>
@@ -1735,7 +1599,7 @@ export function CustomerHomeView({
                           <p className="text-xs text-[#17645F]/70">
                             {nearbySummary.nearestBajajiEtaMin
                               ? `~${nearbySummary.nearestBajajiEtaMin} min`
-                              : "3–5 min"}
+                              : locale === "sw" ? "Hakuna aliye karibu" : "No nearby driver"}
                           </p>
                         </div>
                       </button>
@@ -1777,42 +1641,11 @@ export function CustomerHomeView({
                         </p>
                       )}
 
-                      <div className="grid grid-cols-3 gap-2 pt-1">
-                        {[
-                          {
-                            id: PaymentMethod.CASH,
-                            label: t("customer.payCash"),
-                            icon: Banknote,
-                          },
-                          {
-                            id: PaymentMethod.MOBILE_MONEY,
-                            label: t("customer.payMobileMoney"),
-                            icon: Smartphone,
-                          },
-                          {
-                            id: PaymentMethod.CARD,
-                            label: t("customer.payCard"),
-                            icon: CreditCard,
-                          },
-                        ].map((pm) => {
-                          const Icon = pm.icon;
-                          const active = paymentMethod === pm.id;
-                          return (
-                            <button
-                              key={pm.id}
-                              type="button"
-                              onClick={() => setPaymentMethod(pm.id)}
-                              className={`flex items-center justify-center gap-1.5 rounded-full border px-2.5 py-2 text-xs font-bold transition ${
-                                active
-                                  ? "border-[#17645F] bg-[#17645F] text-[#F3EEE8]"
-                                  : "border-[#17645F]/20 bg-[#F3EEE8] text-[#17645F] hover:border-[#17645F]"
-                              }`}
-                            >
-                              <Icon className="h-3.5 w-3.5 shrink-0" />
-                              <span className="truncate">{pm.label}</span>
-                            </button>
-                          );
-                        })}
+                      <div className="pt-1">
+                        <div className="flex w-fit items-center gap-1.5 rounded-full border border-[#17645F] bg-[#17645F] px-4 py-2 text-xs font-bold text-[#F3EEE8]">
+                          <Banknote className="h-3.5 w-3.5 shrink-0" />
+                          <span>{t("customer.payCash")}</span>
+                        </div>
                       </div>
 
                       {paymentMethod === PaymentMethod.CASH && (

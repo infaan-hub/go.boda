@@ -113,19 +113,16 @@ export async function POST(request: Request) {
   try {
     const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
 
-    // 1. Strict Unguja PostGIS polygon check + Stone Town Smart Snap
+    // 1. Keep the exact selected pickup and validate both points against Unguja.
     const geoCheck = (await sql`
       SELECT
         ST_Contains((SELECT geom FROM geo.zones WHERE id = 'unguja-island'),
           ST_SetSRID(ST_MakePoint(${d.pickup.lng}, ${d.pickup.lat}), 4326)) AS pickup_in_unguja,
         ST_Contains((SELECT geom FROM geo.zones WHERE id = 'unguja-island'),
-          ST_SetSRID(ST_MakePoint(${d.dropoff.lng}, ${d.dropoff.lat}), 4326)) AS dropoff_in_unguja,
-        ST_Contains((SELECT geom FROM geo.zones WHERE id = 'stone-town-pedestrian'),
-          ST_SetSRID(ST_MakePoint(${d.pickup.lng}, ${d.pickup.lat}), 4326)) AS pickup_in_st
+          ST_SetSRID(ST_MakePoint(${d.dropoff.lng}, ${d.dropoff.lat}), 4326)) AS dropoff_in_unguja
     `) as Array<{
       pickup_in_unguja: boolean;
       dropoff_in_unguja: boolean;
-      pickup_in_st: boolean;
     }>;
 
     if (!geoCheck[0]?.pickup_in_unguja || !geoCheck[0]?.dropoff_in_unguja) {
@@ -139,29 +136,11 @@ export async function POST(request: Request) {
       );
     }
 
-    let effLat = d.pickup.lat;
-    let effLng = d.pickup.lng;
-    let pickupSnapped = false;
-    let snapGateName: string | null = null;
-    let walkMeters = 0;
-
-    if (geoCheck[0].pickup_in_st) {
-      const snapRows = (await sql`
-        SELECT name_en AS "nameEn", lat, lng,
-               ROUND(ST_DistanceSphere(geom, ST_SetSRID(ST_MakePoint(${d.pickup.lng}, ${d.pickup.lat}), 4326)))::int AS "walkMeters"
-        FROM geo.snap_points
-        WHERE zone_id = 'stone-town-pedestrian'
-        ORDER BY geom <-> ST_SetSRID(ST_MakePoint(${d.pickup.lng}, ${d.pickup.lat}), 4326)
-        LIMIT 1
-      `) as Array<{ nameEn: string; lat: number; lng: number; walkMeters: number }>;
-      if (snapRows[0]) {
-        effLat = snapRows[0].lat;
-        effLng = snapRows[0].lng;
-        pickupSnapped = true;
-        snapGateName = snapRows[0].nameEn;
-        walkMeters = snapRows[0].walkMeters;
-      }
-    }
+    const effLat = d.pickup.lat;
+    const effLng = d.pickup.lng;
+    const pickupSnapped = false;
+    const snapGateName: string | null = null;
+    const walkMeters = 0;
 
     const straightMeters = Math.max(
       400,
@@ -284,18 +263,55 @@ export async function POST(request: Request) {
     const candidates = (await sql`
       SELECT
         operator_id AS "operatorId",
+        rating_avg AS "ratingAvg",
+        last_seen_at AS "lastSeenAt",
         ROUND(ST_DistanceSphere(geom, ST_SetSRID(ST_MakePoint(${effLng}, ${effLat}), 4326)))::int AS "distanceMeters"
       FROM location.operator_positions
       WHERE transport_type = ${d.transportType}
         AND is_online = TRUE
         AND is_busy = FALSE
-      ORDER BY geom <-> ST_SetSRID(ST_MakePoint(${effLng}, ${effLat}), 4326)
+        AND is_demo = FALSE
+        AND last_seen_at > NOW() - INTERVAL '90 seconds'
+        AND ST_DWithin(
+          geom::geography,
+          ST_SetSRID(ST_MakePoint(${effLng}, ${effLat}), 4326)::geography,
+          8000
+        )
+      ORDER BY
+        ST_DistanceSphere(geom, ST_SetSRID(ST_MakePoint(${effLng}, ${effLat}), 4326)) ASC,
+        last_seen_at DESC,
+        rating_avg DESC
       LIMIT 5
-    `) as Array<{ operatorId: string; distanceMeters: number }>;
+    `) as Array<{
+      operatorId: string;
+      ratingAvg: number;
+      lastSeenAt: string | Date;
+      distanceMeters: number;
+    }>;
 
     const expiresAt = new Date(Date.now() + 90 * 1000).toISOString();
     for (const c of candidates) {
-      const eta = Math.max(1, Math.ceil(c.distanceMeters / (d.transportType === "BODABODA" ? 430 : 350)));
+      const eta = Math.max(
+        1,
+        Math.ceil(
+          (c.distanceMeters * 1.3) /
+            (d.transportType === "BODABODA" ? 360 : 300)
+        )
+      );
+      const gpsAgeSeconds = Math.max(
+        0,
+        (Date.now() - new Date(c.lastSeenAt).getTime()) / 1000
+      );
+      const matchScore = Math.max(
+        0,
+        Math.min(
+          1,
+          1 -
+            0.65 * (c.distanceMeters / 8000) -
+            0.2 * (gpsAgeSeconds / 90) +
+            0.15 * ((Math.min(5, Number(c.ratingAvg) || 0) - 3) / 2)
+        )
+      );
       await sql`
         INSERT INTO dispatch.offers (
           trip_id, operator_id, transport_type, operator_title,
@@ -304,7 +320,7 @@ export async function POST(request: Request) {
         )
         VALUES (
           ${tripId}::uuid, ${c.operatorId}::uuid, ${d.transportType}, ${operatorTitle},
-          5.0, 1, 0.9, ${c.distanceMeters}, ${eta},
+          8.0, 1, ${matchScore}, ${c.distanceMeters}, ${eta},
           ${d.pickupLabel}, ${d.dropoffLabel}, ${estimatedFareTzs}, ${d.paymentMethod},
           'PENDING', ${expiresAt}::timestamptz
         )

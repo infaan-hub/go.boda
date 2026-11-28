@@ -5,8 +5,11 @@ import { TransportType, UNGUJA_GEO } from "@goboda/shared-types";
 export const dynamic = "force-dynamic";
 
 function estimateEta(distanceMeters: number, type: TransportType): number {
-  const speed = type === TransportType.BODABODA ? 430 : 350;
-  return Math.max(1, Math.ceil(distanceMeters / speed));
+  // Combine exact crow-flight distance with an Unguja road detour factor and
+  // typical in-town speeds; straight-line distance alone understates travel time.
+  const roadDistanceMeters = distanceMeters * 1.3;
+  const speedMetersPerMinute = type === TransportType.BODABODA ? 360 : 300;
+  return Math.max(1, Math.ceil(roadDistanceMeters / speedMetersPerMinute));
 }
 
 export async function GET(request: Request) {
@@ -34,6 +37,7 @@ export async function GET(request: Request) {
         heading,
         rating_avg AS "ratingAvg",
         is_demo AS "isDemo",
+        last_seen_at AS "lastSeenAt",
         ROUND(
           ST_DistanceSphere(
             geom,
@@ -43,14 +47,37 @@ export async function GET(request: Request) {
       FROM location.operator_positions
       WHERE is_online = TRUE
         AND is_busy = FALSE
-        AND (is_demo = TRUE OR last_seen_at > NOW() - INTERVAL '90 seconds')
+        AND is_demo = FALSE
+        AND last_seen_at > NOW() - INTERVAL '90 seconds'
         AND ST_DWithin(
           geom::geography,
           ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
           ${radiusMeters}
         )
-      ORDER BY geom <-> ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)
+      ORDER BY
+        ST_DistanceSphere(geom, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)) ASC,
+        rating_avg DESC
       LIMIT 30
+    `;
+
+    const countRows = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE transport_type = 'BODABODA')::int AS bodabodas,
+        COUNT(*) FILTER (WHERE transport_type = 'BAJAJI')::int AS bajajis,
+        (MIN(ST_DistanceSphere(geom, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)))
+          FILTER (WHERE transport_type = 'BODABODA'))::int AS "nearestBodabodaMeters",
+        (MIN(ST_DistanceSphere(geom, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)))
+          FILTER (WHERE transport_type = 'BAJAJI'))::int AS "nearestBajajiMeters"
+      FROM location.operator_positions
+      WHERE is_online = TRUE
+        AND is_busy = FALSE
+        AND is_demo = FALSE
+        AND last_seen_at > NOW() - INTERVAL '90 seconds'
+        AND ST_DWithin(
+          geom::geography,
+          ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
+          ${radiusMeters}
+        )
     `;
 
     const vehicles = (
@@ -64,25 +91,51 @@ export async function GET(request: Request) {
         heading: number;
         ratingAvg: number;
         isDemo: boolean;
+        lastSeenAt: string | Date;
         distanceMeters: number;
       }>
-    ).map((v) => ({
-      ...v,
-      etaMinutes: estimateEta(v.distanceMeters, v.transportType),
-    }));
+    )
+      .map((v) => {
+        const etaMinutes = estimateEta(v.distanceMeters, v.transportType);
+        const secondsSinceUpdate = Math.max(
+          0,
+          (Date.now() - new Date(v.lastSeenAt).getTime()) / 1000
+        );
+        // Hybrid rank balances estimated road ETA, GPS freshness, and operator rating.
+        const matchScore =
+          etaMinutes * 0.7 +
+          (secondsSinceUpdate / 90) * 0.3 -
+          (Number(v.ratingAvg) || 0) * 0.08;
+        return {
+          vehicle: { ...v, etaMinutes },
+          matchScore,
+        };
+      })
+      .sort((a, b) => a.matchScore - b.matchScore)
+      .map(({ vehicle }) => vehicle);
 
-    const bodabodas = vehicles.filter((v) => v.transportType === "BODABODA");
-    const bajajis = vehicles.filter((v) => v.transportType === "BAJAJI");
+    const counts = countRows[0] as {
+      bodabodas: number;
+      bajajis: number;
+      nearestBodabodaMeters: number | null;
+      nearestBajajiMeters: number | null;
+    };
 
     return NextResponse.json({
       center: { lat, lng },
       radiusKm,
       summary: {
-        totalNearby: vehicles.length,
-        bodabodaCount: bodabodas.length,
-        bajajiCount: bajajis.length,
-        nearestBodabodaEtaMin: bodabodas[0]?.etaMinutes ?? null,
-        nearestBajajiEtaMin: bajajis[0]?.etaMinutes ?? null,
+        totalNearby: counts.bodabodas + counts.bajajis,
+        bodabodaCount: counts.bodabodas,
+        bajajiCount: counts.bajajis,
+        nearestBodabodaEtaMin:
+          counts.nearestBodabodaMeters == null
+            ? null
+            : estimateEta(counts.nearestBodabodaMeters, TransportType.BODABODA),
+        nearestBajajiEtaMin:
+          counts.nearestBajajiMeters == null
+            ? null
+            : estimateEta(counts.nearestBajajiMeters, TransportType.BAJAJI),
       },
       vehicles,
       timestamp: new Date().toISOString(),

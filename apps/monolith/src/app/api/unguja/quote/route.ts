@@ -164,7 +164,7 @@ export async function POST(request: Request) {
 
   try {
     const [pickup, dropoff] = await Promise.all([
-      resolvePointPostgis(body.pickup, true),
+      resolvePointPostgis(body.pickup),
       resolvePointPostgis(body.dropoff),
     ]);
 
