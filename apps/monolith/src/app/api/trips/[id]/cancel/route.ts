@@ -16,7 +16,7 @@ export async function POST(
     const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = await sql`
       UPDATE trip.trips
-      SET status = 'CANCELLED', cancelled_at = NOW(), updated_at = NOW()
+      SET status = 'CANCELLED_BY_CUSTOMER', cancelled_at = NOW(), updated_at = NOW()
       WHERE id = ${id}::uuid
         AND customer_id = ${auth.customer.id}::uuid
         AND status IN ('SEARCHING', 'OFFERED_TO_OPERATOR', 'NO_OPERATOR_FOUND', 'ASSIGNED')

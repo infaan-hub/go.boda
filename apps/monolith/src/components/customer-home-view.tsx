@@ -725,7 +725,7 @@ export function CustomerHomeView({
           activeSos?: { alertCode?: string } | null;
         };
         if (stopped || !result.trip) return;
-        if (result.trip.status === "CANCELLED") {
+        if (result.trip.status === TripStatus.CANCELLED_BY_CUSTOMER) {
           setActiveTrip(null);
           shareLinkRequestedForTrip.current = null;
           return;
@@ -1089,9 +1089,7 @@ export function CustomerHomeView({
                                 ? "Rider wa Bodaboda"
                                 : "Dereva wa Bajaji"
                             } aliye karibu...`
-                          : locale === "sw"
-                            ? "Inatafuta mwendeshaji halisi aliye mtandaoni..."
-                            : "Finding a real online operator who can take your trip..."}
+                          : "Finding a real online operator who can take your trip..."}
                       </h2>
                       <p className="text-xs text-[#17645F]/75">
                         {activeTrip.tripCode} • {locale === "sw" ? "Inasubiri mwendeshaji akubali ombi" : "Waiting for an online operator to accept"}
