@@ -13,7 +13,7 @@ export async function POST(
   const { id } = await context.params;
 
   try {
-    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
+    const sql = getSql(process.env.DATABASE_URL ?? process.env.CUSTOMER_DATABASE_URL);
     const rows = await sql`
       UPDATE trip.trips
       SET status = 'CANCELLED_BY_CUSTOMER', cancelled_at = NOW(), updated_at = NOW()

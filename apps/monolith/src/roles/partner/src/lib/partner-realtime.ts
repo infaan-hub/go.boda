@@ -323,7 +323,7 @@ function resolveNotifUrl(eventSubject: string, payload: Record<string, unknown> 
 export async function buildPartnerRealtimeSnapshot(
   partner: PartnerSessionUser
 ): Promise<PartnerRealtimeSnapshot> {
-  const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
+  const sql = getSql(process.env.DATABASE_URL ?? process.env.PARTNER_DATABASE_URL);
   const operatorId = partner.id;
 
   const profileRows = (await sql`

@@ -20,7 +20,7 @@ export async function POST(
   const ttlMinutes = Math.min(240, Math.max(15, Number(body.ttlMinutes ?? 120)));
 
   try {
-    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
+    const sql = getSql(process.env.DATABASE_URL ?? process.env.CUSTOMER_DATABASE_URL);
     const rows = (await sql`
       SELECT id, trip_code, customer_id, operator_id, status, operator_plate,
              pickup_label, dropoff_label

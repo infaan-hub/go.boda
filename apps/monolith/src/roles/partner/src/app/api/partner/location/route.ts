@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   const operatorId = auth.partner.id;
 
   try {
-    const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
+    const sql = getSql(process.env.DATABASE_URL ?? process.env.PARTNER_DATABASE_URL);
     const geoRows = (await sql`
       SELECT ST_Contains(
         (SELECT geom FROM geo.zones WHERE id = 'unguja-island'),

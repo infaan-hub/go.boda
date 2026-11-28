@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
   // Query Neon PostGIS directly in the monolith.
   try {
-    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
+    const sql = getSql(process.env.DATABASE_URL ?? process.env.CUSTOMER_DATABASE_URL);
     const radiusMeters = radiusKm * 1000;
     const rows = await sql`
       SELECT

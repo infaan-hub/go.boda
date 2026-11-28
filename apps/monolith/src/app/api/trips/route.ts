@@ -86,7 +86,7 @@ export async function GET(request: Request) {
   if (!auth.ok) return auth.response;
   const customerId = auth.customer.id;
   try {
-    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
+    const sql = getSql(process.env.DATABASE_URL ?? process.env.CUSTOMER_DATABASE_URL);
     const rows = customerId
       ? await sql`
           SELECT
@@ -151,7 +151,7 @@ export async function POST(request: Request) {
 
   const d = parsed.data;
   try {
-    const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
+    const sql = getSql(process.env.DATABASE_URL ?? process.env.CUSTOMER_DATABASE_URL);
 
     // 1. Keep the exact selected pickup and validate both points against Unguja.
     const geoCheck = (await sql`

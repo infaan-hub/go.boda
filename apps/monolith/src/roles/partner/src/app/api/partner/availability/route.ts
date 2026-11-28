@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   const operatorId = auth.partner.id;
 
   try {
-    const sql = getSql(process.env.PARTNER_DATABASE_URL ?? process.env.DATABASE_URL);
+    const sql = getSql(process.env.DATABASE_URL ?? process.env.PARTNER_DATABASE_URL);
     const profileRows = (await sql`
       SELECT id, transport_type AS "transportType", operator_title AS "operatorTitle",
              plate_number AS "plateNumber", home_kituo AS "homeKituo",

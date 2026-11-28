@@ -297,18 +297,20 @@ export function UngujaMap({
     pointMarkersRef.current.forEach((m) => m.remove());
     pointMarkersRef.current = [];
 
-    // Original pickup pin
-    const pickupEl = buildPinElement(
-      snappedPickup ? "Walk" : "A",
-      snappedPickup ? "#64748b" : "#17645F",
-      "#ffffff",
-      pickup.label
-    );
-    pointMarkersRef.current.push(
-      new maplibregl.Marker({ element: pickupEl, anchor: "bottom" })
-        .setLngLat([pickup.lng, pickup.lat])
-        .addTo(map)
-    );
+    // Show pickup only after the customer has selected a point.
+    if (pickup.label.trim()) {
+      const pickupEl = buildPinElement(
+        snappedPickup ? "Walk" : "A",
+        snappedPickup ? "#64748b" : "#17645F",
+        "#ffffff",
+        pickup.label
+      );
+      pointMarkersRef.current.push(
+        new maplibregl.Marker({ element: pickupEl, anchor: "bottom" })
+          .setLngLat([pickup.lng, pickup.lat])
+          .addTo(map)
+      );
+    }
 
     // Stone Town Smart Snap perimeter gate marker
     if (snappedPickup) {
@@ -385,12 +387,16 @@ export function UngujaMap({
 
     // Smoothly frame pickup + dropoff inside Unguja bounds
     const inUnguja =
+      pickup.label.trim().length > 0 &&
       pickup.lat <= UNGUJA_GEO.BOUNDS.northEast.lat &&
       pickup.lat >= UNGUJA_GEO.BOUNDS.southWest.lat &&
       pickup.lng >= UNGUJA_GEO.BOUNDS.southWest.lng &&
       pickup.lng <= UNGUJA_GEO.BOUNDS.northEast.lng;
 
-    if (!inUnguja) return;
+    if (!inUnguja) {
+      map.easeTo({ center: [39.32, -6.15], zoom: 9.5, duration: 500 });
+      return;
+    }
 
     if (
       dropoff &&

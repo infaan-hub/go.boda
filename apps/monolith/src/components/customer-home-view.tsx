@@ -199,28 +199,22 @@ export function CustomerHomeView({
   const [pinMode, setPinMode] = React.useState<"pickup" | "dropoff">("dropoff");
 
   const [pickup, setPickup] = React.useState<MapPoint>({
-    lat: -6.1649,
-    lng: 39.1936,
-    label:
-      locale === "sw"
-        ? "Kituo cha Darajani, Stone Town"
-        : "Darajani Market Perimeter, Stone Town",
+    lat: -6.15,
+    lng: 39.32,
+    label: "",
   });
   const [dropoff, setDropoff] = React.useState<MapPoint>({
-    lat: -6.222,
-    lng: 39.2249,
-    label:
-      locale === "sw"
-        ? "Uwanja wa Ndege wa Karume (ZNZ)"
-        : "Abeid Amani Karume Airport (ZNZ)",
+    lat: -6.15,
+    lng: 39.32,
+    label: "",
   });
 
   // Search autocomplete state
   const [activeField, setActiveField] = React.useState<
     "pickup" | "dropoff" | null
   >(null);
-  const [pickupQuery, setPickupQuery] = React.useState(pickup.label);
-  const [dropoffQuery, setDropoffQuery] = React.useState(dropoff.label);
+  const [pickupQuery, setPickupQuery] = React.useState("");
+  const [dropoffQuery, setDropoffQuery] = React.useState("");
   const [searchResults, setSearchResults] = React.useState<LandmarkItem[]>([]);
   const [searching, setSearching] = React.useState(false);
   const gpsLookupId = React.useRef(0);
@@ -377,6 +371,18 @@ export function CustomerHomeView({
   }, []);
 
   React.useEffect(() => {
+    if (!pickup.label.trim()) {
+      setLoadingNearby(false);
+      setVehicles([]);
+      setNearbySummary({
+        totalNearby: 0,
+        bodabodaCount: 0,
+        bajajiCount: 0,
+        nearestBodabodaEtaMin: null,
+        nearestBajajiEtaMin: null,
+      });
+      return;
+    }
     setLoadingNearby(true);
     setVehicles([]);
     setNearbySummary({
@@ -387,17 +393,19 @@ export function CustomerHomeView({
       nearestBajajiEtaMin: null,
     });
     void loadNearby(pickup.lat, pickup.lng);
-  }, [pickup.lat, pickup.lng, loadNearby]);
+  }, [pickup.lat, pickup.lng, pickup.label, loadNearby]);
 
   React.useEffect(() => {
-    const refresh = () => void loadNearby(pickup.lat, pickup.lng);
+    const refresh = () => {
+      if (pickup.label.trim()) void loadNearby(pickup.lat, pickup.lng);
+    };
     const interval = window.setInterval(refresh, 20_000);
     window.addEventListener("focus", refresh);
     return () => {
       window.clearInterval(interval);
       window.removeEventListener("focus", refresh);
     };
-  }, [pickup.lat, pickup.lng, loadNearby]);
+  }, [pickup.lat, pickup.lng, pickup.label, loadNearby]);
 
   // Support 1-tap "Book Return Trip" query parameters from /trips
   React.useEffect(() => {
@@ -438,6 +446,12 @@ export function CustomerHomeView({
 
   // Fetch an upfront TZS quote for the exact selected points.
   React.useEffect(() => {
+    if (!pickup.label.trim() || !dropoff.label.trim()) {
+      setQuoteData(null);
+      setOutsideError(null);
+      setLoadingQuote(false);
+      return;
+    }
     const controller = new AbortController();
     setLoadingQuote(true);
     setOutsideError(null);
@@ -483,7 +497,7 @@ export function CustomerHomeView({
       });
 
     return () => controller.abort();
-  }, [pickup.lat, pickup.lng, dropoff.lat, dropoff.lng, appliedPromoCode, locale]);
+  }, [pickup.lat, pickup.lng, pickup.label, dropoff.lat, dropoff.lng, dropoff.label, appliedPromoCode, locale]);
 
   // Debounced bilingual Unguja landmark search
   React.useEffect(() => {
@@ -1001,7 +1015,7 @@ export function CustomerHomeView({
                     vehicles={vehicles}
                     pickup={pickup}
                     snappedPickup={null}
-                    dropoff={dropoff}
+                    dropoff={dropoff.label ? dropoff : null}
                     routeGeometry={quoteData?.route.geometry ?? null}
                     pinMode={pinMode}
                     onMapSelect={handleMapSelect}
@@ -1356,6 +1370,9 @@ export function CustomerHomeView({
                             gpsLookupId.current += 1;
                             mapLookupId.current += 1;
                             setPickupQuery(e.target.value);
+                            if (e.target.value !== pickup.label) {
+                              setPickup((point) => ({ ...point, label: "" }));
+                            }
                           }}
                           placeholder={t("customer.pickupPlaceholder")}
                           className="w-full bg-transparent text-sm font-medium text-[#122927] placeholder:text-[#17645F]/40 focus:outline-none"
@@ -1380,6 +1397,9 @@ export function CustomerHomeView({
                           onChange={(e) => {
                             mapLookupId.current += 1;
                             setDropoffQuery(e.target.value);
+                            if (e.target.value !== dropoff.label) {
+                              setDropoff((point) => ({ ...point, label: "" }));
+                            }
                           }}
                           placeholder={t("customer.whereToPlaceholder")}
                           className="w-full bg-transparent text-sm font-medium text-[#122927] placeholder:text-[#17645F]/40 focus:outline-none"
