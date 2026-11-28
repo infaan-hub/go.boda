@@ -1,4 +1,4 @@
-import { randomInt, randomUUID } from "node:crypto";
+import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSql } from "@goboda/db";
@@ -9,11 +9,11 @@ import {
   paymentMethodSchema,
   transportTypeSchema,
 } from "@goboda/shared-types";
+import { verifyCustomerRequest } from "@/lib/customer-auth";
 
 export const dynamic = "force-dynamic";
 
 const createTripSchema = z.object({
-  customerId: z.string().uuid().optional(),
   transportType: transportTypeSchema,
   pickup: z.object({
     lat: z.number().min(-90).max(90),
@@ -44,9 +44,47 @@ function haversineMeters(
   return Math.round(2 * R * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s)));
 }
 
+async function estimateRoadRoute(
+  from: { lat: number; lng: number },
+  to: { lat: number; lng: number }
+) {
+  const straightMeters = Math.max(400, haversineMeters(from, to));
+  try {
+    const osrmBase = process.env.OSRM_BASE_URL ?? "https://router.project-osrm.org";
+    const response = await fetch(
+      `${osrmBase}/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=false`,
+      { cache: "no-store", signal: AbortSignal.timeout(2500) }
+    );
+    if (response.ok) {
+      const data = (await response.json()) as {
+        routes?: Array<{ distance: number; duration: number }>;
+      };
+      const route = data.routes?.[0];
+      if (route && route.distance > 0 && route.duration > 0) {
+        return {
+          distanceMeters: Math.round(route.distance),
+          durationSeconds: Math.max(180, Math.round(route.duration)),
+        };
+      }
+    }
+  } catch {
+    // The local estimate below keeps trip creation available when routing is down.
+  }
+
+  const distanceMeters = Math.round(straightMeters * 1.24);
+  return {
+    distanceMeters,
+    durationSeconds: Math.max(
+      180,
+      Math.round((distanceMeters / 1000 / 24) * 3600)
+    ),
+  };
+}
+
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const customerId = searchParams.get("customerId");
+  const auth = await verifyCustomerRequest(request);
+  if (!auth.ok) return auth.response;
+  const customerId = auth.customer.id;
   try {
     const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = customerId
@@ -64,7 +102,7 @@ export async function GET(request: Request) {
             gross_fare_tzs AS "grossFareTzs", discount_tzs AS "discountTzs",
             estimated_fare_tzs AS "estimatedFareTzs", final_fare_tzs AS "finalFareTzs",
             operator_name AS "operatorName", operator_plate AS "operatorPlate",
-            start_pin AS "startPin", completed_at AS "completedAt",
+            completed_at AS "completedAt",
             created_at AS "createdAt"
           FROM trip.trips
           WHERE customer_id = ${customerId}::uuid
@@ -100,6 +138,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const auth = await verifyCustomerRequest(request);
+  if (!auth.ok) return auth.response;
   const body = await request.json().catch(() => null);
   const parsed = createTripSchema.safeParse(body);
   if (!parsed.success) {
@@ -142,12 +182,10 @@ export async function POST(request: Request) {
     const snapGateName: string | null = null;
     const walkMeters = 0;
 
-    const straightMeters = Math.max(
-      400,
-      haversineMeters({ lat: effLat, lng: effLng }, d.dropoff)
+    const { distanceMeters, durationSeconds } = await estimateRoadRoute(
+      { lat: effLat, lng: effLng },
+      d.dropoff
     );
-    const distanceMeters = Math.round(straightMeters * 1.24);
-    const durationSeconds = Math.max(180, Math.round((distanceMeters / 1000 / 24) * 3600));
 
     // 2. Live Upfront TZS Tariff + Optional Promo
     const tariffRows = (await sql`
@@ -218,7 +256,7 @@ export async function POST(request: Request) {
     const operatorNetTzs = Math.max(0, grossFareTzs - commissionTzs);
     const tripCode = `GB-${randomInt(100000, 999999)}`;
     const startPin = String(randomInt(1000, 9999));
-    const customerId = d.customerId ?? randomUUID();
+    const customerId = auth.customer.id;
     const operatorTitle = getOperatorTitle(d.transportType);
 
     // 3. Persist real Trip in trip.trips
@@ -247,13 +285,14 @@ export async function POST(request: Request) {
       RETURNING
         id, trip_code AS "tripCode", customer_id AS "customerId",
         transport_type AS "transportType", operator_title AS "operatorTitle",
-        status, pickup_label AS "pickupLabel", pickup_snapped AS "pickupSnapped",
+        status, distance_meters AS "distanceMeters",
+        pickup_label AS "pickupLabel", pickup_snapped AS "pickupSnapped",
         pickup_snap_gate_name AS "pickupSnapGateName", pickup_walk_meters AS "pickupWalkMeters",
         dropoff_label AS "dropoffLabel", payment_method AS "paymentMethod",
         promo_code AS "promoCode", gross_fare_tzs AS "grossFareTzs",
         discount_tzs AS "discountTzs", estimated_fare_tzs AS "estimatedFareTzs",
         commission_tzs AS "commissionTzs", operator_net_tzs AS "operatorNetTzs",
-        start_pin AS "startPin", created_at AS "createdAt"
+        created_at AS "createdAt"
     `) as Array<Record<string, unknown>>;
 
     const trip = inserted[0]!;
@@ -289,7 +328,7 @@ export async function POST(request: Request) {
       distanceMeters: number;
     }>;
 
-    const expiresAt = new Date(Date.now() + 90 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + 30 * 1000).toISOString();
     for (const c of candidates) {
       const eta = Math.max(
         1,

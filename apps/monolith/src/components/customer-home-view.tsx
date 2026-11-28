@@ -13,18 +13,14 @@ import {
   Clock,
   Compass,
   ExternalLink,
-  KeyRound,
   Loader2,
   LocateFixed,
   MapPin,
-  MessageSquare,
   Navigation,
   PhoneCall,
   Radar,
   RefreshCw,
   Route,
-  Share2,
-  ShieldAlert,
   ShieldCheck,
   Star,
   Tag,
@@ -150,15 +146,16 @@ interface QuoteResponse {
 }
 
 interface ActiveCustomerTrip {
+  id: string;
   tripCode: string;
   status: TripStatus;
   transportType: TransportType;
-  operatorName: string;
-  operatorPlate: string;
-  operatorPhone: string;
-  operatorRating: number;
-  operatorEtaMin: number;
-  startPin: string;
+  operatorId: string | null;
+  operatorName: string | null;
+  operatorPlate: string | null;
+  operatorPhone: string | null;
+  operatorRating: number | null;
+  operatorEtaMin: number | null;
   fareTzs: number;
   paymentMethod: PaymentMethod;
   pickupLabel: string;
@@ -166,7 +163,7 @@ interface ActiveCustomerTrip {
   pickupNote: string;
   cashChangeNote: string;
   distanceKm: number;
-  shareToken: string;
+  shareToken: string | null;
   sosTriggered: boolean;
   sosAlertCode: string | null;
 }
@@ -182,24 +179,6 @@ interface HistoryEntry {
   helmetProvided: boolean | null;
   completedAt: string;
 }
-
-const CUSTOMER_CHAT_PRESETS = [
-  {
-    key: "WAIT_2_MIN",
-    sw: "Subiri dakika 2, natoka sasa.",
-    en: "Please wait 2 min, coming out now.",
-  },
-  {
-    key: "STONE_TOWN_WALK",
-    sw: "Natembea kuja barabarani.",
-    en: "Walking out to the perimeter road.",
-  },
-  {
-    key: "EXTRA_HELMET",
-    sw: "Tafadhali hakikisha una helmeti safi.",
-    en: "Please make sure you have a clean helmet.",
-  },
-] as const;
 
 export function CustomerHomeView({
   locale,
@@ -266,17 +245,16 @@ export function CustomerHomeView({
   const [loadingQuote, setLoadingQuote] = React.useState(true);
   const [outsideError, setOutsideError] = React.useState<string | null>(null);
   const [gpsStatus, setGpsStatus] = React.useState<string | null>(null);
+  const [tripRequestError, setTripRequestError] = React.useState<string | null>(null);
+  const [requestingTrip, setRequestingTrip] = React.useState(false);
 
   // Phase 4 Full Customer Trip Flow, Quick-Chat, SOS, Live Share & Rating state
   const [activeTrip, setActiveTrip] = React.useState<ActiveCustomerTrip | null>(
     null
   );
-  const [sosDrawerOpen, setSosDrawerOpen] = React.useState(false);
-  const [chatMessages, setChatMessages] = React.useState<
-    Array<{ id: string; text: string; time: string }>
-  >([]);
   const [ratingStars, setRatingStars] = React.useState(5);
   const [helmetProvided, setHelmetProvided] = React.useState<boolean>(true);
+  const shareLinkRequestedForTrip = React.useRef<string | null>(null);
   const [tripHistory, setTripHistory] = React.useState<HistoryEntry[]>([
     {
       tripCode: "GB-51029",
@@ -290,6 +268,72 @@ export function CustomerHomeView({
       completedAt: "Yesterday",
     },
   ]);
+
+  React.useEffect(() => {
+    let stopped = false;
+    void fetch("/api/trips", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as {
+          trips?: Array<{
+            id: string;
+            tripCode: string;
+            status: TripStatus;
+            transportType: TransportType;
+            pickupLabel: string;
+            dropoffLabel: string;
+            distanceMeters: number;
+            paymentMethod: PaymentMethod;
+            estimatedFareTzs: number;
+            finalFareTzs: number | null;
+          }>;
+        };
+      })
+      .then((data) => {
+        if (stopped || !data?.trips) return;
+        const trip = data.trips.find((candidate) =>
+          [
+            TripStatus.SEARCHING,
+            TripStatus.OFFERED_TO_OPERATOR,
+            TripStatus.NO_OPERATOR_FOUND,
+            TripStatus.ASSIGNED,
+            TripStatus.ARRIVED_AT_PICKUP,
+            TripStatus.IN_PROGRESS,
+            TripStatus.SOS_ACTIVE,
+            TripStatus.COMPLETED_UNPAID,
+          ].some((status) => status === candidate.status)
+        );
+        if (!trip) return;
+        setActiveTrip((current) =>
+          current ?? {
+            id: trip.id,
+            tripCode: trip.tripCode,
+            status: trip.status,
+            transportType: trip.transportType,
+            operatorId: null,
+            operatorName: null,
+            operatorPlate: null,
+            operatorPhone: null,
+            operatorRating: null,
+            operatorEtaMin: null,
+            fareTzs: Number(trip.finalFareTzs ?? trip.estimatedFareTzs),
+            paymentMethod: trip.paymentMethod,
+            pickupLabel: trip.pickupLabel,
+            dropoffLabel: trip.dropoffLabel,
+            pickupNote: "",
+            cashChangeNote: "",
+            distanceKm: Number(trip.distanceMeters) / 1000,
+            shareToken: null,
+            sosTriggered: trip.status === TripStatus.SOS_ACTIVE,
+            sosAlertCode: null,
+          }
+        );
+      })
+      .catch(() => null);
+    return () => {
+      stopped = true;
+    };
+  }, []);
 
   // Fetch nearby Bodabodas & Bajajis from BFF -> location-service / Neon PostGIS
   const loadNearby = React.useCallback(async (lat: number, lng: number) => {
@@ -441,17 +485,6 @@ export function CustomerHomeView({
     return () => controller.abort();
   }, [pickup.lat, pickup.lng, dropoff.lat, dropoff.lng, appliedPromoCode, locale]);
 
-  // Auto-transition SEARCHING -> ASSIGNED after 1.5s radar match
-  React.useEffect(() => {
-    if (!activeTrip || activeTrip.status !== TripStatus.SEARCHING) return;
-    const timer = setTimeout(() => {
-      setActiveTrip((prev) =>
-        prev ? { ...prev, status: TripStatus.ASSIGNED } : null
-      );
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [activeTrip]);
-
   // Debounced bilingual Unguja landmark search
   React.useEffect(() => {
     if (!activeField) {
@@ -572,70 +605,232 @@ export function CustomerHomeView({
   const fallbackBodaFare = DEFAULT_TARIFFS_TZS.BODABODA.minFareTzs;
   const fallbackBajajiFare = DEFAULT_TARIFFS_TZS.BAJAJI.minFareTzs;
 
-  const handleRequestTransport = () => {
-    if (!activeQuote || !quoteData) return;
-    const matched = vehicles.find((v) => v.transportType === selectedType);
-    const isBoda = selectedType === TransportType.BODABODA;
-    const pin = String(Math.floor(1000 + Math.random() * 9000));
-    const tripCode = `GB-${Math.floor(10000 + Math.random() * 90000)}`;
-    setChatMessages([]);
-    setSosDrawerOpen(false);
-    setRatingStars(5);
-    setHelmetProvided(true);
+  const handleRequestTransport = async () => {
+    if (!activeQuote || !quoteData || requestingTrip) return;
+    setRequestingTrip(true);
+    setTripRequestError(null);
+    try {
+      const response = await fetch("/api/trips", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          transportType: selectedType,
+          pickup: { lat: pickup.lat, lng: pickup.lng },
+          pickupLabel: pickup.label,
+          pickupNote,
+          dropoff: { lat: dropoff.lat, lng: dropoff.lng },
+          dropoffLabel: dropoff.label,
+          paymentMethod,
+          promoCode: appliedPromoCode || undefined,
+        }),
+      });
+      const result = (await response.json()) as {
+        error?: string;
+        trip?: {
+          id: string;
+          tripCode: string;
+          status: TripStatus;
+          transportType: TransportType;
+          pickupLabel: string;
+          dropoffLabel: string;
+          distanceMeters: number;
+          estimatedFareTzs: number;
+          paymentMethod: PaymentMethod;
+        };
+      };
+      if (!response.ok || !result.trip) {
+        throw new Error(result.error ?? "TRIP_REQUEST_FAILED");
+      }
 
-    setActiveTrip({
-      tripCode,
-      status: TripStatus.SEARCHING,
-      transportType: selectedType,
-      operatorName: isBoda ? "Hassan Ali" : "Khamis Bakari",
-      operatorPlate: isBoda ? "Z 104 AAB" : "Z 612 BBA",
-      operatorPhone: "+255770123456",
-      operatorRating: matched?.ratingAvg ?? 4.9,
-      operatorEtaMin: matched?.etaMinutes ?? (isBoda ? 2 : 3),
-      startPin: pin,
-      fareTzs: activeQuote.finalFareTzs,
-      paymentMethod,
-      pickupLabel: pickup.label,
-      dropoffLabel: dropoff.label,
-      pickupNote,
-      cashChangeNote:
-        paymentMethod === PaymentMethod.CASH ? cashChangeNote : "",
-      distanceKm: quoteData.route.distanceKm,
-      shareToken: isBoda ? "demo-unguja" : "demo-bajaji",
-      sosTriggered: false,
-      sosAlertCode: null,
-    });
+      setRatingStars(5);
+      setHelmetProvided(true);
+      setActiveTrip({
+        id: result.trip.id,
+        tripCode: result.trip.tripCode,
+        status: result.trip.status,
+        transportType: result.trip.transportType,
+        operatorId: null,
+        operatorName: null,
+        operatorPlate: null,
+        operatorPhone: null,
+        operatorRating: null,
+        operatorEtaMin: null,
+        fareTzs: Number(result.trip.estimatedFareTzs),
+        paymentMethod: result.trip.paymentMethod,
+        pickupLabel: result.trip.pickupLabel,
+        dropoffLabel: result.trip.dropoffLabel,
+        pickupNote,
+        cashChangeNote,
+        distanceKm: Number(result.trip.distanceMeters) / 1000,
+        shareToken: null,
+        sosTriggered: false,
+        sosAlertCode: null,
+      });
+    } catch (error) {
+      setTripRequestError(
+        error instanceof Error
+          ? error.message
+          : locale === "sw"
+            ? "Ombi la safari halikufaulu. Jaribu tena."
+            : "Could not request a trip. Please try again."
+      );
+    } finally {
+      setRequestingTrip(false);
+    }
   };
 
-  const handleSendChat = (preset: (typeof CUSTOMER_CHAT_PRESETS)[number]) => {
-    const time = new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    setChatMessages((prev) => [
-      ...prev,
-      {
-        id: `${Date.now()}-${preset.key}`,
-        text: locale === "sw" ? preset.sw : preset.en,
-        time,
-      },
-    ]);
-  };
-
-  const handleConfirmSos = () => {
-    const code = `SOS-${Math.floor(10000 + Math.random() * 90000)}`;
-    setActiveTrip((prev) =>
-      prev
-        ? {
-            ...prev,
-            status: TripStatus.SOS_ACTIVE,
-            sosTriggered: true,
-            sosAlertCode: code,
-          }
-        : null
+  const handleCancelTrip = async () => {
+    if (!activeTrip) return;
+    const response = await fetch(
+      `/api/trips/${encodeURIComponent(activeTrip.id)}/cancel`,
+      { method: "POST" }
     );
-    setSosDrawerOpen(false);
+    if (response.ok) {
+      setActiveTrip(null);
+      shareLinkRequestedForTrip.current = null;
+    } else {
+      const result = (await response.json().catch(() => ({}))) as { error?: string };
+      setTripRequestError(result.error ?? "TRIP_CANCEL_FAILED");
+    }
   };
+
+  const activeTripId = activeTrip?.id ?? null;
+  const activeTripStatus = activeTrip?.status;
+  const activeOperatorId = activeTrip?.operatorId ?? null;
+  const activeShareToken = activeTrip?.shareToken ?? null;
+
+  React.useEffect(() => {
+    if (!activeTripId) return;
+    let stopped = false;
+    const refreshTrip = async () => {
+      try {
+        const response = await fetch(
+          `/api/trips/${encodeURIComponent(activeTripId)}`,
+          { cache: "no-store" }
+        );
+        if (!response.ok) return;
+        const result = (await response.json()) as {
+          trip: {
+            status: TripStatus;
+            operatorId: string | null;
+            operatorName: string | null;
+            operatorPlate: string | null;
+            operatorPhone: string | null;
+            operatorRating: number | string | null;
+            operatorEtaMin: number | null;
+            distanceMeters: number;
+            estimatedFareTzs: number;
+            finalFareTzs: number | null;
+          };
+          activeSos?: { alertCode?: string } | null;
+        };
+        if (stopped || !result.trip) return;
+        if (result.trip.status === "CANCELLED") {
+          setActiveTrip(null);
+          shareLinkRequestedForTrip.current = null;
+          return;
+        }
+        setActiveTrip((current) =>
+          !current || current.id !== activeTripId
+            ? current
+            : {
+                ...current,
+                status: result.trip.status,
+                operatorId: result.trip.operatorId,
+                operatorName: result.trip.operatorName,
+                operatorPlate: result.trip.operatorPlate,
+                operatorPhone: result.trip.operatorPhone,
+                operatorRating:
+                  result.trip.operatorRating == null
+                    ? null
+                    : Number(result.trip.operatorRating),
+                operatorEtaMin: result.trip.operatorEtaMin,
+                distanceKm: Number(result.trip.distanceMeters) / 1000,
+                fareTzs: Number(
+                  result.trip.finalFareTzs ?? result.trip.estimatedFareTzs
+                ),
+                sosTriggered:
+                  result.trip.status === TripStatus.SOS_ACTIVE ||
+                  Boolean(result.activeSos),
+                sosAlertCode: result.activeSos?.alertCode ?? null,
+              }
+        );
+      } catch {
+        // Keep the most recent server-confirmed state while connectivity recovers.
+      }
+    };
+    void refreshTrip();
+    const interval = window.setInterval(() => void refreshTrip(), 3000);
+    return () => {
+      stopped = true;
+      window.clearInterval(interval);
+    };
+  }, [activeTripId]);
+
+  React.useEffect(() => {
+    if (
+      !activeTripId ||
+      !(
+        activeTripStatus === TripStatus.SEARCHING ||
+        activeTripStatus === TripStatus.OFFERED_TO_OPERATOR ||
+        activeTripStatus === TripStatus.NO_OPERATOR_FOUND
+      )
+    ) {
+      return;
+    }
+    const interval = window.setInterval(() => {
+      void fetch(`/api/trips/${encodeURIComponent(activeTripId)}/dispatch`, {
+        method: "POST",
+      });
+    }, 35_000);
+    return () => window.clearInterval(interval);
+  }, [activeTripId, activeTripStatus]);
+
+  React.useEffect(() => {
+    if (
+      !activeTripId ||
+      !activeOperatorId ||
+      activeShareToken ||
+      !(
+        activeTripStatus === TripStatus.ASSIGNED ||
+        activeTripStatus === TripStatus.ARRIVED_AT_PICKUP ||
+        activeTripStatus === TripStatus.IN_PROGRESS ||
+        activeTripStatus === TripStatus.SOS_ACTIVE
+      ) ||
+      shareLinkRequestedForTrip.current === activeTripId
+    ) {
+      return;
+    }
+    shareLinkRequestedForTrip.current = activeTripId;
+    let stopped = false;
+    void fetch(`/api/trips/${encodeURIComponent(activeTripId)}/share`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ locale }),
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("SHARE_LINK_FAILED");
+        return (await response.json()) as { shareToken: string };
+      })
+      .then(({ shareToken }) => {
+        if (stopped) return;
+        setActiveTrip((current) =>
+          current?.id === activeTripId ? { ...current, shareToken } : current
+        );
+      })
+      .catch(() => {
+        shareLinkRequestedForTrip.current = null;
+      });
+    return () => {
+      stopped = true;
+    };
+  }, [
+    activeTripId,
+    activeOperatorId,
+    activeShareToken,
+    activeTripStatus,
+    locale,
+  ]);
 
   const handleSubmitRating = () => {
     if (!activeTrip) return;
@@ -660,18 +855,9 @@ export function CustomerHomeView({
     setActiveTab("history");
   };
 
-  const shareOrigin =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : "https://zan-goboda.vercel.app";
-  const liveTrackPath = activeTrip ? `/track/${activeTrip.shareToken}` : "/track/demo-unguja";
-  const whatsappShareHref = activeTrip
-    ? `https://wa.me/?text=${encodeURIComponent(
-        locale === "sw"
-          ? `Fuatilia safari yangu ya Go.boda (${activeTrip.tripCode}, ${activeTrip.operatorPlate}) kutoka ${activeTrip.pickupLabel} kwenda ${activeTrip.dropoffLabel}: ${shareOrigin}${liveTrackPath}`
-          : `Track my live Go.boda Unguja trip (${activeTrip.tripCode}, ${activeTrip.operatorPlate}) from ${activeTrip.pickupLabel} to ${activeTrip.dropoffLabel}: ${shareOrigin}${liveTrackPath}`
-      )}`
-    : "#";
+  const liveTrackPath = activeTrip?.shareToken
+    ? `/track/${activeTrip.shareToken}`
+    : null;
 
   return (
     <CustomerPortalShell
@@ -887,11 +1073,13 @@ export function CustomerHomeView({
               </section>
             </ScrollReveal>
 
-            {/* ACTIVE CUSTOMER TRIP EXPERIENCE (Matching Radar -> Assigned + PIN -> Live SOS/WhatsApp Share -> Receipt + Helmet Rating) */}
+            {/* Live trip request and operator confirmation */}
             {activeTrip ? (
               <ScrollReveal delayMs={60}>
                 <Card className="space-y-4 border-2 border-[#17645F] bg-[#FAF7F2] p-5 shadow-md">
-                  {activeTrip.status === TripStatus.SEARCHING ? (
+                  {activeTrip.status === TripStatus.SEARCHING ||
+                  activeTrip.status === TripStatus.OFFERED_TO_OPERATOR ||
+                  activeTrip.status === TripStatus.NO_OPERATOR_FOUND ? (
                     <div className="space-y-3 py-4 text-center">
                       <Radar className="mx-auto h-10 w-10 animate-spin text-[#17645F]" />
                       <h2 className="font-display text-2xl uppercase text-[#17645F]">
@@ -901,21 +1089,28 @@ export function CustomerHomeView({
                                 ? "Rider wa Bodaboda"
                                 : "Dereva wa Bajaji"
                             } aliye karibu...`
-                          : `Matching nearby verified ${
-                              activeTrip.transportType === TransportType.BODABODA
-                                ? "Bodaboda Rider"
-                                : "Bajaji Driver"
-                            }...`}
+                          : locale === "sw"
+                            ? "Inatafuta mwendeshaji halisi aliye mtandaoni..."
+                            : "Finding a real online operator who can take your trip..."}
                       </h2>
                       <p className="text-xs text-[#17645F]/75">
-                        {activeTrip.tripCode} • {formatTzs(activeTrip.fareTzs)} •{" "}
-                        {activeTrip.paymentMethod}
+                        {activeTrip.tripCode} • {locale === "sw" ? "Inasubiri mwendeshaji akubali ombi" : "Waiting for an online operator to accept"}
                       </p>
+                      <div className="grid grid-cols-2 gap-3 text-left">
+                        <div className="rounded-2xl bg-[#F3EEE8] p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#17645F]/70">{locale === "sw" ? "Umbali wa safari" : "Trip distance"}</p>
+                          <p className="mt-1 text-lg font-extrabold text-[#122927]">{activeTrip.distanceKm.toFixed(1)} km</p>
+                        </div>
+                        <div className="rounded-2xl bg-[#F3EEE8] p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#17645F]/70">{locale === "sw" ? "Nauli" : "Fare"}</p>
+                          <p className="mt-1 text-lg font-extrabold text-[#122927]">{formatTzs(activeTrip.fareTzs)}</p>
+                        </div>
+                      </div>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setActiveTrip(null)}
+                        onClick={() => void handleCancelTrip()}
                       >
                         {locale === "sw" ? "Ghairi Ombi" : "Cancel Request"}
                       </Button>
@@ -1048,239 +1243,50 @@ export function CustomerHomeView({
                         </div>
                       )}
 
-                      {/* Assigned Bodaboda Rider / Bajaji Driver Header */}
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`flex h-12 w-12 items-center justify-center rounded-full ${
-                              activeTrip.transportType === TransportType.BODABODA
-                                ? "bg-[#17645F] text-[#F3EEE8]"
-                                : "bg-[#B86B2B] text-[#FAF7F2]"
-                            }`}
-                          >
-                            {activeTrip.transportType === TransportType.BODABODA ? (
-                              <Bike className="h-6 w-6" />
-                            ) : (
-                              <CarFront className="h-6 w-6" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-sm font-extrabold text-[#122927]">
-                              {activeTrip.operatorName} • ★{" "}
-                              {activeTrip.operatorRating.toFixed(1)}
-                            </p>
-                            <p className="text-xs font-bold text-[#17645F]">
-                              {activeTrip.transportType === TransportType.BODABODA
-                                ? "Bodaboda Rider"
-                                : "Bajaji Driver"}{" "}
-                              •{" "}
-                              <span className="font-mono">
-                                {activeTrip.operatorPlate}
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                        <Badge
-                          tone={activeTrip.sosTriggered ? "rose" : "emerald"}
-                        >
-                          {activeTrip.status}
-                        </Badge>
-                      </div>
-
-                      {/* Prominent 4-Digit Start PIN Card */}
-                      {activeTrip.status === TripStatus.ASSIGNED && (
-                        <div className="flex items-center justify-between rounded-2xl bg-[#17645F] px-4 py-3.5 text-[#F3EEE8]">
-                          <div className="flex items-center gap-2.5">
-                            <KeyRound className="h-5 w-5 text-[#E6C99E]" />
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className={activeTrip.transportType === TransportType.BODABODA ? "flex h-12 w-12 items-center justify-center rounded-full bg-[#17645F] text-[#F3EEE8]" : "flex h-12 w-12 items-center justify-center rounded-full bg-[#B86B2B] text-[#FAF7F2]"}>
+                              {activeTrip.transportType === TransportType.BODABODA ? <Bike className="h-6 w-6" /> : <CarFront className="h-6 w-6" />}
+                            </div>
                             <div>
-                              <p className="text-[11px] font-semibold text-[#F3EEE8]/85">
-                                {locale === "sw"
-                                  ? "Mpe mwendeshaji PIN hii kuanza safari"
-                                  : "Share this 4-digit Start PIN to begin trip"}
+                              <p className="text-sm font-extrabold text-[#122927]">
+                                {activeTrip.operatorName ?? (locale === "sw" ? "Mwendeshaji amethibitishwa" : "Operator confirmed")}
+                                {activeTrip.operatorRating != null && activeTrip.operatorRating > 0 ? " • ★ " + activeTrip.operatorRating.toFixed(1) : ""}
                               </p>
-                              <p className="text-xs text-[#F3EEE8]/70">
-                                ETA ~{activeTrip.operatorEtaMin} min •{" "}
-                                {formatTzs(activeTrip.fareTzs)}
+                              <p className="text-xs font-bold text-[#17645F]">
+                                {activeTrip.transportType === TransportType.BODABODA ? "Bodaboda Rider" : "Bajaji Driver"}
+                                {activeTrip.operatorPlate ? " • " + activeTrip.operatorPlate : ""}
                               </p>
                             </div>
                           </div>
-                          <span className="rounded-full bg-[#F3EEE8] px-4 py-1.5 font-mono text-xl font-black tracking-widest text-[#17645F]">
-                            {activeTrip.startPin}
-                          </span>
+                          <Badge tone={activeTrip.sosTriggered ? "rose" : "emerald"}>{activeTrip.status}</Badge>
                         </div>
-                      )}
-
-                      {/* Call, WhatsApp Live Share & Emergency SOS Action Bar */}
-                      <div className="grid grid-cols-3 gap-2">
-                        <a
-                          href={`tel:${activeTrip.operatorPhone}`}
-                          className="flex items-center justify-center gap-1.5 rounded-full border border-[#17645F]/25 bg-[#F3EEE8] px-2.5 py-2 text-xs font-bold text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
-                        >
-                          <PhoneCall className="h-3.5 w-3.5" />
-                          {locale === "sw" ? "Piga Simu" : "Call"}
-                        </a>
-                        <a
-                          href={whatsappShareHref}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center justify-center gap-1.5 rounded-full bg-[#17645F] px-2.5 py-2 text-xs font-bold text-[#F3EEE8] hover:bg-[#114E4A]"
-                        >
-                          <Share2 className="h-3.5 w-3.5" />
-                          WhatsApp
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => setSosDrawerOpen((v) => !v)}
-                          className="flex items-center justify-center gap-1.5 rounded-full bg-[#A93232] px-2.5 py-2 text-xs font-extrabold text-white hover:bg-[#8A2626]"
-                        >
-                          <ShieldAlert className="h-3.5 w-3.5" />
-                          SOS
-                        </button>
-                      </div>
-
-                      {/* Direct Preview Link to Public /track/[shareToken] */}
-                      <div className="flex items-center justify-between rounded-2xl bg-[#F3EEE8] px-3.5 py-2.5 text-xs">
-                        <span className="truncate font-medium text-[#122927]">
-                          {locale === "sw"
-                            ? "Kiungo cha ufuatiliaji:"
-                            : "Live share link:"}{" "}
-                          <code className="font-bold text-[#17645F]">
-                            {liveTrackPath}
-                          </code>
-                        </span>
-                        <a
-                          href={liveTrackPath}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex shrink-0 items-center gap-1 font-bold text-[#17645F] underline"
-                        >
-                          {locale === "sw" ? "Fungua" : "Open"}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-
-                      {/* SOS Confirmation Drawer */}
-                      {sosDrawerOpen && (
-                        <div className="space-y-2.5 rounded-2xl border-2 border-[#A93232] bg-[#A93232]/10 p-3.5">
-                          <div className="flex items-start gap-2 text-xs text-[#6B1D1D]">
-                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#A93232]" />
-                            <div>
-                              <p className="font-extrabold">
-                                {locale === "sw"
-                                  ? "Thibitisha Tahadhari ya Dharura (SOS)"
-                                  : "Confirm Emergency SOS Alert"}
-                              </p>
-                              <p className="mt-0.5">
-                                {locale === "sw"
-                                  ? "Hii itatuma GPS yako ya sasa, namba ya chombo na safari kwa timu ya Operesheni mara moja."
-                                  : "Sends your live Unguja GPS, vehicle Z-Plate, and trip details immediately to Go.boda Operations."}
-                              </p>
-                            </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="rounded-2xl bg-[#F3EEE8] p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#17645F]/70">{locale === "sw" ? "Umbali wa safari" : "Trip distance"}</p>
+                            <p className="mt-1 text-lg font-extrabold text-[#122927]">{activeTrip.distanceKm.toFixed(1)} km</p>
                           </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setSosDrawerOpen(false)}
-                            >
-                              {locale === "sw" ? "Funga" : "Cancel"}
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="danger"
-                              onClick={handleConfirmSos}
-                            >
-                              {locale === "sw"
-                                ? "Tuma SOS Sasa"
-                                : "Trigger SOS Now"}
-                            </Button>
+                          <div className="rounded-2xl bg-[#F3EEE8] p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#17645F]/70">{locale === "sw" ? "Nauli" : "Fare"}</p>
+                            <p className="mt-1 text-lg font-extrabold text-[#122927]">{formatTzs(activeTrip.fareTzs)}</p>
                           </div>
                         </div>
-                      )}
-
-                      {/* Bilingual Quick-Chat Presets */}
-                      <div className="space-y-2 border-t border-[#17645F]/10 pt-3">
-                        <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-[#17645F]/80">
-                          <MessageSquare className="h-3.5 w-3.5 text-[#17645F]" />
-                          {locale === "sw"
-                            ? "Ujumbe wa Haraka kwa Mwendeshaji"
-                            : "Quick-Chat with Operator"}
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {CUSTOMER_CHAT_PRESETS.map((p) => (
-                            <button
-                              key={p.key}
-                              type="button"
-                              onClick={() => handleSendChat(p)}
-                              className="rounded-full border border-[#17645F]/20 bg-[#F3EEE8] px-3 py-1 text-[11px] font-semibold text-[#17645F] hover:bg-[#17645F] hover:text-[#F3EEE8]"
-                            >
-                              {locale === "sw" ? p.sw : p.en}
-                            </button>
-                          ))}
-                        </div>
-                        {chatMessages.length > 0 && (
-                          <div className="space-y-1">
-                            {chatMessages.map((m) => (
-                              <div
-                                key={m.id}
-                                className="flex items-center justify-between rounded-2xl bg-[#17645F]/10 px-3 py-1.5 text-xs text-[#122927]"
-                              >
-                                <span>{m.text}</span>
-                                <span className="text-[10px] font-bold text-[#17645F]">
-                                  {m.time}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Trip Stage Controls */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#17645F]/10 pt-3">
-                        {activeTrip.status === TripStatus.ASSIGNED ? (
-                          <>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setActiveTrip(null)}
-                            >
-                              {locale === "sw" ? "Ghairi Safari" : "Cancel Trip"}
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="primary"
-                              onClick={() =>
-                                setActiveTrip((p) =>
-                                  p ? { ...p, status: TripStatus.IN_PROGRESS } : null
-                                )
-                              }
-                            >
-                              {locale === "sw"
-                                ? "PIN Imethibitishwa → Safari Imeanza"
-                                : "PIN Verified → Start Trip"}
-                            </Button>
-                          </>
+                        {liveTrackPath ? (
+                          <a href={liveTrackPath} target="_blank" rel="noreferrer" className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#17645F] px-4 py-3 text-sm font-bold text-[#F3EEE8] hover:bg-[#114E4A]">
+                            <Navigation className="h-4 w-4" />
+                            {locale === "sw" ? "Fungua eneo la moja kwa moja" : "View live location"}
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
                         ) : (
-                          <Button
-                            type="button"
-                            size="md"
-                            variant="amber"
-                            className="w-full font-extrabold"
-                            onClick={() =>
-                              setActiveTrip((p) =>
-                                p
-                                  ? { ...p, status: TripStatus.COMPLETED_UNPAID }
-                                  : null
-                              )
-                            }
-                          >
-                            {locale === "sw"
-                              ? "Fika Unakoenda → Risiti na Tathmini"
-                              : "Arrive at Dropoff → Receipt & Helmet Check"}
+                          <p className="text-center text-xs text-[#17645F]/70">
+                            {locale === "sw" ? "Inaandaa kiungo salama cha eneo la moja kwa moja…" : "Preparing secure live location link…"}
+                          </p>
+                        )}
+                        {(activeTrip.status === TripStatus.ASSIGNED ||
+                          activeTrip.status === TripStatus.ARRIVED_AT_PICKUP) && (
+                          <Button type="button" variant="outline" size="sm" onClick={() => void handleCancelTrip()} className="w-full">
+                            {locale === "sw" ? "Ghairi Safari" : "Cancel Trip"}
                           </Button>
                         )}
                       </div>
@@ -1677,21 +1683,26 @@ export function CustomerHomeView({
                       size="lg"
                       variant="primary"
                       disabled={
-                        Boolean(outsideError) || loadingQuote || !activeQuote ||
+                        requestingTrip || Boolean(outsideError) || loadingQuote || !activeQuote ||
                         pickupQuery.trim() !== pickup.label ||
                         dropoffQuery.trim() !== dropoff.label
                       }
                       onClick={handleRequestTransport}
                       className="w-full uppercase tracking-[0.14em]"
                     >
-                      {t("customer.requestCta")} •{" "}
-                      {selectedType === TransportType.BODABODA
-                        ? "Go.boda"
-                        : "Go.bajaji"}
-                      {activeQuote
-                        ? ` • ${formatTzs(activeQuote.finalFareTzs)}`
-                        : ""}
+                      {requestingTrip
+                        ? locale === "sw" ? "Inatuma ombi..." : "Requesting trip..."
+                        : <>
+                            {t("customer.requestCta")} •{" "}
+                            {selectedType === TransportType.BODABODA ? "Go.boda" : "Go.bajaji"}
+                            {activeQuote ? ` • ${formatTzs(activeQuote.finalFareTzs)}` : ""}
+                          </>}
                     </Button>
+                    {tripRequestError && (
+                      <p role="alert" className="rounded-xl bg-[#A93232]/10 px-3 py-2 text-xs font-semibold text-[#8A2626]">
+                        {tripRequestError}
+                      </p>
+                    )}
                   </section>
                 </ScrollReveal>
               </>

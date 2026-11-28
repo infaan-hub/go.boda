@@ -29,7 +29,6 @@ const actionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("START"),
     tripId: z.string().uuid(),
-    startPin: z.string().trim().regex(/^\d{4}$/),
   }),
   z.object({
     action: z.literal("COMPLETE_CASH"),
@@ -138,7 +137,7 @@ export async function POST(request: Request) {
           SET status = 'ASSIGNED',
               operator_id = ${operatorId}::uuid,
               operator_name = ${op?.fullName ?? auth.partner.name},
-              operator_plate = ${op?.plateNumber ?? "Z 000 AAA"},
+              operator_plate = ${op?.plateNumber ?? null},
               operator_phone = ${op?.phone ?? auth.partner.phone},
               assigned_at = NOW(),
               updated_at = NOW()
@@ -242,21 +241,18 @@ export async function POST(request: Request) {
 
     if (d.action === "START") {
       const rows = (await sql`
-        SELECT id, start_pin AS "startPin", status
+        SELECT id, status
         FROM trip.trips
         WHERE id = ${d.tripId}::uuid AND operator_id = ${operatorId}::uuid
         LIMIT 1
-      `) as Array<{ id: string; startPin: string; status: string }>;
+      `) as Array<{ id: string; status: string }>;
       const trip = rows[0];
       if (!trip || trip.status !== "ARRIVED_AT_PICKUP") {
         return NextResponse.json({ error: "INVALID_STATE_TRANSITION" }, { status: 409 });
       }
-      if (trip.startPin !== d.startPin) {
-        return NextResponse.json({ error: "INVALID_START_PIN" }, { status: 400 });
-      }
       const updated = await sql`
         UPDATE trip.trips
-        SET status = 'IN_PROGRESS', pin_verified_at = NOW(), started_at = NOW(), updated_at = NOW()
+        SET status = 'IN_PROGRESS', started_at = NOW(), updated_at = NOW()
         WHERE id = ${d.tripId}::uuid
         RETURNING id, status
       `;

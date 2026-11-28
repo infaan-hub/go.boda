@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getSql } from "@goboda/db";
+import { verifyCustomerRequest } from "@/lib/customer-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,8 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const auth = await verifyCustomerRequest(request);
+  if (!auth.ok) return auth.response;
   const { id } = await context.params;
   const body = (await request.json().catch(() => ({}))) as {
     locale?: "sw" | "en";
@@ -19,14 +22,17 @@ export async function POST(
   try {
     const sql = getSql(process.env.CUSTOMER_DATABASE_URL ?? process.env.DATABASE_URL);
     const rows = (await sql`
-      SELECT id, trip_code, customer_id, operator_plate, pickup_label, dropoff_label
+      SELECT id, trip_code, customer_id, operator_id, status, operator_plate,
+             pickup_label, dropoff_label
       FROM trip.trips
-      WHERE id = ${id}::uuid
+      WHERE id = ${id}::uuid AND customer_id = ${auth.customer.id}::uuid
       LIMIT 1
     `) as Array<{
       id: string;
       trip_code: string;
       customer_id: string;
+      operator_id: string | null;
+      status: string;
       operator_plate: string | null;
       pickup_label: string;
       dropoff_label: string;
@@ -35,6 +41,9 @@ export async function POST(
     const trip = rows[0];
     if (!trip) {
       return NextResponse.json({ error: "TRIP_NOT_FOUND" }, { status: 404 });
+    }
+    if (!trip.operator_id || !["ASSIGNED", "ARRIVED_AT_PICKUP", "IN_PROGRESS", "SOS_ACTIVE"].includes(trip.status)) {
+      return NextResponse.json({ error: "OPERATOR_NOT_ASSIGNED" }, { status: 409 });
     }
 
     const token = randomBytes(12).toString("base64url");

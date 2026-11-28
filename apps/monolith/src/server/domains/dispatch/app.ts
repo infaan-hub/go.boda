@@ -709,7 +709,7 @@ app.post("/api/v1/dispatch/offers/:offerId/accept", async (request, reply) => {
   const plateNumber =
     (opProfileRows[0] as { plate_number?: string } | undefined)?.plate_number ??
     (posRows[0] as { plate_number?: string } | undefined)?.plate_number ??
-    "Z-UNGUJA";
+    null;
   const operatorName =
     (opProfileRows[0] as { full_name?: string } | undefined)?.full_name ??
     (offer.operator_title === "RIDER" ? "Verified Bodaboda Rider" : "Verified Bajaji Driver");

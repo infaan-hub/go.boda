@@ -136,7 +136,7 @@ export function PartnerTripWorkflowView({ locale, stage }: { locale: "sw" | "en"
     if (!activeTrip) return;
     const arrived = await act("ARRIVE", { tripId: activeTrip.id });
     if (!arrived) return;
-    const started = await act("START", { tripId: activeTrip.id, startPin: activeTrip.startPin });
+    const started = await act("START", { tripId: activeTrip.id });
     if (started) router.push("/partner/trips/pickup/");
   }
   async function destination() {
