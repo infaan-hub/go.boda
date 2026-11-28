@@ -12,6 +12,7 @@ import {
   Save,
   ShieldCheck,
   Tag,
+  Trash2,
   XCircle,
 } from "lucide-react";
 import { Badge, Button, Card } from "@goboda/ui";
@@ -103,6 +104,45 @@ export function OperatorsKycPanel({
       onNotify(
         "rose",
         err instanceof Error ? err.message : "Network error reviewing operator"
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleDelete(op: AdminOperatorRow) {
+    const roleLabel =
+      op.transportType === "BODABODA" ? "Bodaboda Rider" : "Bajaji Driver";
+    const confirmed = window.confirm(
+      `Delete ${roleLabel} ${op.fullName} (${op.plateNumber})?\n\n` +
+        "This permanently removes their operator profile, KYC documents, live position, " +
+        "push subscriptions and login account. Trips and financial records stay for audit. " +
+        "This cannot be undone."
+    );
+    if (!confirmed) return;
+
+    setBusyId(op.id);
+    try {
+      const res = await fetch(`/api/ops/operators/${op.id}`, {
+        method: "DELETE",
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+      };
+      if (!res.ok) {
+        onNotify("rose", json.message || json.error || "Delete failed");
+        return;
+      }
+      onNotify(
+        "emerald",
+        `${roleLabel} ${op.fullName} (${op.plateNumber}) deleted.`
+      );
+      await onMutated();
+    } catch (err) {
+      onNotify(
+        "rose",
+        err instanceof Error ? err.message : "Network error deleting operator"
       );
     } finally {
       setBusyId(null);
@@ -317,6 +357,16 @@ export function OperatorsKycPanel({
                         Suspend
                       </Button>
                     ) : null}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busyId === op.id}
+                      onClick={() => handleDelete(op)}
+                      className="text-[#A93232]"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </Card>

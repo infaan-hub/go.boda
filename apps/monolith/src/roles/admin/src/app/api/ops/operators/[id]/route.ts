@@ -129,3 +129,84 @@ export async function GET(
     );
   }
 }
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const auth = await verifyAdminRequest(request);
+  if (!auth.ok) return auth.response;
+
+  const { id } = await context.params;
+  try {
+    const sql = getSql(process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL);
+    const profileRows = (await sql`
+      SELECT id, user_id AS "userId", full_name AS "fullName", plate_number AS "plateNumber"
+      FROM operator.profiles
+      WHERE id = ${id}::uuid
+      LIMIT 1
+    `) as Array<{
+      id: string;
+      userId: string;
+      fullName: string;
+      plateNumber: string;
+    }>;
+
+    const profile = profileRows[0];
+    if (!profile) {
+      return NextResponse.json({ error: "OPERATOR_NOT_FOUND" }, { status: 404 });
+    }
+
+    const activeTrips = (await sql`
+      SELECT trip_code AS "tripCode", status
+      FROM trip.trips
+      WHERE operator_id = ${profile.userId}::uuid
+        AND status IN ('ASSIGNED', 'ARRIVED_AT_PICKUP', 'IN_PROGRESS', 'SOS_ACTIVE')
+      ORDER BY created_at DESC
+      LIMIT 1
+    `) as Array<{ tripCode: string; status: string }>;
+
+    if (activeTrips[0]) {
+      return NextResponse.json(
+        {
+          error: "OPERATOR_HAS_ACTIVE_TRIP",
+          message: `Cannot delete ${profile.fullName}: trip ${activeTrips[0].tripCode} is ${activeTrips[0].status}. Complete or cancel it first.`,
+        },
+        { status: 409 }
+      );
+    }
+
+    // One atomic statement: clear live/push/dispatch data, then the profile and login.
+    // Trips, payments and ledger entries are retained for audit.
+    const deleted = (await sql`
+      WITH cleared_offers AS (
+        DELETE FROM dispatch.offers WHERE operator_id = ${profile.userId}::uuid
+      ), cleared_positions AS (
+        DELETE FROM location.operator_positions WHERE operator_id = ${profile.userId}::uuid
+      ), cleared_push AS (
+        DELETE FROM notif.push_subscriptions WHERE user_id = ${profile.userId}::uuid
+      ), cleared_profile AS (
+        DELETE FROM operator.profiles WHERE id = ${id}::uuid
+      )
+      DELETE FROM auth.users WHERE id = ${profile.userId}::uuid
+      RETURNING id
+    `) as Array<{ id: string }>;
+
+    if (!deleted[0]) {
+      return NextResponse.json({ error: "OPERATOR_USER_NOT_FOUND" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      deleted: true,
+      operatorId: id,
+      userId: profile.userId,
+      fullName: profile.fullName,
+      plateNumber: profile.plateNumber,
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: "OPERATOR_DELETE_FAILED", message: err instanceof Error ? err.message : "DB error" },
+      { status: 500 }
+    );
+  }
+}
