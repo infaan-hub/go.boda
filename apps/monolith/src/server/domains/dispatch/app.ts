@@ -28,7 +28,7 @@ export const HOST = process.env.HOST ?? "0.0.0.0";
 export const logger = createLogger(SERVICE_NAME);
 
 // Expanding search radius sequence across Unguja (urban -> outer/rural)
-export const EXPANDING_RADII_KM = [1.5, 3.0, 5.0, 6.0] as const;
+export const EXPANDING_RADII_KM = [1.5, 3.0, 6.0, 12.0, 24.0, 48.0, 100.0] as const;
 
 function getJwtSecretBytes(): Uint8Array {
   const secret = process.env.JWT_SECRET;

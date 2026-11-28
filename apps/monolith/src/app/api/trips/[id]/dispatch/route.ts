@@ -5,6 +5,7 @@ import { verifyCustomerRequest } from "@/lib/customer-auth";
 export const dynamic = "force-dynamic";
 
 const OFFER_TTL_SECONDS = 30;
+const MAX_SEARCH_RADIUS_KM = 100;
 
 export async function POST(
   request: Request,
@@ -63,20 +64,19 @@ export async function POST(
 
     const roundRows = (await sql`
       SELECT COALESCE(MAX(round_number), 0)::int AS "lastRound",
-             COALESCE(MAX(search_radius_km), 0)::int AS "lastRadiusKm"
+             COALESCE(MAX(search_radius_km), 0)::float8 AS "lastRadiusKm"
       FROM dispatch.offers WHERE trip_id = ${id}::uuid
     `) as Array<{ lastRound: number; lastRadiusKm: number }>;
     const roundNumber = Number(roundRows[0]?.lastRound ?? 0) + 1;
-    const elapsedMinutes = Math.floor(
-      Math.max(0, Date.now() - new Date(trip.createdAt).getTime()) / 60_000
+    const elapsedSeconds = Math.max(
+      0,
+      (Date.now() - new Date(trip.createdAt).getTime()) / 1000
     );
+    const elapsedRadiusKm = 1.5 * 2 ** Math.floor(elapsedSeconds / 35);
+    const lastRadiusKm = Number(roundRows[0]?.lastRadiusKm ?? 0);
     const radiusKm = Math.min(
-      15,
-      Math.max(
-        8,
-        Number(roundRows[0]?.lastRadiusKm ?? 0) + 2,
-        8 + elapsedMinutes * 2
-      )
+      MAX_SEARCH_RADIUS_KM,
+      Math.max(lastRadiusKm > 0 ? lastRadiusKm * 2 : 1.5, elapsedRadiusKm)
     );
     const candidates = (await sql`
       SELECT p.operator_id AS "operatorId", p.rating_avg AS "ratingAvg",
@@ -96,12 +96,12 @@ export async function POST(
           ST_SetSRID(ST_MakePoint(${trip.pickupLng}, ${trip.pickupLat}), 4326)::geography,
           ${radiusKm * 1000}
         )
+        AND NOT EXISTS (
+          SELECT 1 FROM dispatch.offers prior
+          WHERE prior.trip_id = ${id}::uuid
+            AND prior.operator_id = p.operator_id
+        )
       ORDER BY
-        CASE WHEN EXISTS (
-          SELECT 1 FROM dispatch.offers old
-          WHERE old.trip_id = ${id}::uuid
-            AND old.operator_id = p.operator_id
-        ) THEN 1 ELSE 0 END ASC,
         ST_DistanceSphere(
           p.geom,
           ST_SetSRID(ST_MakePoint(${trip.pickupLng}, ${trip.pickupLat}), 4326)

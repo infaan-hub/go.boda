@@ -8,8 +8,16 @@ export const dynamic = "force-dynamic";
 
 const availabilitySchema = z.object({
   isOnline: z.boolean(),
-  lat: z.number().min(-90).max(90).default(-6.1649),
-  lng: z.number().min(-180).max(180).default(39.1936),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
+}).superRefine((value, ctx) => {
+  if (value.isOnline && (value.lat == null || value.lng == null)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [value.lat == null ? "lat" : "lng"],
+      message: "A current GPS position is required to go online.",
+    });
+  }
 });
 
 export async function POST(request: Request) {
@@ -26,6 +34,9 @@ export async function POST(request: Request) {
   }
 
   const d = parsed.data;
+  // Coordinates may be omitted when going offline; online requests require real GPS.
+  const lat = d.lat ?? -6.1649;
+  const lng = d.lng ?? 39.1936;
   const operatorId = auth.partner.id;
 
   try {
@@ -88,7 +99,7 @@ export async function POST(request: Request) {
       const geoRows = (await sql`
         SELECT ST_Contains(
           (SELECT geom FROM geo.zones WHERE id = 'unguja-island'),
-          ST_SetSRID(ST_MakePoint(${d.lng}, ${d.lat}), 4326)
+          ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)
         ) AS in_unguja
       `) as Array<{ in_unguja: boolean }>;
 
@@ -110,14 +121,14 @@ export async function POST(request: Request) {
     `;
 
     await sql`
-      INSERT INTO location.operator_positions (
+      INSERT INTO location.operator_positions AS current_position (
         operator_id, transport_type, operator_title, plate_number, home_kituo,
         is_online, is_busy, is_demo, lat, lng, geom, last_seen_at
       )
       VALUES (
         ${operatorId}::uuid, ${profile.transportType}, ${profile.operatorTitle},
         ${profile.plateNumber}, ${profile.homeKituo}, ${d.isOnline}, FALSE, FALSE,
-        ${d.lat}, ${d.lng}, ST_SetSRID(ST_MakePoint(${d.lng}, ${d.lat}), 4326), NOW()
+        ${lat}, ${lng}, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326), NOW()
       )
       ON CONFLICT (operator_id) DO UPDATE SET
         transport_type = EXCLUDED.transport_type,
@@ -125,9 +136,9 @@ export async function POST(request: Request) {
         plate_number = EXCLUDED.plate_number,
         home_kituo = EXCLUDED.home_kituo,
         is_online = EXCLUDED.is_online,
-        lat = EXCLUDED.lat,
-        lng = EXCLUDED.lng,
-        geom = EXCLUDED.geom,
+        lat = CASE WHEN EXCLUDED.is_online THEN EXCLUDED.lat ELSE current_position.lat END,
+        lng = CASE WHEN EXCLUDED.is_online THEN EXCLUDED.lng ELSE current_position.lng END,
+        geom = CASE WHEN EXCLUDED.is_online THEN EXCLUDED.geom ELSE current_position.geom END,
         last_seen_at = NOW()
     `;
 

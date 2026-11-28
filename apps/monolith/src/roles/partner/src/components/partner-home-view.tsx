@@ -223,6 +223,63 @@ function PartnerHomeContent({
     };
   }, [isOnline]);
 
+  // Keep an idle online operator's GPS fresh so dispatch can still find them.
+  React.useEffect(() => {
+    if (!isOnline || page !== "shift") return;
+    let stopped = false;
+    let requestInFlight = false;
+
+    const refreshLocation = () => {
+      if (requestInFlight || typeof navigator === "undefined" || !navigator.geolocation) {
+        return;
+      }
+      requestInFlight = true;
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const response = await fetch("/api/partner/location", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              }),
+            });
+            if (!response.ok && response.status !== 409 && !stopped) {
+              setStatusNotice(
+                locale === "sw"
+                  ? "Washa GPS na ruhusa ya eneo ili uweze kupokea safari."
+                  : "Keep GPS and location permission enabled to receive trip requests."
+              );
+            }
+          } catch {
+            // Keep online state; the next location heartbeat will retry.
+          } finally {
+            requestInFlight = false;
+          }
+        },
+        () => {
+          requestInFlight = false;
+          if (!stopped) {
+            setStatusNotice(
+              locale === "sw"
+                ? "Washa GPS na ruhusa ya eneo ili uweze kupokea safari."
+                : "Keep GPS and location permission enabled to receive trip requests."
+            );
+          }
+        },
+        { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 }
+      );
+    };
+
+    refreshLocation();
+    const interval = window.setInterval(refreshLocation, 25_000);
+    return () => {
+      stopped = true;
+      window.clearInterval(interval);
+    };
+  }, [isOnline, page, locale]);
+
   // 20-second dispatch offer countdown
   React.useEffect(() => {
     if (!incomingOffer) return;
@@ -412,30 +469,39 @@ function PartnerHomeContent({
     setStatusNotice(null);
     setIncomingOffer(null);
     try {
-      let lat = -6.1649;
-      let lng = 39.1936;
+      let lat: number | undefined;
+      let lng: number | undefined;
       if (nextOnline && typeof navigator !== "undefined" && "geolocation" in navigator) {
         const pos = await new Promise<GeolocationPosition | null>((resolve) => {
           navigator.geolocation.getCurrentPosition(
             (p) => resolve(p),
             () => resolve(null),
-            { timeout: 2500, maximumAge: 30000 }
+            { timeout: 10000, maximumAge: 10000, enableHighAccuracy: true }
           );
         });
-        if (pos) {
-          const candLat = pos.coords.latitude;
-          const candLng = pos.coords.longitude;
-          if (candLat >= -6.5 && candLat <= -5.7 && candLng >= 39.1 && candLng <= 39.6) {
-            lat = candLat;
-            lng = candLng;
-          }
+        if (!pos) {
+          setStatusNotice(
+            locale === "sw"
+              ? "Washa GPS na ruhusu eneo kabla ya kwenda mtandaoni."
+              : "Enable GPS and location permission before going online."
+          );
+          return;
         }
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } else if (nextOnline) {
+        setStatusNotice(
+          locale === "sw"
+            ? "Kifaa hiki hakiungi mkono GPS ya eneo."
+            : "This device does not support GPS location."
+        );
+        return;
       }
 
       const res = await fetch("/api/partner/availability", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ isOnline: nextOnline, lat, lng }),
+        body: JSON.stringify({ isOnline: nextOnline, ...(lat != null && lng != null ? { lat, lng } : {}) }),
       });
 
       if (res.ok) {

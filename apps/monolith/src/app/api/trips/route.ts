@@ -314,7 +314,7 @@ export async function POST(request: Request) {
         AND ST_DWithin(
           geom::geography,
           ST_SetSRID(ST_MakePoint(${effLng}, ${effLat}), 4326)::geography,
-          8000
+          1500
         )
       ORDER BY
         ST_DistanceSphere(geom, ST_SetSRID(ST_MakePoint(${effLng}, ${effLat}), 4326)) ASC,
@@ -346,7 +346,7 @@ export async function POST(request: Request) {
         Math.min(
           1,
           1 -
-            0.65 * (c.distanceMeters / 8000) -
+            0.65 * (c.distanceMeters / 1500) -
             0.2 * (gpsAgeSeconds / 90) +
             0.15 * ((Math.min(5, Number(c.ratingAvg) || 0) - 3) / 2)
         )
@@ -359,7 +359,7 @@ export async function POST(request: Request) {
         )
         VALUES (
           ${tripId}::uuid, ${c.operatorId}::uuid, ${d.transportType}, ${operatorTitle},
-          8.0, 1, ${matchScore}, ${c.distanceMeters}, ${eta},
+          1.5, 1, ${matchScore}, ${c.distanceMeters}, ${eta},
           ${d.pickupLabel}, ${d.dropoffLabel}, ${estimatedFareTzs}, ${d.paymentMethod},
           'PENDING', ${expiresAt}::timestamptz
         )
